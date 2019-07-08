@@ -61,9 +61,11 @@ if __name__ == "__main__":
 
     for v in tqdm(res.values()):
         op = subprocess.run(["mp3info", "-p '%S'", os.path.join(MP3_PATH, v['path'])], stdout=PIPE)
-        new = int(float(eval(op.stdout)))
-        if new != 30:
-            print(new)
+        try:
+            new = int(float(eval(op.stdout)))
+        except:
+            tqdm.write(op.stdout)
+
         v['track']['duration'] = str(new)
             
 
