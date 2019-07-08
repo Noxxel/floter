@@ -38,8 +38,6 @@ if __name__ == '__main__':
     ndf = int(opt.ndf)
 
     netG = dcgan.Generator(ngpu).to(device)
-    if opt.netG == '':
-        raise Exception("No weights provided for Generator!")
     if opt.cuda:
         netG.load_state_dict(torch.load(opt.netG))
     else:
@@ -47,8 +45,6 @@ if __name__ == '__main__':
     print(netG)
 
     netD = dcgan.Discriminator(ngpu).to(device)
-    if opt.netD == '':
-        raise Exception("No weights provided for Discriminator!")
     if opt.cuda:
         netD.load_state_dict(torch.load(opt.netD))
     else:
