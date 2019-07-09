@@ -153,7 +153,7 @@ if __name__ == '__main__':
     optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
-    for epoch in tqdm(range(starting_epoch, opt.niter)):
+    for epoch in tqdm(range(starting_epoch+1, opt.niter)):
         time.sleep(5)
         for i, data in enumerate(tqdm(dataloader, 0)):
             ############################
