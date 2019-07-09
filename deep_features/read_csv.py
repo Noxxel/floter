@@ -64,7 +64,7 @@ if __name__ == "__main__":
         try:
             new = int(float(eval(op.stdout)))
         except:
-            tqdm.write(op.stdout)
+            print(op.stdout)
 
         v['track']['duration'] = str(new)
             

@@ -13,7 +13,7 @@ import librosa
 
 class SoundfileDataset(Dataset):
 
-    def __init__(self, path, ipath="./fma_small", hotvec=True, out_type='raw', mel_seg_size=2**11):
+    def __init__(self, path, ipath="./mels_set", hotvec=True, out_type='raw', mel_seg_size=2**11):
         _, ext = os.path.splitext(path)
         if ext == ".p":
             d = pickle.load(open(path, 'rb'))
@@ -21,10 +21,9 @@ class SoundfileDataset(Dataset):
             raise RuntimeError(f"{path}: extention '{ext[1:]}' not known")
         
         #np.seterr(all='ignore')
-        
+
         if out_type == 'mel':
-            d = {k:v for k,v in d.items() if os.path.isfile(os.path.join(ipath, v['path'][:-3] + "npy"))
-                                          and v["track"]["genre_top"] != ""}
+            d = {k:v for k,v in d.items() if os.path.isfile(os.path.join(ipath, v['path'][:-3] + "npy")) and v["track"]["genre_top"] != ""}
 
         # Generate class-idx-converter
         classes = set()
@@ -156,12 +155,12 @@ class SoundfileDataset(Dataset):
     def get_mel(self, idx):
         this = self.data[idx]
         X    = np.load(os.path.join(self.ipath, this.path[:-3]) + "npy")
-        le   = X.shape[1] - self.mel_seg_size
+        """ le   = X.shape[1] - self.mel_seg_size
         if le >= 0:
             offs = np.random.randint(0, le + 1)
             X = X[:,offs:offs+self.mel_seg_size]
         else:
-            X = X.pad(((0,0), (0,-le)), 'constant', constant_values=0)
+            X = X.pad(((0,0), (0,-le)), 'constant', constant_values=0) """
         
         return torch.as_tensor(X, dtype=torch.float32), this.label # no 1hot here
         
