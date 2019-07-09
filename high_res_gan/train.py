@@ -154,7 +154,7 @@ if __name__ == '__main__':
     optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
     for epoch in tqdm(range(starting_epoch+1, opt.niter)):
-        time.sleep(5)
+        torch.cuda.empty_cache()
         for i, data in enumerate(tqdm(dataloader, 0)):
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
