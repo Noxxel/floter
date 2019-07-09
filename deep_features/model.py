@@ -21,7 +21,7 @@ class LSTM(nn.Module):
         self.dropout2D = nn.Dropout2d(p=dropout) """
 
         # Define the LSTM layer
-        self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers)
+        self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers, batch_first=True)
 
         # Define the output layer
         self.linear = nn.Linear(self.hidden_dim, output_dim)
@@ -39,21 +39,22 @@ class LSTM(nn.Module):
         #print(X.shape)
         #out = self.conv1(X)
         #print(out.shape)
-        print(X.shape)
-        lstm_out, hidden = self.lstm(X) #.view(len(input), self.batch_size, -1)
-        #print(lstm_out.shape, hidden.shape)
-        #print(lstm_out.shape, self.hidden.shape)
+        #X = nn.utils.rnn.pack_padded_sequence(X enforce_sorted=False)
+        #print("0----------------------------------------------------------")
+        #print(X.shape)
+        lstm_out, self.hidden = self.lstm(X) #.view(len(input), self.batch_size, -1)
+        #print("1----------------------------------------------------------")
+        #print(lstm_out.shape)
         
         # Only take the output from the final timetep
         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
-        y_pred = self.linear(lstm_out[-1]) #.view(self.batch_size, -1)
+        out = lstm_out[:,-1].reshape(self.batch_size, -1)
+        y_pred = self.linear(out)
         y_pred = F.log_softmax(y_pred, dim=1)
         return y_pred #.view(-1)
 
     def get_accuracy(self, logits, target):
         """ compute accuracy for training round """
-        corrects = (
-            torch.max(logits, 1)[1].view(target.size()).data == target.data
-        ).sum()
+        corrects = (torch.max(logits, 1)[1].view(target.size()).data == target.data).sum()
         accuracy = 100.0 * corrects / self.batch_size
         return accuracy.item()

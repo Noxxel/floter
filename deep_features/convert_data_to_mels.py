@@ -17,7 +17,7 @@ def save_mel(paths):
         song, sr = librosa.load(inpath, mono=True)
 
         n_fft = 2**11         # shortest human-disting. sound (music)
-        hop_length = 2**9    # => 25% overlap of frames
+        hop_length = 2**9    # => 75% overlap of frames
         n_mels = 128
 
         if len(song) < n_fft:
