@@ -5,3 +5,4 @@ all_metadata.p
 */__pycache__/*
 *.zip
 data/
+*.pth
