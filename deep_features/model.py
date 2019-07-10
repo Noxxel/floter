@@ -16,8 +16,8 @@ class LSTM(nn.Module):
         self.lstm_hidden = 100
 
         self.conv1 = nn.Conv1d(self.input_dim, self.hidden_dim1, 1)
-        self.conv2 = nn.Conv1d(self.hidden_dim1, self.hidden_dim2, 5)
-        self.conv3 = nn.Conv1d(self.hidden_dim2, self.hidden_dim3, 3)
+        self.conv2 = nn.Conv1d(self.hidden_dim1, self.hidden_dim2, 1)
+        self.conv3 = nn.Conv1d(self.hidden_dim2, self.hidden_dim3, 1)
 
         self.batchnorm1 = nn.BatchNorm1d(self.hidden_dim1, momentum=0.9)
         self.batchnorm2 = nn.BatchNorm1d(self.hidden_dim2, momentum=0.9)
@@ -34,8 +34,8 @@ class LSTM(nn.Module):
 
     def init_hidden(self):
         # This is what we'll initialise our hidden state as
-        return (torch.zeros(self.num_layers, self.batch_size, self.lstm_hidden),
-                torch.zeros(self.num_layers, self.batch_size, self.lstm_hidden))
+        return (torch.zeros(self.num_layers, self.batch_size, self.lstm_hidden).cuda(),
+                torch.zeros(self.num_layers, self.batch_size, self.lstm_hidden).cuda())
 
     def forward(self, X):
         X = self.conv1(X.view(X.shape[0],X.shape[2],X.shape[1]))
@@ -55,10 +55,8 @@ class LSTM(nn.Module):
         X = self.relu(X)
         #X = self.maxpool(X)
         X = self.dropout(X) #regularize the model
-        #print(X.shape)
         
-        lstm_out, self.hidden = self.lstm(X.view(X.shape[0],X.shape[2],X.shape[1]))
-
+        lstm_out, _ = self.lstm(X.view(X.shape[0],X.shape[2],X.shape[1]))
         #print(lstm_out.shape)
         
         # Only take the output from the final timestep

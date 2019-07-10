@@ -15,7 +15,7 @@ duration = 30
 n_fft = 2**12         # shortest human-disting. sound (music)
 hop_length = 2**10    # => 75% overlap of frames
 n_mels = 256
-n_epochs = 100
+n_epochs = 400
 batch_size = 16
 l_rate = 1e-4
 DEBUG = False
@@ -74,14 +74,14 @@ def plot_melspectogram():
 
 dset = SoundfileDataset("./all_metadata.p", out_type="mel")
 if DEBUG:
-    dset.data = dset.data[:100]
+    dset.data = dset.data[:1000]
 
 tset, vset = dset.get_split(sampler=False)
 
 TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True)
 VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True)
 
-model = LSTM(n_mels, batch_size, num_layers=32, dropout=0.2)
+model = LSTM(n_mels, batch_size, num_layers=2, dropout=0.2)
 #model(mel)
 
 loss_function = nn.NLLLoss()
@@ -94,7 +94,7 @@ model.to("cuda")
 for epoch in tqdm(range(n_epochs), desc='Epoch'):
     train_running_loss, train_acc = 0.0, 0.0
     model.hidden = model.init_hidden()
-
+    FIRST = True
     for X, y in tqdm(TLoader, desc="Training"):
         X, y = X.cuda(), y.cuda()
         model.zero_grad()
@@ -102,15 +102,17 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         del X
         loss = loss_function(out, y)
         loss.backward()
+    
         optimizer.step()
         train_running_loss += loss.detach().item()
         train_acc += model.get_accuracy(out, y)
-        del y
         del out
+        del y
 
     tqdm.write("Epoch:  %d | NLLoss: %.4f | Train Accuracy: %.2f" % (epoch, train_running_loss / len(TLoader), train_acc / len(TLoader)))
     val_running_loss, val_acc = 0.0, 0.0
     model.eval()
+    model.hidden = model.init_hidden()
     for X, y in tqdm(VLoader, desc="Validation"):
         X, y = X.cuda(), y.cuda()
         out = model(X)
@@ -118,8 +120,8 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         val_loss = loss_function(out, y)
         val_running_loss += val_loss.detach().item()
         val_acc += model.get_accuracy(out, y)
-        del y
         del out
+        del y
 
     tqdm.write("Epoch:  %d | Val Loss %.4f  | Val Accuracy: %.2f"
             % (
@@ -139,3 +141,4 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     filename = "./states/lstm_{:02d}.nn".format(epoch)
     torch.save(state, filename)
     del state
+    torch.cuda.empty_cache()
