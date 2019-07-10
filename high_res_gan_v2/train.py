@@ -119,7 +119,7 @@ if __name__ == '__main__':
                 netG.load_state_dict(torch.load(state))
                 print("successfully loaded %s" % (state))
                 loaded_epoch = int(states[-1][11:-4])
-                starting_epoch = loaded_epoch
+                starting_epoch = loaded_epoch+1
     print(netG)
 
 
@@ -138,7 +138,7 @@ if __name__ == '__main__':
                 netD.load_state_dict(torch.load(state))
                 print("successfully loaded %s" % (state))
                 loaded_epoch = int(states[-1][11:-4])
-                if loaded_epoch != starting_epoch:
+                if loaded_epoch != starting_epoch-1:
                     raise Exception("loaded states of discriminator ({}) and generator ({}) don't match!".format(loaded_epoch, starting_epoch))
     print(netD)
 
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
-    for epoch in tqdm(range(starting_epoch+1, opt.niter+1)):
+    for epoch in tqdm(range(starting_epoch, opt.niter)):
         torch.cuda.empty_cache()
         netG.to(device)
         netD.to(device)
