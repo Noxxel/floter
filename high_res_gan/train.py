@@ -206,6 +206,7 @@ if __name__ == '__main__':
                         '%s/fake_samples_epoch_%03d.png' % (opt.outf, epoch),
                         normalize=True)
             del real_cpu
+            del fake
 
         netG.to("cpu")
         netD.to("cpu")
