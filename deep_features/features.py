@@ -136,9 +136,8 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     val_loss_list.append(val_running_loss / len(VLoader))
 
     if (epoch+1)%10 == 0:
-        pass
-    state = {'state_dict':model.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'accuracy':val_accuracy_list}
-    filename = "./states/lstm_{:02d}.nn".format(epoch)
-    torch.save(state, filename)
-    del state
-    torch.cuda.empty_cache()
+        state = {'state_dict':model.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'accuracy':val_accuracy_list}
+        filename = "./states/lstm_{:02d}.nn".format(epoch)
+        torch.save(state, filename)
+        del state
+        torch.cuda.empty_cache()
