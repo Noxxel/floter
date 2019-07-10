@@ -125,8 +125,7 @@ class SoundfileDataset(Dataset):
         this = self.data[idx]
 
         if self.out_type == 'mel':
-            X = np.load(os.path.join(self.ipath, this.path[:-3]) + "npy").T
-            X = X[:1290,:]
+            X = np.load(os.path.join(self.ipath, this.path[:-3]) + "npy").T[:1290,:]
         else:
             try:
                 song, sr = librosa.load(os.path.join(self.ipath, this.path))
@@ -151,27 +150,7 @@ class SoundfileDataset(Dataset):
         else:
             y = this.label
 
-        return torch.as_tensor(X, dtype=torch.float32).cuda(), torch.tensor(y).cuda()
-
-    """ def get_mel(self, idx):
-        this = self.data[idx]
-        X    = np.load(os.path.join(self.ipath, this.path[:-3]) + "npy")
-
-        le   = X.shape[1] - self.mel_seg_size
-        if le >= 0:
-            offs = np.random.randint(0, le + 1)
-            X = X[:,offs:offs+self.mel_seg_size]
-        else:
-            X = X.pad(((0,0), (0,-le)), 'constant', constant_values=0)
-        
-        if self.hotvec:
-            y = torch.zeros(self.n_classes)
-            y[this.label] = 1
-        else:
-            y = this.label
-        
-        return torch.as_tensor(X, dtype=torch.float32), y """
-
+        return torch.as_tensor(X, dtype=torch.float32), y
     
     def get_split(self, sampler=True):
         validation_split = .2
@@ -220,10 +199,8 @@ if __name__ == "__main__":
     #TODO: compare to training with offline-preprocessed data, to see if preprocessing is bottleneck
     dataloader = DataLoader(dset, num_workers=1, batch_size=1)
     minLen = 10000000
-    for i, [X, y] in tqdm(enumerate(dataloader)):
+    for i, [X, y] in enumerate(dataloader):
         if X.shape[1] < minLen:
-            print(X.shape[1])
-            print(dset.data[i].path)
             minLen = X.shape[1]
         if X.shape[1] < 1290:
             print("Small song")
