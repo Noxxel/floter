@@ -6,3 +6,4 @@ all_metadata.p
 *.zip
 data/
 *.pth
+high_res_gan/out/
