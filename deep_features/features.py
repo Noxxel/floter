@@ -12,18 +12,18 @@ from tqdm import tqdm
 
 filename = "/home/flo/Lectures/floter/deep_features/relish_it.mp3"
 duration = 30
-n_fft = 2**12         # shortest human-disting. sound (music)
+n_fft = 2**12        # shortest human-disting. sound (music)
 hop_length = 2**10    # => 75% overlap of frames
 n_mels = 256
 n_epochs = 400
 batch_size = 16
 l_rate = 1e-4
-DEBUG = False
+DEBUG = True
 
-""" y, sr = librosa.load(filename, mono=True, duration=duration, sr=44100)
+y, sr = librosa.load(filename, mono=True, duration=duration, sr=44100)
 
 print("Sample rate:", sr)
-print("Signal:", y.shape) """
+print("Signal:", y.shape)
 
 def plot_signal():
     ticks = []
@@ -66,11 +66,11 @@ def plot_melspectogram():
 
 #plot_signal()
 #fft = plot_spectogram()
-#mel = plot_melspectogram()
+mel = plot_melspectogram()
 #print(mel.shape)
 #mel = torch.tensor(mel.T[:1290,:], dtype=torch.float32).unsqueeze(0)
 #print(mel.shape)
-
+exit()
 
 dset = SoundfileDataset("./all_metadata.p", out_type="mel")
 if DEBUG:
@@ -81,11 +81,12 @@ tset, vset = dset.get_split(sampler=False)
 TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True)
 VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True)
 
-model = LSTM(n_mels, batch_size, num_layers=2, dropout=0.2)
+model = LSTM(n_mels, batch_size, num_layers=2)
 #model(mel)
 
 loss_function = nn.NLLLoss()
 optimizer = optim.Adam(model.parameters(), lr=l_rate)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, verbose=True)
 
 val_loss_list, val_accuracy_list, epoch_list = [], [], []
 loss_function.to("cuda")
@@ -122,7 +123,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         val_acc += model.get_accuracy(out, y)
         del out
         del y
-
+    scheduler.step(val_loss)
     tqdm.write("Epoch:  %d | Val Loss %.4f  | Val Accuracy: %.2f"
             % (
                 epoch,
