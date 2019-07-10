@@ -155,6 +155,8 @@ if __name__ == '__main__':
 
     for epoch in tqdm(range(starting_epoch+1, opt.niter)):
         torch.cuda.empty_cache()
+        netG.to(device)
+        netD.to(device)
         for i, data in enumerate(tqdm(dataloader, 0)):
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
@@ -203,7 +205,10 @@ if __name__ == '__main__':
                 vutils.save_image(fake.detach(),
                         '%s/fake_samples_epoch_%03d.png' % (opt.outf, epoch),
                         normalize=True)
+            del real_cpu
 
+        netG.to("cpu")
+        netD.to("cpu")
         # do checkpointing
         torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch))
         torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch))
