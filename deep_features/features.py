@@ -75,7 +75,7 @@ tset, vset = dset.get_split(sampler=False)
 TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True)
 VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True)
 
-model = LSTM(n_mels, batch_size, num_layers=10, dropout=0.2)
+model = LSTM(n_mels, batch_size, num_layers=100, dropout=0.2)
 #model(mel)
 
 loss_function = nn.NLLLoss()
@@ -122,3 +122,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     epoch_list.append(epoch)
     val_accuracy_list.append(val_acc / len(VLoader))
     val_loss_list.append(val_running_loss / len(VLoader))
+
+    state = {'state_dict':model.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'accuracy':val_accuracy_list}
+    filename = "./states/lstm_{:02d}.nn".format(epoch)
+    torch.save(state, filename)

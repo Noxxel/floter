@@ -1,10 +1,11 @@
-*/fma_small/*
-*/fma_metadata/*
-*/mels_set/*
+fma_small/
+fma_metadata/
+mels_set/
 all_metadata.p
-*/__pycache__/*
+__pycache__/
 *.zip
 data/
 *.pth
 high_res_gan/out/
 high_res_gan_v2/out/
+states/
