@@ -15,7 +15,7 @@ duration = 30
 n_fft = 2**12         # shortest human-disting. sound (music)
 hop_length = 2**10    # => 75% overlap of frames
 n_mels = 256
-n_epochs = 10
+n_epochs = 100
 batch_size = 16
 l_rate = 1e-4
 DEBUG = False
@@ -89,9 +89,9 @@ optimizer = optim.Adam(model.parameters(), lr=l_rate)
 
 val_loss_list, val_accuracy_list, epoch_list = [], [], []
 loss_function.to("cuda")
+model.to("cuda")
 
 for epoch in tqdm(range(n_epochs), desc='Epoch'):
-    model.to("cuda")
     train_running_loss, train_acc = 0.0, 0.0
     model.hidden = model.init_hidden()
 
@@ -106,6 +106,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         train_running_loss += loss.detach().item()
         train_acc += model.get_accuracy(out, y)
         del y
+        del out
 
     tqdm.write("Epoch:  %d | NLLoss: %.4f | Train Accuracy: %.2f" % (epoch, train_running_loss / len(TLoader), train_acc / len(TLoader)))
     val_running_loss, val_acc = 0.0, 0.0
@@ -118,6 +119,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         val_running_loss += val_loss.detach().item()
         val_acc += model.get_accuracy(out, y)
         del y
+        del out
 
     tqdm.write("Epoch:  %d | Val Loss %.4f  | Val Accuracy: %.2f"
             % (
@@ -130,8 +132,9 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     epoch_list.append(epoch)
     val_accuracy_list.append(val_acc / len(VLoader))
     val_loss_list.append(val_running_loss / len(VLoader))
-    model.to("cpu")
 
+    if (epoch+1)%10 == 0:
+        pass
     state = {'state_dict':model.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'accuracy':val_accuracy_list}
     filename = "./states/lstm_{:02d}.nn".format(epoch)
     torch.save(state, filename)
