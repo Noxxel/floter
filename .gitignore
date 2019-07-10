@@ -7,3 +7,4 @@ all_metadata.p
 data/
 *.pth
 high_res_gan/out/
+high_res_gan_v2/out/
