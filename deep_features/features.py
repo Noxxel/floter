@@ -74,7 +74,7 @@ def plot_melspectogram():
 
 dset = SoundfileDataset("./all_metadata.p", out_type="mel")
 if DEBUG:
-    dset.data = dset.data[:1000]
+    dset.data = dset.data[:2000]
 
 tset, vset = dset.get_split(sampler=False)
 
@@ -94,7 +94,7 @@ model.to("cuda")
 for epoch in tqdm(range(n_epochs), desc='Epoch'):
     train_running_loss, train_acc = 0.0, 0.0
     model.hidden = model.init_hidden()
-    FIRST = True
+
     for X, y in tqdm(TLoader, desc="Training"):
         X, y = X.cuda(), y.cuda()
         model.zero_grad()
@@ -102,8 +102,8 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         del X
         loss = loss_function(out, y)
         loss.backward()
-    
         optimizer.step()
+
         train_running_loss += loss.detach().item()
         train_acc += model.get_accuracy(out, y)
         del out
@@ -112,7 +112,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     tqdm.write("Epoch:  %d | NLLoss: %.4f | Train Accuracy: %.2f" % (epoch, train_running_loss / len(TLoader), train_acc / len(TLoader)))
     val_running_loss, val_acc = 0.0, 0.0
     model.eval()
-    model.hidden = model.init_hidden()
+    #model.hidden = model.init_hidden()
     for X, y in tqdm(VLoader, desc="Validation"):
         X, y = X.cuda(), y.cuda()
         out = model(X)
