@@ -81,7 +81,7 @@ tset, vset = dset.get_split(sampler=False)
 TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True)
 VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True)
 
-model = LSTM(n_mels, batch_size, num_layers=100, dropout=0.2)
+model = LSTM(n_mels, batch_size, num_layers=32, dropout=0.2)
 #model(mel)
 
 loss_function = nn.NLLLoss()
@@ -96,26 +96,28 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     model.hidden = model.init_hidden()
 
     for X, y in tqdm(TLoader, desc="Training"):
-        
         X, y = X.cuda(), y.cuda()
         model.zero_grad()
         out = model(X)
+        del X
         loss = loss_function(out, y)
         loss.backward()
         optimizer.step()
         train_running_loss += loss.detach().item()
         train_acc += model.get_accuracy(out, y)
+        del y
 
     tqdm.write("Epoch:  %d | NLLoss: %.4f | Train Accuracy: %.2f" % (epoch, train_running_loss / len(TLoader), train_acc / len(TLoader)))
     val_running_loss, val_acc = 0.0, 0.0
     model.eval()
     for X, y in tqdm(VLoader, desc="Validation"):
-        
         X, y = X.cuda(), y.cuda()
         out = model(X)
+        del X
         val_loss = loss_function(out, y)
         val_running_loss += val_loss.detach().item()
         val_acc += model.get_accuracy(out, y)
+        del y
 
     tqdm.write("Epoch:  %d | Val Loss %.4f  | Val Accuracy: %.2f"
             % (
