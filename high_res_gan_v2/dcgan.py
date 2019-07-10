@@ -85,14 +85,14 @@ class Discriminator(nn.Module):
             nn.BatchNorm2d(10*ndf),
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*10) x 4 x 4
-            # nn.Conv2d(in_channels=10*ndf, out_channels=12*ndf, kernel_size=4, stride=2, padding=1, bias=False),
-            # nn.BatchNorm2d(12*ndf),
-            # nn.LeakyReLU(0.2, inplace=True),
-            # # state size. (ndf*12) x 2 x 2
-            # nn.Conv2d(in_channels=12*ndf, out_channels=14*ndf, kernel_size=4, stride=2, padding=1, bias=False),
-            # nn.BatchNorm2d(14*ndf),
-            # nn.LeakyReLU(0.2, inplace=True),
-            # # state size. (ndf*14) x 1 x 1
+            nn.Conv2d(in_channels=10*ndf, out_channels=12*ndf, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(12*ndf),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (ndf*12) x 2 x 2
+            nn.Conv2d(in_channels=12*ndf, out_channels=14*ndf, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(14*ndf),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (ndf*14) x 1 x 1
             nn.Conv2d(in_channels=14*ndf, out_channels=1, kernel_size=2, stride=2, padding=0, bias=False),
             # nn.AdaptiveAvgPool2d((1,1)),
             # batchsize x 1 x 1 x 1
@@ -104,8 +104,5 @@ class Discriminator(nn.Module):
             output = nn.parallel.data_parallel(self.main, input, range(self.ngpu))
         else:
             output = self.main(input)
-        
-        import pdb
-        pdb.set_trace()
 
         return output.view(-1, 1).squeeze(1)

@@ -39,12 +39,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataroot', required=False, default="../data/flowers", help='path to dataset')
     parser.add_argument('--workers', type=int, help='number of data loading workers', default=2)
-    parser.add_argument('--batchSize', type=int, default=32, help='input batch size')
+    parser.add_argument('--batchSize', type=int, default=16, help='input batch size')
     parser.add_argument('--imageSize', type=int, default=512, help='the height / width of the input image to network')
     parser.add_argument('--nz', type=int, default=1000, help='size of the latent z vector')
     parser.add_argument('--ngf', type=int, default=8)
     parser.add_argument('--ndf', type=int, default=8)
-    parser.add_argument('--niter', type=int, default=100, help='number of epochs to train for')
+    parser.add_argument('--niter', type=int, default=250, help='number of epochs to train for')
     parser.add_argument('--lr', type=float, default=0.0002, help='learning rate, default=0.0002')
     parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
     parser.add_argument('--cuda', action='store_true', help='enables cuda')
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
-    for epoch in tqdm(range(starting_epoch+1, opt.niter)):
+    for epoch in tqdm(range(starting_epoch+1, opt.niter+1)):
         torch.cuda.empty_cache()
         netG.to(device)
         netD.to(device)
