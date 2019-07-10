@@ -16,12 +16,14 @@ n_fft = 2**12         # shortest human-disting. sound (music)
 hop_length = 2**10    # => 75% overlap of frames
 n_mels = 256
 n_epochs = 10
-batch_size = 64
+batch_size = 16
+l_rate = 1e-4
+DEBUG = False
 
-y, sr = librosa.load(filename, mono=True, duration=duration, sr=44100)
+""" y, sr = librosa.load(filename, mono=True, duration=duration, sr=44100)
 
 print("Sample rate:", sr)
-print("Signal:", y.shape)
+print("Signal:", y.shape) """
 
 def plot_signal():
     ticks = []
@@ -71,7 +73,11 @@ def plot_melspectogram():
 
 
 dset = SoundfileDataset("./all_metadata.p", out_type="mel")
+if DEBUG:
+    dset.data = dset.data[:100]
+
 tset, vset = dset.get_split(sampler=False)
+
 TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True)
 VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True)
 
@@ -79,18 +85,18 @@ model = LSTM(n_mels, batch_size, num_layers=100, dropout=0.2)
 #model(mel)
 
 loss_function = nn.NLLLoss()
-optimizer = optim.Adam(model.parameters(), lr=1e-3)
+optimizer = optim.Adam(model.parameters(), lr=l_rate)
 
 val_loss_list, val_accuracy_list, epoch_list = [], [], []
-model.cuda()
-loss_function.cuda()
+loss_function.to("cuda")
 
 for epoch in tqdm(range(n_epochs), desc='Epoch'):
+    model.to("cuda")
     train_running_loss, train_acc = 0.0, 0.0
     model.hidden = model.init_hidden()
-    model.train()
 
     for X, y in tqdm(TLoader, desc="Training"):
+        
         X, y = X.cuda(), y.cuda()
         model.zero_grad()
         out = model(X)
@@ -103,8 +109,8 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     tqdm.write("Epoch:  %d | NLLoss: %.4f | Train Accuracy: %.2f" % (epoch, train_running_loss / len(TLoader), train_acc / len(TLoader)))
     val_running_loss, val_acc = 0.0, 0.0
     model.eval()
-    model.hidden = model.init_hidden()
     for X, y in tqdm(VLoader, desc="Validation"):
+        
         X, y = X.cuda(), y.cuda()
         out = model(X)
         val_loss = loss_function(out, y)
@@ -118,10 +124,11 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
                 val_acc / len(VLoader),
             )
         )
-
+    model.train()
     epoch_list.append(epoch)
     val_accuracy_list.append(val_acc / len(VLoader))
     val_loss_list.append(val_running_loss / len(VLoader))
+    model.to("cpu")
 
     state = {'state_dict':model.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'accuracy':val_accuracy_list}
     filename = "./states/lstm_{:02d}.nn".format(epoch)

@@ -15,9 +15,9 @@ class LSTM(nn.Module):
         self.hidden_dim3 = 128
         self.lstm_hidden = 100
 
-        self.conv1 = nn.Conv1d(self.input_dim, self.hidden_dim1, 5)
-        self.conv2 = nn.Conv1d(self.hidden_dim1, self.hidden_dim2, 3)
-        self.conv3 = nn.Conv1d(self.hidden_dim2, self.hidden_dim3, 2)
+        self.conv1 = nn.Conv1d(self.input_dim, self.hidden_dim1, 1)
+        self.conv2 = nn.Conv1d(self.hidden_dim1, self.hidden_dim2, 5)
+        self.conv3 = nn.Conv1d(self.hidden_dim2, self.hidden_dim3, 3)
 
         self.batchnorm1 = nn.BatchNorm1d(self.hidden_dim1, momentum=0.9)
         self.batchnorm2 = nn.BatchNorm1d(self.hidden_dim2, momentum=0.9)
@@ -38,33 +38,33 @@ class LSTM(nn.Module):
                 torch.zeros(self.num_layers, self.batch_size, self.lstm_hidden))
 
     def forward(self, X):
-        out = self.conv1(X.view(self.batch_size,X.shape[2],X.shape[1]))
-        out = self.batchnorm1(out)
-        out = self.relu(out)
-        out = self.maxpool(out)
-        out = self.dropout(out)
+        X = self.conv1(X.view(X.shape[0],X.shape[2],X.shape[1]))
+        X = self.batchnorm1(X)
+        X = self.relu(X)
+        X = self.maxpool(X)
+        X = self.dropout(X)
 
-        out = self.conv2(out)
-        out = self.batchnorm2(out)
-        out = self.relu(out)
-        out = self.maxpool(out)
-        out = self.dropout(out)
+        X = self.conv2(X)
+        X = self.batchnorm2(X)
+        X = self.relu(X)
+        X = self.maxpool(X)
+        X = self.dropout(X)
 
-        out = self.conv3(out)
-        out = self.batchnorm3(out)
-        out = self.relu(out)
-        #out = self.maxpool(out)
-        out = self.dropout(out) #regularize the model
-        #print(out.shape)
+        X = self.conv3(X)
+        X = self.batchnorm3(X)
+        X = self.relu(X)
+        #X = self.maxpool(X)
+        X = self.dropout(X) #regularize the model
+        #print(X.shape)
         
-        lstm_out, self.hidden = self.lstm(out.view(self.batch_size,out.shape[2],out.shape[1]))
+        lstm_out, self.hidden = self.lstm(X.view(X.shape[0],X.shape[2],X.shape[1]))
 
         #print(lstm_out.shape)
         
         # Only take the output from the final timestep
-        out = self.linear(lstm_out[:,-1].view(self.batch_size, -1))
-        out = F.log_softmax(out, dim=1)
-        return out
+        X = self.linear(lstm_out[:,-1].view(X.shape[0], -1))
+        X = F.log_softmax(X, dim=1)
+        return X
 
     def get_accuracy(self, logits, target):
         """ compute accuracy for training round """
