@@ -66,11 +66,11 @@ def plot_melspectogram():
 
 #plot_signal()
 #fft = plot_spectogram()
-mel = plot_melspectogram()
+#mel = plot_melspectogram()
 #print(mel.shape)
 #mel = torch.tensor(mel.T[:1290,:], dtype=torch.float32).unsqueeze(0)
 #print(mel.shape)
-exit()
+#exit()
 
 dset = SoundfileDataset("./all_metadata.p", out_type="mel")
 if DEBUG:
