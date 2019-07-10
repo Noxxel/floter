@@ -151,7 +151,7 @@ class SoundfileDataset(Dataset):
         else:
             y = this.label
 
-        return torch.as_tensor(X, dtype=torch.float32), y
+        return torch.as_tensor(X, dtype=torch.float32).cuda(), torch.tensor(y).cuda()
 
     """ def get_mel(self, idx):
         this = self.data[idx]
