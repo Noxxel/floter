@@ -140,3 +140,19 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         torch.save(state, filename)
         del state
         torch.cuda.empty_cache()
+
+# visualization loss
+plt.plot(epoch_list, val_loss_list)
+plt.xlabel("# of epochs")
+plt.ylabel("Loss")
+plt.title("LSTM: Loss vs # epochs")
+plt.savefig("val_loss.png")
+plt.clf()
+
+# visualization accuracy
+plt.plot(epoch_list, val_accuracy_list, color="red")
+plt.xlabel("# of epochs")
+plt.ylabel("Accuracy")
+plt.title("LSTM: Accuracy vs # epochs")
+plt.savefig("val_acc.png")
+plt.clf()
