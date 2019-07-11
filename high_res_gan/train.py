@@ -154,7 +154,7 @@ if __name__ == '__main__':
     optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
     for epoch in tqdm(range(starting_epoch, opt.niter)):
-        print('{}/netG_epoch_{:0=2d}.pth'.format(opt.outf, epoch))
+        print('{}/netG_epoch_{:0=3d}.pth'.format(opt.outf, epoch))
         torch.cuda.empty_cache()
         netG.to(device)
         netD.to(device)
@@ -212,5 +212,5 @@ if __name__ == '__main__':
         netG.to("cpu")
         netD.to("cpu")
         # do checkpointing
-        torch.save(netG.state_dict(), '{}/netG_epoch_{:0=2d}.pth'.format(opt.outf, epoch))
-        torch.save(netD.state_dict(), '{}/netD_epoch_{:0=2d}.pth'.format(opt.outf, epoch))
+        torch.save(netG.state_dict(), '{}/netG_epoch_{:0=3d}.pth'.format(opt.outf, epoch))
+        torch.save(netD.state_dict(), '{}/netD_epoch_{:0=3d}.pth'.format(opt.outf, epoch))
