@@ -154,7 +154,6 @@ if __name__ == '__main__':
     optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
     for epoch in tqdm(range(starting_epoch, opt.niter)):
-        print('{}/netG_epoch_{:0=3d}.pth'.format(opt.outf, epoch))
         torch.cuda.empty_cache()
         netG.to(device)
         netD.to(device)
