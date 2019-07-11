@@ -95,9 +95,8 @@ model.to("cuda")
 
 for epoch in tqdm(range(n_epochs), desc='Epoch'):
     train_running_loss, train_acc = 0.0, 0.0
-    model.hidden = model.init_hidden()
     for X, y in tqdm(TLoader, desc="Training"):
-        
+        model.hidden = model.init_hidden()
         X, y = X.cuda(), y.cuda()
         model.zero_grad()
         out, hidden = model(X)
@@ -109,12 +108,11 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         train_acc += model.get_accuracy(out, y)
         del out
         del y
-    model.hidden = hidden
     tqdm.write("Epoch:  %d | NLLoss: %.4f | Train Accuracy: %.2f" % (epoch, train_running_loss / len(TLoader), train_acc / len(TLoader)))
     val_running_loss, val_acc = 0.0, 0.0
     model.eval()
-    #model.hidden = model.init_hidden()
     for X, y in tqdm(VLoader, desc="Validation"):
+        model.hidden = model.init_hidden()
         X, y = X.cuda(), y.cuda()
         out, hidden = model(X)
         del X
