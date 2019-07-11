@@ -40,7 +40,7 @@ class LSTM(nn.Module):
         self.lstm = nn.LSTM(self.hidden_dim3, self.lstm_hidden, self.num_layers, batch_first=True)
 
         # Define the output layer
-        self.linear = nn.Linear(self.lstm_hidden, self.linear_dim)
+        self.linear = nn.Linear(15264, self.linear_dim)
         self.output = nn.Linear(self.linear_dim, output_dim)
 
     def init_hidden(self):
@@ -88,13 +88,13 @@ class LSTM(nn.Module):
         X = self.convDrop(X) """
 
         # Only take the output from the final timestep
-        X = lstm_out[:,-1].view(X.shape[0], -1)
+        X = lstm_out.contiguous().view(X.shape[0], -1)
         X = self.linear(X)
         X = self.relu(X)
         X = self.normLinear(X)
         X = self.output(X)
         X = F.log_softmax(X, dim=1)
-        return X
+        return X, hidden
 
     def get_accuracy(self, logits, target):
         """ compute accuracy for training round """

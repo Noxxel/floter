@@ -100,24 +100,23 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         
         X, y = X.cuda(), y.cuda()
         model.zero_grad()
-        out = model(X)
+        out, hidden = model(X)
         del X
         loss = loss_function(out, y)
         loss.backward()
         optimizer.step()
-
         train_running_loss += loss.detach().item()
         train_acc += model.get_accuracy(out, y)
         del out
         del y
-
+    model.hidden = hidden
     tqdm.write("Epoch:  %d | NLLoss: %.4f | Train Accuracy: %.2f" % (epoch, train_running_loss / len(TLoader), train_acc / len(TLoader)))
     val_running_loss, val_acc = 0.0, 0.0
     model.eval()
-    model.hidden = model.init_hidden()
+    #model.hidden = model.init_hidden()
     for X, y in tqdm(VLoader, desc="Validation"):
         X, y = X.cuda(), y.cuda()
-        out = model(X)
+        out, hidden = model(X)
         del X
         val_loss = loss_function(out, y)
         val_running_loss += val_loss.detach().item()
