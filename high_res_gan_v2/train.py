@@ -157,7 +157,7 @@ if __name__ == '__main__':
         netG.to(device)
         netD.to(device)
 
-        epoch_best = 0.0
+        epoch_best = 100000
         for i, data in enumerate(tqdm(dataloader, 0)):
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
@@ -199,8 +199,8 @@ if __name__ == '__main__':
                   % (epoch, opt.niter, i, len(dataloader),
                      errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
             # best generated image in this epoch
-            if D_G_z2 > epoch_best:
-                epoch_best = D_G_z2
+            if errG.item() < epoch_best:
+                epoch_best = errG.item()
                 vutils.save_image(fake.detach(),
                         '%s/best_fake_in_epoch_%03d.png' % (opt.outf, epoch),
                         normalize=True)
