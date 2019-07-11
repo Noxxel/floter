@@ -19,6 +19,7 @@ n_epochs = 400
 batch_size = 16
 l_rate = 1e-4
 DEBUG = True
+num_workers=6
 
 y, sr = librosa.load(filename, mono=True, duration=duration, sr=44100)
 
@@ -72,21 +73,21 @@ def plot_melspectogram():
 #print(mel.shape)
 #exit()
 
-dset = SoundfileDataset("./all_metadata.p", ipath="./mels_set_high", out_type="mel")
+dset = SoundfileDataset("./all_metadata.p", ipath="./mels_set_db", out_type="mel")
 if DEBUG:
     dset.data = dset.data[:2000]
 
 tset, vset = dset.get_split(sampler=False)
 
-TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True)
-VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True)
+TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
+VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=num_workers)
 
 model = LSTM(n_mels, batch_size, num_layers=2)
 #model(mel)
 
 loss_function = nn.NLLLoss()
 optimizer = optim.Adam(model.parameters(), lr=l_rate)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, verbose=True)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
 val_loss_list, val_accuracy_list, epoch_list = [], [], []
 loss_function.to("cuda")
