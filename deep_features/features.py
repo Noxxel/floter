@@ -10,7 +10,7 @@ from model import LSTM
 from dataset import SoundfileDataset
 from tqdm import tqdm
 
-filename = "/home/flo/Lectures/floter/deep_features/relish_it.mp3"
+filename = "./relish_it.mp3"
 duration = 30
 n_fft = 2**12        # shortest human-disting. sound (music)
 hop_length = 2**10    # => 75% overlap of frames
