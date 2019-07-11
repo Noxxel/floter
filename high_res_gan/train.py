@@ -211,5 +211,5 @@ if __name__ == '__main__':
         netG.to("cpu")
         netD.to("cpu")
         # do checkpointing
-        torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch))
-        torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch))
+        torch.save(netG.state_dict(), '{}/netG_epoch_{0:0=2d}.pth'.format(opt.outf, epoch))
+        torch.save(netD.state_dict(), '{}/netD_epoch_{0:0=2d}.pth'.format(opt.outf, epoch))
