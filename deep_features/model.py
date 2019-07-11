@@ -94,7 +94,7 @@ class LSTM(nn.Module):
         X = self.normLinear(X)
         X = self.output(X)
         X = F.log_softmax(X, dim=1)
-        return X, hidden
+        return X
 
     def get_accuracy(self, logits, target):
         """ compute accuracy for training round """

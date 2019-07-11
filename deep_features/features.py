@@ -99,7 +99,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         model.hidden = model.init_hidden()
         X, y = X.cuda(), y.cuda()
         model.zero_grad()
-        out, hidden = model(X)
+        out = model(X)
         del X
         loss = loss_function(out, y)
         loss.backward()
@@ -114,7 +114,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     for X, y in tqdm(VLoader, desc="Validation"):
         model.hidden = model.init_hidden()
         X, y = X.cuda(), y.cuda()
-        out, hidden = model(X)
+        out = model(X)
         del X
         val_loss = loss_function(out, y)
         val_running_loss += val_loss.detach().item()
