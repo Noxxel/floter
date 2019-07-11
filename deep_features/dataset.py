@@ -153,7 +153,7 @@ class SoundfileDataset(Dataset):
         return torch.as_tensor(X, dtype=torch.float32), y
     
     def get_split(self, sampler=True):
-        validation_split = .2
+        validation_split = .3
         shuffle_dataset = True
         random_seed= 4 # chosen by diceroll, 100% random
         # Creating data indices for training and validation splits:

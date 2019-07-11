@@ -2,6 +2,7 @@ fma_small/
 fma_metadata/
 mels_set/
 mels_set_high/
+mels_set_db/
 all_metadata.p
 __pycache__/
 *.zip

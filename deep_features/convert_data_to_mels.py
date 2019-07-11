@@ -6,7 +6,7 @@ import multiprocessing
 from tqdm import tqdm
 
 INPATH  = "./fma_small"
-OUTPATH = "./mels_set_high"
+OUTPATH = "./mels_set_db"
 
 def save_mel(paths):
     
@@ -24,6 +24,7 @@ def save_mel(paths):
             return
 
         X = librosa.feature.melspectrogram(song, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels)
+        X = librosa.power_to_db(X, ref=np.max)
         if not os.path.isdir(os.path.dirname(outpath)):
             os.makedirs(os.path.dirname(outpath))
         

@@ -13,23 +13,26 @@ class LSTM(nn.Module):
         self.hidden_dim1 = 512
         self.hidden_dim2 = 256
         self.hidden_dim3 = 128
-        self.lstm_hidden = 100
+        self.hidden_dim4 = 128
+        self.lstm_hidden = 256
 
-        self.conv1 = nn.Conv1d(self.input_dim, self.hidden_dim1, 3, padding=1)
-        self.conv2 = nn.Conv1d(self.hidden_dim1, self.hidden_dim2, 3, padding=1)
-        self.conv3 = nn.Conv1d(self.hidden_dim2, self.hidden_dim3, 3, padding=1)
+        self.conv1 = nn.Conv1d(self.input_dim, self.hidden_dim1, 11)
+        self.conv2 = nn.Conv1d(self.hidden_dim1, self.hidden_dim2, 3)
+        self.conv3 = nn.Conv1d(self.hidden_dim2, self.hidden_dim3, 3)
+        self.conv4 = nn.Conv1d(self.lstm_hidden, self.hidden_dim4, 11)
 
         self.batchnorm1 = nn.BatchNorm1d(self.hidden_dim1, momentum=0.9)
         self.batchnorm2 = nn.BatchNorm1d(self.hidden_dim2, momentum=0.9)
         self.batchnorm3 = nn.BatchNorm1d(self.hidden_dim3, momentum=0.9)
-        self.batchnorm4 = nn.BatchNorm1d(self.lstm_hidden, momentum=0.9)
+        self.batchnorm4 = nn.BatchNorm1d(self.hidden_dim4, momentum=0.9)
+        self.normLSTM = nn.BatchNorm1d(self.lstm_hidden, momentum=0.9)
         self.maxpool = nn.MaxPool1d(2)
         self.relu = nn.ReLU()
         self.convDrop = nn.Dropout(p=0.25)
         self.dropout = nn.Dropout(p=dropout)
 
         # Define the LSTM layer
-        self.lstm = nn.LSTM(self.hidden_dim1, self.lstm_hidden, self.num_layers, batch_first=True)
+        self.lstm = nn.LSTM(self.hidden_dim3, self.lstm_hidden, self.num_layers, batch_first=True)
 
         # Define the output layer
         self.linear = nn.Linear(self.lstm_hidden, output_dim)
@@ -40,13 +43,14 @@ class LSTM(nn.Module):
                 torch.zeros(self.num_layers, self.batch_size, self.lstm_hidden).cuda())
 
     def forward(self, X):
+        #print(X.shape)
         X = self.conv1(X.view(X.shape[0],X.shape[2],X.shape[1]))
         X = self.batchnorm1(X)
         X = self.relu(X)
         X = self.maxpool(X)
         X = self.convDrop(X)
 
-        """ X = self.conv2(X)
+        X = self.conv2(X)
         X = self.batchnorm2(X)
         X = self.relu(X)
         X = self.maxpool(X)
@@ -56,15 +60,31 @@ class LSTM(nn.Module):
         X = self.batchnorm3(X)
         X = self.relu(X)
         X = self.maxpool(X)
-        X = self.convDrop(X) """ #regularize the model
+        X = self.convDrop(X) #regularize the model
         #print(X.shape)
         
-        lstm_out, _ = self.lstm(X.view(X.shape[0],X.shape[2],X.shape[1]), self.hidden)
+        lstm_out, hidden = self.lstm(X.view(X.shape[0],X.shape[2],X.shape[1]), self.hidden)
         #print(lstm_out.shape)
-        
-        # Only take the output from the final timestep
-        X = self.batchnorm4(_[0][0].view(X.shape[0], self.lstm_hidden, -1))
+        X = self.relu(lstm_out[:,-1].view(X.shape[0], self.lstm_hidden, -1))
+        X = self.normLSTM(X)
         X = self.dropout(X)
+        
+        #X = self.conv4(lstm_out.view(lstm_out.shape[0], lstm_out.shape[2], lstm_out.shape[1]))
+        
+
+        """ X = self.batchnorm4(X)
+        X = self.relu(X)
+        X = self.maxpool(X)
+        X = self.convDrop(X) """
+        #print(X.shape)
+        """ X = self.conv3(X)
+        X = self.batchnorm3(X)
+        X = self.relu(X)
+        X = self.maxpool(X)
+        X = self.convDrop(X) """
+
+        # Only take the output from the final timestep
+        
         X = self.linear(X.view(X.shape[0], -1))
         X = F.log_softmax(X, dim=1)
         return X
