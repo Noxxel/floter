@@ -156,6 +156,8 @@ if __name__ == '__main__':
         torch.cuda.empty_cache()
         netG.to(device)
         netD.to(device)
+
+        epoch_best = 0.0
         for i, data in enumerate(tqdm(dataloader, 0)):
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
@@ -196,6 +198,13 @@ if __name__ == '__main__':
             tqdm.write('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
                   % (epoch, opt.niter, i, len(dataloader),
                      errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
+            # best generated image in this epoch
+            if D_G_z2 > epoch_best:
+                epoch_best = D_G_z2
+                vutils.save_image(fake.detach(),
+                        '%s/best_fake_in_epoch_%03d.png' % (opt.outf, epoch),
+                        normalize=True)
+
             if i % 100 == 0:
                 vutils.save_image(real_cpu,
                         '%s/real_samples.png' % opt.outf,
