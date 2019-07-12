@@ -12,14 +12,19 @@ from tqdm import tqdm
 
 filename = "./relish_it.mp3"
 duration = 30
-n_fft = 2**12        # shortest human-disting. sound (music)
-hop_length = 2**10    # => 75% overlap of frames
+n_fft = 2**10        # shortest human-disting. sound (music)
+hop_length = 2**9    # => 50% overlap of frames
 n_mels = 256
 n_epochs = 400
 batch_size = 16
 l_rate = 1e-4
-DEBUG = True
-num_workers=6
+DEBUG = False
+num_workers = 8
+device = "cuda:1"
+datapath = "./mels_set_db"
+#datapath = "./mels_set_f1024_b128"
+statepath = "conv_small_b256"
+#statepath = "conv_small_b128"
 
 y, sr = librosa.load(filename, mono=True, duration=duration, sr=44100)
 
@@ -53,7 +58,7 @@ def plot_spectogram():
     return fft
 
 def plot_melspectogram():
-    mel = librosa.feature.melspectrogram(y, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels) #window of about 10ms 
+    mel = librosa.feature.melspectrogram(y, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels) #window of about 10ms
     plt.figure(figsize=(24, 6))
     dsp.specshow(librosa.power_to_db(mel, ref=np.max), y_axis="mel", x_axis="time", sr=sr)
     plt.title("Mel spectrogram")
@@ -73,7 +78,7 @@ def plot_melspectogram():
 #print(mel.shape)
 #exit()
 
-dset = SoundfileDataset("./all_metadata.p", ipath="./mels_set_db", out_type="mel")
+dset = SoundfileDataset("./all_metadata.p", ipath=datapath, out_type="mel")
 if DEBUG:
     dset.data = dset.data[:2000]
 
@@ -90,14 +95,14 @@ optimizer = optim.Adam(model.parameters(), lr=l_rate)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
 val_loss_list, val_accuracy_list, epoch_list = [], [], []
-loss_function.to("cuda")
-model.to("cuda")
+loss_function.to(device)
+model.to(device)
 
 for epoch in tqdm(range(n_epochs), desc='Epoch'):
     train_running_loss, train_acc = 0.0, 0.0
     for X, y in tqdm(TLoader, desc="Training"):
-        model.hidden = model.init_hidden()
-        X, y = X.cuda(), y.cuda()
+        model.hidden = model.init_hidden(device)
+        X, y = X.to(device), y.to(device)
         model.zero_grad()
         out = model(X)
         del X
@@ -112,8 +117,8 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     val_running_loss, val_acc = 0.0, 0.0
     model.eval()
     for X, y in tqdm(VLoader, desc="Validation"):
-        model.hidden = model.init_hidden()
-        X, y = X.cuda(), y.cuda()
+        model.hidden = model.init_hidden(device)
+        X, y = X.to(device), y.to(device)
         out = model(X)
         del X
         val_loss = loss_function(out, y)
@@ -136,23 +141,25 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
 
     if (epoch+1)%10 == 0:
         state = {'state_dict':model.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'accuracy':val_accuracy_list}
-        filename = "./states/lstm_{:02d}.nn".format(epoch)
+        filename = "./{}/lstm_{:02d}.nn".format(statepath, epoch)
         torch.save(state, filename)
         del state
         torch.cuda.empty_cache()
 
 # visualization loss
 plt.plot(epoch_list, val_loss_list)
+plt.ylim(0, np.max(val_loss_list))
 plt.xlabel("# of epochs")
 plt.ylabel("Loss")
 plt.title("LSTM: Loss vs # epochs")
-plt.savefig("val_loss.png")
+plt.savefig("./{}/val_loss.png".format(statepath))
 plt.clf()
 
 # visualization accuracy
 plt.plot(epoch_list, val_accuracy_list, color="red")
+plt.ylim(0, 100)
 plt.xlabel("# of epochs")
 plt.ylabel("Accuracy")
 plt.title("LSTM: Accuracy vs # epochs")
-plt.savefig("val_acc.png")
+plt.savefig("./{}/val_acc.png".format(statepath))
 plt.clf()

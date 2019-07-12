@@ -125,7 +125,10 @@ class SoundfileDataset(Dataset):
         this = self.data[idx]
 
         if self.out_type == 'mel':
-            X = np.load(os.path.join(self.ipath, this.path[:-3]) + "npy").T[:1290,:]
+            X = np.load(os.path.join(self.ipath, this.path[:-3]) + "npy")
+            #print(X.shape)
+            #X = X.T[:1290,:]
+            X = X.T[:2580,:]
         else:
             try:
                 song, sr = librosa.load(os.path.join(self.ipath, this.path))

@@ -10,16 +10,16 @@ class LSTM(nn.Module):
         self.input_dim = input_dim
         self.batch_size = batch_size
         self.num_layers = num_layers
-        self.hidden_dim1 = 256
-        self.hidden_dim2 = 128
-        self.hidden_dim3 = 64
+        self.hidden_dim1 = 128 #128
+        self.hidden_dim2 = 64 #64
+        self.hidden_dim3 = 32 #32
         self.hidden_dim4 = 128
         self.hidden_dim5 = 64
-        self.lstm_hidden = 96
-        self.linear_dim = 64
+        self.lstm_hidden = 64 #64
+        self.linear_dim = 32 #32
 
-        self.conv1 = nn.Conv1d(self.input_dim, self.hidden_dim1, 3)
-        self.conv2 = nn.Conv1d(self.hidden_dim1, self.hidden_dim2, 3)
+        self.conv1 = nn.Conv1d(self.input_dim, self.hidden_dim1, 7)
+        self.conv2 = nn.Conv1d(self.hidden_dim1, self.hidden_dim2, 5)
         self.conv3 = nn.Conv1d(self.hidden_dim2, self.hidden_dim3, 3)
         self.conv4 = nn.Conv1d(self.lstm_hidden, self.hidden_dim4, 3)
         self.conv5 = nn.Conv1d(self.hidden_dim4, self.hidden_dim5, 3)
@@ -38,15 +38,25 @@ class LSTM(nn.Module):
 
         # Define the LSTM layer
         self.lstm = nn.LSTM(self.hidden_dim3, self.lstm_hidden, self.num_layers, batch_first=True)
+        #self.lstm = nn.LSTM(self.input_dim, self.lstm_hidden, self.num_layers, batch_first=True)
 
         # Define the output layer
-        self.linear = nn.Linear(15264, self.linear_dim)
+        #self.linear = nn.Linear(15264, self.linear_dim)
+        self.linear = nn.Linear(self.lstm_hidden, self.linear_dim)
         self.output = nn.Linear(self.linear_dim, output_dim)
+        #self.output = nn.Linear(self.lstm_hidden, output_dim)
 
-    def init_hidden(self):
+    def init_hidden(self, device):
         # This is what we'll initialise our hidden state as
-        return (torch.zeros(self.num_layers, self.batch_size, self.lstm_hidden).cuda(),
-                torch.zeros(self.num_layers, self.batch_size, self.lstm_hidden).cuda())
+        return (torch.zeros(self.num_layers, self.batch_size, self.lstm_hidden).to(device),
+                torch.zeros(self.num_layers, self.batch_size, self.lstm_hidden).to(device))
+
+    def forwardBug(self, X):
+        lstm_out, hidden = self.lstm(X, self.hidden)
+        X = lstm_out[:,-1].view(X.shape[0], -1)
+        X = self.output(X)
+        X = F.log_softmax(X, dim=1)
+        return X
 
     def forward(self, X):
         #print(X.shape)
@@ -88,7 +98,8 @@ class LSTM(nn.Module):
         X = self.convDrop(X) """
 
         # Only take the output from the final timestep
-        X = lstm_out.contiguous().view(X.shape[0], -1)
+        #X = lstm_out.contiguous().view(X.shape[0], -1)
+        X = lstm_out[:,-1].view(X.shape[0], -1)
         X = self.linear(X)
         X = self.relu(X)
         X = self.normLinear(X)

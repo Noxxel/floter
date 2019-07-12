@@ -2,6 +2,7 @@ fma_small/
 fma_metadata/
 mels_set/
 mels_set_high/
+mels_set_f1024_b128/
 mels_set_db/
 all_metadata.p
 __pycache__/
@@ -11,3 +12,7 @@ data/
 high_res_gan/out/
 high_res_gan_v2/out/
 states/
+test/
+plain_lstm/
+fully_connected/
+conv_*/
