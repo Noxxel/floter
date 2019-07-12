@@ -10,13 +10,13 @@ class LSTM(nn.Module):
         self.input_dim = input_dim
         self.batch_size = batch_size
         self.num_layers = num_layers
-        self.hidden_dim1 = 128 #128
-        self.hidden_dim2 = 64 #64
-        self.hidden_dim3 = 32 #32
+        self.hidden_dim1 = 256 #128
+        self.hidden_dim2 = 128 #64
+        self.hidden_dim3 = 64 #32
         self.hidden_dim4 = 128
         self.hidden_dim5 = 64
-        self.lstm_hidden = 64 #64
-        self.linear_dim = 32 #32
+        self.lstm_hidden = 100 #64
+        self.linear_dim = 64 #32
 
         self.conv1 = nn.Conv1d(self.input_dim, self.hidden_dim1, 7)
         self.conv2 = nn.Conv1d(self.hidden_dim1, self.hidden_dim2, 5)
@@ -99,6 +99,8 @@ class LSTM(nn.Module):
 
         # Only take the output from the final timestep
         #X = lstm_out.contiguous().view(X.shape[0], -1)
+        #print(hidden[0], hidden[1])
+        #X = torch.cat()
         X = lstm_out[:,-1].view(X.shape[0], -1)
         X = self.linear(X)
         X = self.relu(X)
@@ -108,7 +110,6 @@ class LSTM(nn.Module):
         return X
 
     def get_accuracy(self, logits, target):
-        """ compute accuracy for training round """
         corrects = (torch.max(logits, 1)[1].view(target.size()).data == target.data).sum()
         accuracy = 100.0 * corrects / self.batch_size
         return accuracy.item()

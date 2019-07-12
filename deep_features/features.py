@@ -9,21 +9,23 @@ from torch.utils.data import DataLoader
 from model import LSTM
 from dataset import SoundfileDataset
 from tqdm import tqdm
+import os
 
 filename = "./relish_it.mp3"
 duration = 30
-n_fft = 2**10        # shortest human-disting. sound (music)
+n_fft = 2**11        # shortest human-disting. sound (music)
 hop_length = 2**9    # => 50% overlap of frames
 n_mels = 256
 n_epochs = 400
 batch_size = 16
 l_rate = 1e-4
 DEBUG = False
+NORMALIZE = True
 num_workers = 8
-device = "cuda:1"
-datapath = "./mels_set_db"
-#datapath = "./mels_set_f1024_b128"
-statepath = "conv_small_b256"
+device = "cuda"
+#datapath = "./mels_set_db"
+datapath = "./mels_set_f2048_b256"
+statepath = "conv_big_b256_norm"
 #statepath = "conv_small_b128"
 
 y, sr = librosa.load(filename, mono=True, duration=duration, sr=44100)
@@ -72,13 +74,20 @@ def plot_melspectogram():
 
 #plot_signal()
 #fft = plot_spectogram()
-#mel = plot_melspectogram()
+""" mel = plot_melspectogram()
+mel = librosa.power_to_db(mel)
+mel = mel.T[:2580,:]
+if NORMALIZE:
+    mel = mel - mel.mean(axis=0)
+    safe_max = np.abs(mel).max(axis=0)
+    safe_max[safe_max==0] = 1
+    mel = mel / safe_max """
 #print(mel.shape)
 #mel = torch.tensor(mel.T[:1290,:], dtype=torch.float32).unsqueeze(0)
 #print(mel.shape)
 #exit()
 
-dset = SoundfileDataset("./all_metadata.p", ipath=datapath, out_type="mel")
+dset = SoundfileDataset("./all_metadata.p", ipath=datapath, out_type="mel", normalize=NORMALIZE)
 if DEBUG:
     dset.data = dset.data[:2000]
 
@@ -88,7 +97,10 @@ TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, 
 VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=num_workers)
 
 model = LSTM(n_mels, batch_size, num_layers=2)
-#model(mel)
+""" mel = torch.tensor(mel, dtype=torch.float32).unsqueeze(0)
+model.hidden = model.init_hidden(device)
+model(mel)
+exit() """
 
 loss_function = nn.NLLLoss()
 optimizer = optim.Adam(model.parameters(), lr=l_rate)
@@ -142,6 +154,8 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     if (epoch+1)%10 == 0:
         state = {'state_dict':model.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'accuracy':val_accuracy_list}
         filename = "./{}/lstm_{:02d}.nn".format(statepath, epoch)
+        if not os.path.isdir(os.path.dirname(statepath)):
+            os.makedirs(os.path.dirname(statepath), exist_ok=True)
         torch.save(state, filename)
         del state
         torch.cuda.empty_cache()

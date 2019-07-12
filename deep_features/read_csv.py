@@ -1,4 +1,3 @@
-#!/bin/env python3
 from csv import reader
 import pickle
 from tqdm import tqdm
@@ -27,9 +26,9 @@ def read_dict(path):
     
     return res
 
-def make_dict(header, data):
-    """
-    converts metadata for a single file to a dict
+def make_dict(#!/bin/env python3header, data):
+    """#!/bin/env python3
+    converts m#!/bin/env python3etadata for a single file to a dict
     called by read_dict
     """
     d = {}

@@ -1,4 +1,3 @@
-#!/bin/env python3
 import torch
 import random
 from torch.utils.data import Dataset, DataLoader
@@ -13,7 +12,7 @@ import librosa
 
 class SoundfileDataset(Dataset):
 
-    def __init__(self, path="./all_metadata.p", ipath="./mels_set", hotvec=False, out_type='raw', mel_seg_size=2**11):
+    def __init__(self, path="./all_metadata.p", ipath="./mels_set", hotvec=False, out_type='raw', mel_seg_size=2**11, normalize=True):
         _, ext = os.path.splitext(path)
         if ext == ".p":
             d = pickle.load(open(path, 'rb'))
@@ -50,6 +49,7 @@ class SoundfileDataset(Dataset):
         self.hotvec = hotvec     # whether to return labels as one-hot-vec
         self.out_type = out_type # 'raw' or 'mel' or other stuff
         self.mel_seg_size = mel_seg_size
+        self.normalize = normalize
 
     def calc_entropy(self, song):
         fsize = 1024
@@ -129,6 +129,12 @@ class SoundfileDataset(Dataset):
             #print(X.shape)
             #X = X.T[:1290,:]
             X = X.T[:2580,:]
+            #normalize data
+            if self.normalize:
+                X = X - X.mean(axis=0)
+                safe_max = np.abs(X).max(axis=0)
+                safe_max[safe_max==0] = 1
+                X = X / safe_max
         else:
             try:
                 song, sr = librosa.load(os.path.join(self.ipath, this.path))
@@ -178,7 +184,7 @@ class SoundfileDataset(Dataset):
             return train_set, valid_set
 
     def get_indices(self, shuffle=True):
-        validation_split = .2
+        validation_split = .3
         random_seed= 4 # chosen by diceroll, 100% random  
         
         # Creating data indices for training and validation splits:

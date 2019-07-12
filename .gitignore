@@ -1,9 +1,7 @@
 fma_small/
 fma_metadata/
-mels_set/
-mels_set_high/
 mels_set_f1024_b128/
-mels_set_db/
+mels_set_f2048_b256/
 all_metadata.p
 __pycache__/
 *.zip
