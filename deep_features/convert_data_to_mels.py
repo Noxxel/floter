@@ -6,7 +6,7 @@ import multiprocessing
 from tqdm import tqdm
 
 INPATH  = "./fma_small"
-OUTPATH = "./mels_set_f2048_b256"
+OUTPATH = "./mels_set_f1024_b128"
 
 def save_mel(paths):
     
@@ -16,9 +16,9 @@ def save_mel(paths):
 
         song, sr = librosa.load(inpath, mono=True, sr=44100)
 
-        n_fft = 2**11         # shortest human-disting. sound (music)
+        n_fft = 2**10        # shortest human-disting. sound (music)
         hop_length = 2**9    # => 75% overlap of frames
-        n_mels = 256
+        n_mels = 128
 
         if len(song) < n_fft:
             return
