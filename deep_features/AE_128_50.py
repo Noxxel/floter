@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 n_fft = 2**11
-n_mels = 256
+n_mels = 128
 encode_size = 100
 middle_size = 50
 l_rate = 1e-3
@@ -21,8 +21,8 @@ device = "cuda"
 DEBUG = True
 LOG = False
 log_intervall = 50
-ipath = "./mels_set_f8820_h735_b256"
-#ipath = "./mels_set_f{}_b{}".format(n_fft, n_mels)
+#ipath = "./mels_set_f8820_h735_b256"
+ipath = "./mels_set_f{}_b{}".format(n_fft, n_mels)
 statepath = "./vae_b{}_{}".format(n_mels, middle_size)
 
 class AutoEncoder(nn.Module):
