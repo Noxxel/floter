@@ -187,6 +187,22 @@ class SoundfileDataset(Dataset):
             valid_set = Subset(self, val_indices)
             return train_set, valid_set
 
+    def get_train(self, sampler=True):
+        shuffle_dataset = True
+        random_seed= 4 # chosen by diceroll, 100% random
+        dataset_size = self.__len__()
+        indices = list(range(dataset_size))
+        if shuffle_dataset :
+            np.random.seed(random_seed)
+            np.random.shuffle(indices)
+        # Creating PT data samplers and loaders:
+        if sampler:
+            train_sampler = SubsetRandomSampler(indices)
+            return train_sampler
+        else:
+            train_set = Subset(self, indices)
+            return train_set
+
     def get_indices(self, shuffle=True):
         validation_split = .3
         random_seed= 4 # chosen by diceroll, 100% random  
