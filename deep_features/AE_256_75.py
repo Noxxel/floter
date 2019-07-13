@@ -11,6 +11,8 @@ import numpy as np
 
 n_fft = 2**11
 n_mels = 256
+encode_size = 200
+middle_size = 75
 l_rate = 1e-3
 n_epochs = 400
 num_workers = 3
@@ -21,15 +23,15 @@ LOG = False
 log_intervall = 50
 ipath = "./mels_set_f8820_h735_b256"
 #ipath = "./mels_set_f{}_b{}".format(n_fft, n_mels)
-statepath = "./vae_b{}_75".format(n_mels)
+statepath = "./vae_b{}_{}".format(n_mels, middle_size)
 
 class AutoEncoder(nn.Module):
-    def __init__(self, input_size):
+    def __init__(self, input_size, encode=100, middle=25):
         super(AutoEncoder, self).__init__()
 
         self.input_size = input_size
-        self.encode_size = 128
-        self.middle = 75
+        self.encode_size = encode
+        self.middle = middle
 
         self.fc1 = nn.Linear(self.input_size, self.encode_size)
         self.fc2 = nn.Linear(self.encode_size, self.middle)
@@ -68,7 +70,7 @@ tset, vset = dset.get_split(sampler=False, split_size=0.2)
 TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
 VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=num_workers)
 
-vae = AutoEncoder(n_mels)
+vae = AutoEncoder(n_mels, encode=encode_size, middle=middle_size)
 lossf = nn.MSELoss()
 optimizer = optim.Adam(vae.parameters(), lr=l_rate)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
