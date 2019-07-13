@@ -15,8 +15,8 @@ l_rate = 1e-3
 n_epochs = 400
 num_workers = 3
 batch_size = 1
-device = "cuda:0"
-DEBUG = False
+device = "cuda"
+DEBUG = True
 LOG = False
 log_intervall = 50
 ipath = "./mels_set_f8820_h735_b256"
@@ -62,7 +62,7 @@ class AutoEncoder(nn.Module):
 dset = SoundfileDataset(ipath=ipath, out_type="mel", normalize=True)
 
 if DEBUG:
-    dset.data = dset.data[:2000]
+    dset.data = dset.data[:1000]
 
 tset, vset = dset.get_split(sampler=False, split_size=0.2)
 TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
@@ -92,9 +92,9 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         train_acc.append(np.abs((X - out).detach().cpu()).sum())
         if LOG and idx != 0 and idx % log_intervall == 0:
             tqdm.write("Current loss: {}".format(train_running_loss/idx))
-    train_acc = np.array(train_acc) - np.mean(train_acc)
-    train_max = np.abs(train_acc).max()
-    train_acc = (train_acc / train_max).mean() * 100
+    train_acc = np.array(train_acc)# - np.mean(train_acc)
+    train_max = np.max(train_acc)
+    train_acc = (train_acc / train_max).mean()
     tqdm.write("Epoch: {:d} | Train Loss: {:.2f} | Train Div: {:.2f}".format(epoch, train_running_loss / len(TLoader), train_acc))
     val_running_loss = 0.0
     val_acc = []
@@ -106,9 +106,9 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         val_running_loss += loss.detach().item()
         val_acc.append(np.abs((X - out).detach().cpu()).sum())
     
-    val_acc = np.array(val_acc) - np.mean(val_acc)
-    val_max = np.abs(val_acc).max()
-    val_acc = (val_acc / val_max).mean() * 100
+    val_acc = np.array(val_acc)# - np.mean(val_acc)
+    val_max = np.max(val_acc)
+    val_acc = (val_acc / val_max).mean()
     scheduler.step(val_running_loss/len(VLoader))
     tqdm.write("Epoch: {:d} | Val Loss: {:.2f} | Val Div: {:.2f}".format(epoch, val_running_loss / len(VLoader), val_acc))
     
