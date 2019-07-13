@@ -9,7 +9,8 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-n_fft = 2**11
+print("Starting")
+n_fft = 2**10
 n_mels = 128
 encode_size = 100
 middle_size = 50
@@ -17,7 +18,7 @@ l_rate = 1e-3
 n_epochs = 400
 num_workers = 3
 batch_size = 1
-device = "cuda"
+device = "cuda:1"
 DEBUG = True
 LOG = False
 log_intervall = 50
