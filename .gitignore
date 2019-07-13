@@ -13,3 +13,4 @@ test/
 plain_lstm/
 fully_connected/
 conv_*/
+vae_*/

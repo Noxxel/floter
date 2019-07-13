@@ -12,12 +12,15 @@ import librosa
 
 class SoundfileDataset(Dataset):
 
-    def __init__(self, path="./all_metadata.p", ipath="./mels_set", hotvec=False, out_type='raw', mel_seg_size=2**11, normalize=True):
+    def __init__(self, path="./all_metadata.p", ipath="./mels_set", hotvec=False, out_type='raw', n_time_steps=None, normalize=True):
         _, ext = os.path.splitext(path)
         if ext == ".p":
             d = pickle.load(open(path, 'rb'))
         else:
             raise RuntimeError(f"{path}: extention '{ext[1:]}' not known")
+        
+        if not os.path.isdir(ipath):
+            raise RuntimeError(f"{ipath} no such directory!")
         
         #np.seterr(all='ignore')
         
@@ -48,7 +51,7 @@ class SoundfileDataset(Dataset):
         self.ipath = ipath       # path of image data
         self.hotvec = hotvec     # whether to return labels as one-hot-vec
         self.out_type = out_type # 'raw' or 'mel' or other stuff
-        self.mel_seg_size = mel_seg_size
+        self.n_time_steps = n_time_steps
         self.normalize = normalize
 
     def calc_entropy(self, song):
@@ -126,9 +129,10 @@ class SoundfileDataset(Dataset):
 
         if self.out_type == 'mel':
             X = np.load(os.path.join(self.ipath, this.path[:-3]) + "npy")
-            #print(X.shape)
-            #X = X.T[:1290,:]
-            X = X.T[:2580,:]
+            if self.n_time_steps is None:
+                X = X.T
+            else:
+                X = X.T[:self.n_time_steps,:]
             #normalize data
             if self.normalize:
                 X = X - X.mean(axis=0)
@@ -161,8 +165,8 @@ class SoundfileDataset(Dataset):
 
         return torch.as_tensor(X, dtype=torch.float32), y
     
-    def get_split(self, sampler=True):
-        validation_split = .3
+    def get_split(self, sampler=True, split_size=0.3):
+        validation_split = split_size
         shuffle_dataset = True
         random_seed= 4 # chosen by diceroll, 100% random
         # Creating data indices for training and validation splits:
@@ -202,18 +206,21 @@ class SoundfileDataset(Dataset):
     
 if __name__ == "__main__":
 
-    dset = SoundfileDataset(out_type='mel')
+    dset = SoundfileDataset(ipath="./mels_set_f8820_h735_b256",out_type='mel', n_time_steps=1800)
 
     print("### Benchmarking dataloading speed ###")
     #TODO: compare to training with offline-preprocessed data, to see if preprocessing is bottleneck
     dataloader = DataLoader(dset, num_workers=1, batch_size=1)
     minLen = 10000000
-    for i, [X, y] in enumerate(dataloader):
+    sizes = set()
+    for i, [X, y] in enumerate(tqdm(dataloader)):
+        sizes.add(X.shape[1])
         if X.shape[1] < minLen:
             minLen = X.shape[1]
-        if X.shape[1] < 1290:
-            print("Small song")
-            print(X.shape[1])
-            print(dset.data[i].path)
+        if X.shape[1] < 1798:
+            tqdm.write("Small song")
+            tqdm.write(str(X.shape[1]))
+            tqdm.write(dset.data[i].path)
     
+    print(sizes)
     print(minLen)
