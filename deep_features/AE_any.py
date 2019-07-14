@@ -46,6 +46,7 @@ log_intervall = 50
 ipath = "./mels_set_f8820_h735_b256"
 #ipath = "./mels_set_f{}_b{}".format(n_fft, n_mels)
 statepath = "./out/vae_b{}_{}".format(n_mels, middle_size)
+print('output-path: {}'.format(statepath))
 
 class AutoEncoder(nn.Module):
     def __init__(self, input_size, encode=100, middle=25):
