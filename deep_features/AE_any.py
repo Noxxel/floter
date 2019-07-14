@@ -94,7 +94,9 @@ tset = dset.get_train(sampler=False)
 TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
 
 vae = AutoEncoder(n_mels, encode=encode_size, middle=middle_size)
+vae.to(device)
 lossf = nn.MSELoss()
+lossf.to(device)
 optimizer = optim.Adam(vae.parameters(), lr=l_rate)
 # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
@@ -114,8 +116,6 @@ if not opt.fresh:
             loaded_epoch = int(states[-1][4:-4])
             starting_epoch = loaded_epoch+1
 
-lossf.to(device)
-vae.to(device)
 print("Beginning Training with for {} frequency buckets".format(n_mels))
 for epoch in tqdm(range(starting_epoch, n_epochs), desc='Epoch'):
     train_running_loss = 0.
