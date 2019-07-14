@@ -39,7 +39,7 @@ l_rate = opt.lr
 n_epochs = opt.niter
 num_workers = opt.workers
 batch_size = 1
-device = "cuda:0"
+device = torch.device("cuda:0")
 DEBUG = opt.debug
 LOG = False
 log_intervall = 50
@@ -108,15 +108,12 @@ if not opt.fresh:
     if len(states) >= 1:
         state = os.path.join(statepath, states[-1])
         if os.path.isfile(state):
-            import pdb
-            pdb.set_trace()
             vae.load_state_dict(torch.load(state)['state_dict'])
             optimizer.load_state_dict(torch.load(state)['optim'])
             print("successfully loaded %s" % (state))
             loaded_epoch = int(states[-1][4:-4])
             starting_epoch = loaded_epoch+1
 
-val_loss_list, val_acc_list, epoch_list = [], [], []
 lossf.to(device)
 vae.to(device)
 print("Beginning Training with for {} frequency buckets".format(n_mels))
@@ -140,11 +137,9 @@ for epoch in tqdm(range(starting_epoch, n_epochs), desc='Epoch'):
     # train_max = np.max(train_acc)
     # train_acc = (train_acc / train_max).mean()
     tqdm.write("Epoch: {:d} | Train Loss: {:.2f} | Train Div: {:.2f}".format(epoch, train_running_loss / len(TLoader), train_acc))
-    
-    epoch_list.append(epoch)
 
     if (epoch+1)%10 == 0:
-        state = {'state_dict':vae.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'val_acc': val_acc_list}
+        state = {'state_dict':vae.state_dict(), 'optim':optimizer.state_dict()}
         filename = "{}/vae_{:02d}.nn".format(statepath, epoch)
         if not os.path.isdir(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename), exist_ok=True)
