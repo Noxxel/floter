@@ -125,13 +125,11 @@ if __name__ == '__main__':
                 starting_epoch = loaded_epoch+1
     print(netG)
 
-
-
     netD = dcgan.Discriminator(ngpu, ndf=ndf).to(device)
     netD.apply(weights_init)
     if not opt.fresh and opt.netD != '':
         netD.load_state_dict(torch.load(opt.netD))
-        loaded_epoch = int(opt.netD[-7:-4])
+        starting_epoch = int(opt.netD[-7:-4]) + 1
         print("continueing from epoch {}".format(loaded_epoch))
     elif not opt.fresh:
         outf_files = os.listdir(out_path)
