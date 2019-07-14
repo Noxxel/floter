@@ -167,7 +167,7 @@ class SoundfileDataset(Dataset):
     def get_split(self, sampler=True, split_size=0.3):
         validation_split = split_size
         shuffle_dataset = True
-        random_seed= 4 # chosen by diceroll, 100% random
+        random_seed = 42 # chosen by diceroll, 100% random
         # Creating data indices for training and validation splits:
         dataset_size = self.__len__()
         indices = list(range(dataset_size))
