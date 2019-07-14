@@ -27,6 +27,7 @@ parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. de
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
 parser.add_argument('--workers', default=3, help='number of threads for the dataloader')
 parser.add_argument('--debug', action='store_true', help='shrinks the dataset')
+parser.add_argument('--fresh', action='store_true', help='force a fresh start without loading states')
 
 opt = parser.parse_args()
 
@@ -44,7 +45,7 @@ LOG = False
 log_intervall = 50
 ipath = "./mels_set_f8820_h735_b256"
 #ipath = "./mels_set_f{}_b{}".format(n_fft, n_mels)
-statepath = "./vae_b{}_{}".format(n_mels, middle_size)
+statepath = "./out/vae_b{}_{}".format(n_mels, middle_size)
 
 class AutoEncoder(nn.Module):
     def __init__(self, input_size, encode=100, middle=25):
@@ -96,11 +97,24 @@ lossf = nn.MSELoss()
 optimizer = optim.Adam(vae.parameters(), lr=l_rate)
 # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
+starting_epoch = 0
+if not opt.fresh:
+    outf_files = os.listdir(statepath)
+    states = [of for of in outf_files if "vae_" in of]
+    states.sort()
+    if len(states) >= 1:
+        state = os.path.join(opt.outf, states[-1])
+        if os.path.isfile(state):
+            vae.load_state_dict(torch.load(state))
+            print("successfully loaded %s" % (state))
+            loaded_epoch = int(states[-1][4:-4])
+            starting_epoch = loaded_epoch+1
+
 val_loss_list, val_acc_list, epoch_list = [], [], []
 lossf.to(device)
 vae.to(device)
 print("Beginning Training with for {} frequency buckets".format(n_mels))
-for epoch in tqdm(range(n_epochs), desc='Epoch'):
+for epoch in tqdm(range(starting_epoch, n_epochs), desc='Epoch'):
     train_running_loss = 0.
     train_acc = []
     vae.train()
