@@ -1,5 +1,4 @@
 import torch
-import torchvision.transforms as tf
 from torch import nn, optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
@@ -18,13 +17,13 @@ l_rate = 1e-3
 n_epochs = 400
 num_workers = 3
 batch_size = 1
-device = "cuda:1"
+device = "cuda:0"
 DEBUG = True
 LOG = False
 log_intervall = 50
-ipath = "./mels_set_f8820_h735_b256"
-#ipath = "./mels_set_f{}_b{}".format(n_fft, n_mels)
-statepath = "./vae_b{}_{}".format(n_mels, middle_size)
+#ipath = "./mels_set_f8820_h735_b256"
+ipath = "./mels_set_f{}_b{}".format(n_fft, n_mels)
+statepath = "./conv_ae_b{}_{}".format(n_mels, middle_size)
 
 class AutoEncoder(nn.Module):
     def __init__(self, input_size, encode=100, middle=25):
@@ -33,26 +32,27 @@ class AutoEncoder(nn.Module):
         self.input_size = input_size
         self.encode_size = encode
         self.middle = middle
+        
+        self.conv1 = nn.Conv1d(self.input_size, self.encode_size, 3)
+        self.conv2 = nn.Conv1d(self.encode_size, self.middle, 3)
 
-        self.fc1 = nn.Linear(self.input_size, self.encode_size)
-        self.fc2 = nn.Linear(self.encode_size, self.middle)
-        self.fc3 = nn.Linear(self.middle, self.encode_size)
-        self.fc4 = nn.Linear(self.encode_size, self.input_size)
+        self.t_conv1 = nn.ConvTranspose1d(self.middle, self.encode_size, 3)
+        self.t_conv2 = nn.ConvTranspose1d(self.encode_size, self.input_size, 3)
 
         self.relu = nn.ReLU()
         self.sig = nn.Sigmoid()
     
     def encode(self, X):
-        X = self.fc1(X)
+        X = self.conv1(X)
         X = self.relu(X)
-        X = self.fc2(X)
+        X = self.conv2(X)
         X = self.relu(X)
         return X
     
     def decode(self, X):
-        X = self.fc3(X)
+        X = self.t_conv1(X)
         X = self.relu(X)
-        X = self.fc4(X)
+        X = self.t_conv2(X)
         X = self.relu(X)
         X = self.sig(X)
         return X
@@ -71,23 +71,23 @@ tset, vset = dset.get_split(sampler=False, split_size=0.2)
 TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
 VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=num_workers)
 
-vae = AutoEncoder(n_mels, encode=encode_size, middle=middle_size)
+convAE = AutoEncoder(n_mels, encode=encode_size, middle=middle_size)
 lossf = nn.MSELoss()
-optimizer = optim.Adam(vae.parameters(), lr=l_rate)
+optimizer = optim.Adam(convAE.parameters(), lr=l_rate)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
 val_loss_list, val_acc_list, epoch_list = [], [], []
 lossf.to(device)
-vae.to(device)
+convAE.to(device)
 print("Beginning Training with for {} frequency buckets".format(n_mels))
 for epoch in tqdm(range(n_epochs), desc='Epoch'):
     train_running_loss = 0.
     train_acc = []
-    vae.train()
+    convAE.train()
     for idx, (X, _) in enumerate(tqdm(TLoader, desc="Training")):
         X = X.squeeze().to(device)
-        vae.zero_grad()
-        out = vae(X)
+        convAE.zero_grad()
+        out = convAE(X)
         loss = lossf(out, X)
         loss.backward()
         optimizer.step()
@@ -101,10 +101,10 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     tqdm.write("Epoch: {:d} | Train Loss: {:.2f} | Train Div: {:.2f}".format(epoch, train_running_loss / len(TLoader), train_acc))
     val_running_loss = 0.0
     val_acc = []
-    vae.eval()
+    convAE.eval()
     for idx, (X, _) in enumerate(tqdm(VLoader, desc="Validation")):
         X = X.squeeze().to(device)
-        out = vae(X)
+        out = convAE(X)
         loss = lossf(out, X)
         val_running_loss += loss.detach().item()
         val_acc.append(np.abs((X - out).detach().cpu()).sum())
@@ -120,7 +120,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     val_acc_list.append(val_acc)
 
     if (epoch+1)%10 == 0:
-        state = {'state_dict':vae.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'val_acc': val_acc_list}
+        state = {'state_dict':convAE.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'val_acc': val_acc_list}
         filename = "{}/vae_{:02d}.nn".format(statepath, epoch)
         if not os.path.isdir(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename), exist_ok=True)

@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from model import LSTM
+from model_backward import LSTM
 from dataset import SoundfileDataset
 from tqdm import tqdm
 import os
@@ -22,7 +22,7 @@ n_time_steps = 2580
 l_rate = 1e-4
 DEBUG = False
 NORMALIZE = True
-num_workers = 4
+num_workers = 8
 device = "cuda"
 #datapath = "./mels_set_db"
 datapath = "./mels_set_f{}_b{}".format(n_fft, n_mels)

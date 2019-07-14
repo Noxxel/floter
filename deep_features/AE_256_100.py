@@ -9,21 +9,20 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-print("Starting")
 n_fft = 2**11
 n_mels = 256
-encode_size = 200
-middle_size = 100
-l_rate = 1e-3
+encode_size = 128
+middle_size = 64
+l_rate = 1e-4
 n_epochs = 400
-num_workers = 3
+num_workers = 6
 batch_size = 1
 device = "cuda:0"
-DEBUG = True
+DEBUG = False
 LOG = False
 log_intervall = 50
-ipath = "./mels_set_f8820_h735_b256"
-#ipath = "./mels_set_f{}_b{}".format(n_fft, n_mels)
+#ipath = "./mels_set_f8820_h735_b256"
+ipath = "./mels_set_f{}_b{}".format(n_fft, n_mels)
 statepath = "./vae_b{}_{}".format(n_mels, middle_size)
 
 class AutoEncoder(nn.Module):
@@ -62,14 +61,14 @@ class AutoEncoder(nn.Module):
         X = self.decode(X)
         return X
 
-dset = SoundfileDataset(ipath=ipath, out_type="mel", normalize=True)
+dset = SoundfileDataset(ipath=ipath, out_type="mel", normalize=True, n_time_steps=1800)
 
 if DEBUG:
     dset.data = dset.data[:1000]
 
 tset, vset = dset.get_split(sampler=False, split_size=0.2)
-TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
-VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=num_workers)
+TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers, pin_memory=True)
+VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=num_workers, pin_memory=True)
 
 vae = AutoEncoder(n_mels, encode=encode_size, middle=middle_size)
 lossf = nn.MSELoss()
@@ -85,7 +84,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     train_acc = []
     vae.train()
     for idx, (X, _) in enumerate(tqdm(TLoader, desc="Training")):
-        X = X.squeeze().to(device)
+        X = X.squeeze().to(device, non_blocking=True)
         vae.zero_grad()
         out = vae(X)
         loss = lossf(out, X)
@@ -95,15 +94,17 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         train_acc.append(np.abs((X - out).detach().cpu()).sum())
         if LOG and idx != 0 and idx % log_intervall == 0:
             tqdm.write("Current loss: {}".format(train_running_loss/idx))
+    
     train_acc = np.array(train_acc)# - np.mean(train_acc)
     train_max = np.max(train_acc)
     train_acc = (train_acc / train_max).mean()
     tqdm.write("Epoch: {:d} | Train Loss: {:.2f} | Train Div: {:.2f}".format(epoch, train_running_loss / len(TLoader), train_acc))
+
     val_running_loss = 0.0
     val_acc = []
     vae.eval()
     for idx, (X, _) in enumerate(tqdm(VLoader, desc="Validation")):
-        X = X.squeeze().to(device)
+        X = X.squeeze().to(device, non_blocking=True)
         out = vae(X)
         loss = lossf(out, X)
         val_running_loss += loss.detach().item()
