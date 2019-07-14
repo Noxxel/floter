@@ -97,12 +97,29 @@ vae = AutoEncoder(n_mels, encode=encode_size, middle=middle_size)
 vae.to(device)
 lossf = nn.MSELoss()
 lossf.to(device)
-optimizer = optim.Adam(vae.parameters(), lr=l_rate)
 # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
 starting_epoch = 0
+state = None
 if not os.path.exists(statepath):
     os.makedirs(statepath)
+if not opt.fresh:
+    outf_files = os.listdir(statepath)
+    states = [of for of in outf_files if "vae_" in of]
+    states.sort()
+    if len(states) >= 1:
+        state = os.path.join(statepath, states[-1])
+        if os.path.isfile(state):
+            vae.load_state_dict(torch.load(state)['state_dict'])
+
+optimizer = optim.Adam(vae.parameters(), lr=l_rate)
+
+if not opt.fresh and os.path.isfile(state):
+    optimizer.load_state_dict(torch.load(state)['optim'])
+    print("successfully loaded %s" % (state))
+    loaded_epoch = int(states[-1][4:-4])
+    starting_epoch = loaded_epoch+1
+
 if not opt.fresh:
     outf_files = os.listdir(statepath)
     states = [of for of in outf_files if "vae_" in of]
