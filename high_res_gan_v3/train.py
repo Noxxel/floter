@@ -121,7 +121,7 @@ if __name__ == '__main__':
             if os.path.isfile(state):
                 netG.load_state_dict(torch.load(state))
                 print("successfully loaded %s" % (state))
-                loaded_epoch = int(states[-1][11:-4])
+                loaded_epoch = int(states[-1][-7:-4])
                 starting_epoch = loaded_epoch+1
     print(netG)
 
@@ -141,7 +141,7 @@ if __name__ == '__main__':
             if os.path.isfile(state):
                 netD.load_state_dict(torch.load(state))
                 print("successfully loaded %s" % (state))
-                loaded_epoch = int(states[-1][11:-4])
+                loaded_epoch = int(states[-1][-7:-4])
                 if loaded_epoch != starting_epoch-1:
                     raise Exception("loaded states of discriminator ({}) and generator ({}) don't match!".format(loaded_epoch, starting_epoch))
     print(netD)
