@@ -106,7 +106,7 @@ if not opt.fresh:
     states = [of for of in outf_files if "vae_" in of]
     states.sort()
     if len(states) >= 1:
-        state = os.path.join(opt.outf, states[-1])
+        state = os.path.join(statepath, states[-1])
         if os.path.isfile(state):
             vae.load_state_dict(torch.load(state))
             print("successfully loaded %s" % (state))
