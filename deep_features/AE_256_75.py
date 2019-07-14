@@ -85,6 +85,7 @@ class AutoEncoder(nn.Module):
 dset = SoundfileDataset(ipath=ipath, out_type="mel", normalize=True)
 
 if DEBUG:
+    print('warning, debugging turnned on!')
     dset.data = dset.data[:1000]
 
 tset = dset.get_train(sampler=False)
