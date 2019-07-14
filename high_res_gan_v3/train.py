@@ -131,7 +131,7 @@ if __name__ == '__main__':
     netD.apply(weights_init)
     if not opt.fresh and opt.netD != '':
         netD.load_state_dict(torch.load(opt.netD))
-        loaded_epoch = int(opt.netD[-1][11:-4])
+        loaded_epoch = int(opt.netD[11:-4])
     elif not opt.fresh:
         outf_files = os.listdir(out_path)
         states = [of for of in outf_files if 'netD_epoch_' in of]
