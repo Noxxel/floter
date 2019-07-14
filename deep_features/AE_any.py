@@ -138,7 +138,7 @@ for epoch in tqdm(range(starting_epoch, n_epochs), desc='Epoch'):
     # train_acc = (train_acc / train_max).mean()
     tqdm.write("Epoch: {:d} | Train Loss: {:.2f} | Train Div: {:.2f}".format(epoch, train_running_loss / len(TLoader), train_acc))
 
-    if (epoch+1)%10 == 0:
+    if (epoch)%10 == 0:
         state = {'state_dict':vae.state_dict(), 'optim':optimizer.state_dict()}
         filename = "{}/vae_{:02d}.nn".format(statepath, epoch)
         if not os.path.isdir(os.path.dirname(filename)):
