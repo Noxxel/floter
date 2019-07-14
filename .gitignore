@@ -8,9 +8,6 @@ data/
 *.pth
 high_res_gan/out/
 high_res_gan_v2/out/
-states/
-test/
-plain_lstm/
-fully_connected/
 conv_*/
 vae_*/
+lstm_*/

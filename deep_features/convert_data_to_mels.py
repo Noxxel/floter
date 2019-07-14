@@ -6,8 +6,8 @@ import multiprocessing
 from tqdm import tqdm
 
 n_fft = 2**11
-hop_length = 2**10
-n_mels = 256
+hop_length = 2**9
+n_mels = 128
 
 INPATH  = "./fma_small"
 OUTPATH = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
