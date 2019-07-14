@@ -99,6 +99,7 @@ optimizer = optim.Adam(vae.parameters(), lr=l_rate)
 
 starting_epoch = 0
 if not opt.fresh:
+    os.makedirs(statepath)
     outf_files = os.listdir(statepath)
     states = [of for of in outf_files if "vae_" in of]
     states.sort()
