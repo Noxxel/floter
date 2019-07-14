@@ -25,7 +25,7 @@ parser.add_argument('--niter', type=int, default=500, help='number of epochs to 
 parser.add_argument('--lr', type=float, default=0.0001, help='learning rate, default=0.0002')
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
-parser.add_argument('--workers', default=2, help='number of threads for the dataloader')
+parser.add_argument('--workers', type=int, default=2, help='number of threads for the dataloader')
 parser.add_argument('--debug', action='store_true', help='shrinks the dataset')
 parser.add_argument('--fresh', action='store_true', help='force a fresh start without loading states')
 
