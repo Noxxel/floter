@@ -30,6 +30,7 @@ parser.add_argument('--debug', action='store_true', help='shrinks the dataset')
 parser.add_argument('--fresh', action='store_true', help='force a fresh start without loading states')
 
 opt = parser.parse_args()
+print(opt)
 
 n_fft = 2**11
 n_mels = 256
