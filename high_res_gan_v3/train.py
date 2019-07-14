@@ -155,10 +155,16 @@ if __name__ == '__main__':
     optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
+    schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=10, verbose=True)
+    schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=10, verbose=True)
+
     for epoch in tqdm(range(starting_epoch, opt.niter)):
         torch.cuda.empty_cache()
         netG.to(device)
         netD.to(device)
+
+        errD = None
+        errG = None
 
         epoch_best = 100000
         for i, data in enumerate(tqdm(dataloader, 0)):
@@ -218,6 +224,9 @@ if __name__ == '__main__':
                         normalize=True)
             del real_cpu
             del fake
+        
+        schedulerD.step(errD)
+        schedulerG.step(errG)
 
         netG.to("cpu")
         netD.to("cpu")
