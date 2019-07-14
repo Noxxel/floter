@@ -94,6 +94,8 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         train_acc.append(np.abs((X - out).detach().cpu()).mean())
         if LOG and idx != 0 and idx % log_intervall == 0:
             tqdm.write("Current acc: {}".format(train_acc[-1]))
+        import pdb
+        pdb.set_trace()
     train_acc = np.array(train_acc)# - np.mean(train_acc)
     train_acc = train_acc.mean()
     # train_max = np.max(train_acc)
