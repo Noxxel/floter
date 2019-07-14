@@ -39,7 +39,7 @@ l_rate = opt.lr
 n_epochs = opt.niter
 num_workers = opt.workers
 batch_size = 1
-device = "cuda:1"
+device = "cuda:0"
 DEBUG = opt.debug
 LOG = False
 log_intervall = 50
@@ -108,8 +108,8 @@ if not opt.fresh:
     if len(states) >= 1:
         state = os.path.join(statepath, states[-1])
         if os.path.isfile(state):
-            vae.load_state_dict(torch.load(state)('state_dict'))
-            optimizer.load_state_dict(torch.load(state)('optim'))
+            vae.load_state_dict(torch.load(state)['state_dict'])
+            optimizer.load_state_dict(torch.load(state)['optim'])
             print("successfully loaded %s" % (state))
             loaded_epoch = int(states[-1][4:-4])
             starting_epoch = loaded_epoch+1
