@@ -99,8 +99,9 @@ optimizer = optim.Adam(vae.parameters(), lr=l_rate)
 # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
 starting_epoch = 0
-if not opt.fresh:
+if not os.path.exists(statepath):
     os.makedirs(statepath)
+if not opt.fresh:
     outf_files = os.listdir(statepath)
     states = [of for of in outf_files if "vae_" in of]
     states.sort()
