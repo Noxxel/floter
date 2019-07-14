@@ -51,15 +51,18 @@ if __name__ == '__main__':
     parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
     parser.add_argument('--netG', default='', help="path to netG (to continue training)")
     parser.add_argument('--netD', default='', help="path to netD (to continue training)")
-    parser.add_argument('--outf', default='./out', help='folder to output images and model checkpoints')
+    parser.add_argument('--outf', default='./out/', help='folder to output images and model checkpoints')
     parser.add_argument('--manualSeed', type=int, help='manual seed')
     parser.add_argument('--fresh', action='store_true', help='perform a fresh start instead of continuing from last checkpoint')
 
     opt = parser.parse_args()
     print(opt)
 
+    folder_name = 'nz_{}_ngf_{}_ndf_{}_bs_{}/'.format(opt.nz, opt.ngf, opt.ndf, opt.batchSize)
+    out_path = os.path.join(opt.outf, folder_name)
+
     try:
-        os.makedirs(opt.outf)
+        os.makedirs(out_path)
     except OSError:
         pass
 
@@ -110,11 +113,11 @@ if __name__ == '__main__':
     if not opt.fresh and opt.netG != '':
         netG.load_state_dict(torch.load(opt.netG))
     elif not opt.fresh:
-        outf_files = os.listdir(opt.outf)
+        outf_files = os.listdir(out_path)
         states = [of for of in outf_files if 'netG_epoch_' in of]
         states.sort()
         if len(states) >= 1:
-            state = os.path.join(opt.outf, states[-1])
+            state = os.path.join(out_path, states[-1])
             if os.path.isfile(state):
                 netG.load_state_dict(torch.load(state))
                 print("successfully loaded %s" % (state))
@@ -129,11 +132,11 @@ if __name__ == '__main__':
     if not opt.fresh and opt.netD != '':
         netD.load_state_dict(torch.load(opt.netD))
     elif not opt.fresh:
-        outf_files = os.listdir(opt.outf)
+        outf_files = os.listdir(out_path)
         states = [of for of in outf_files if 'netD_epoch_' in of]
         states.sort()
         if len(states) >= 1:
-            state = os.path.join(opt.outf, states[-1])
+            state = os.path.join(out_path, states[-1])
             if os.path.isfile(state):
                 netD.load_state_dict(torch.load(state))
                 print("successfully loaded %s" % (state))
@@ -202,16 +205,16 @@ if __name__ == '__main__':
             if errG.item() < epoch_best:
                 epoch_best = errG.item()
                 vutils.save_image(fake.detach(),
-                        '%s/best_fake_in_epoch_%03d.png' % (opt.outf, epoch),
+                        '%s/best_fake_in_epoch_%03d.png' % (out_path, epoch),
                         normalize=True)
 
             if i % 100 == 0:
                 vutils.save_image(real_cpu,
-                        '%s/real_samples.png' % opt.outf,
+                        '%s/real_samples.png' % out_path,
                         normalize=True)
                 fake = netG(fixed_noise)
                 vutils.save_image(fake.detach(),
-                        '%s/fake_samples_epoch_%03d.png' % (opt.outf, epoch),
+                        '%s/fake_samples_epoch_%03d.png' % (out_path, epoch),
                         normalize=True)
             del real_cpu
             del fake
@@ -219,5 +222,5 @@ if __name__ == '__main__':
         netG.to("cpu")
         netD.to("cpu")
         # do checkpointing
-        torch.save(netG.state_dict(), '{}/netG_epoch_{:0=3d}.pth'.format(opt.outf, epoch))
-        torch.save(netD.state_dict(), '{}/netD_epoch_{:0=3d}.pth'.format(opt.outf, epoch))
+        torch.save(netG.state_dict(), '{}/netG_epoch_{:0=3d}.pth'.format(out_path, epoch))
+        torch.save(netD.state_dict(), '{}/netD_epoch_{:0=3d}.pth'.format(out_path, epoch))
