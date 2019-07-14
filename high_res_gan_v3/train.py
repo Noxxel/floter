@@ -35,7 +35,7 @@ class DatasetCust(Dataset):
         return sample
         
 
-if __name__ == '__main__':    
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataroot', required=False, default="../data/flowers", help='path to dataset')
     parser.add_argument('--workers', type=int, help='number of data loading workers', default=2)

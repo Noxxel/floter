@@ -1,3 +1,5 @@
+
+import argparse
 import torch
 import torchvision.transforms as tf
 from torch import nn, optim
@@ -10,16 +12,34 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 print("Starting")
+
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--batchSize', type=int, default=16, help='input batch size')
+parser.add_argument('--imageSize', type=int, default=512, help='the height / width of the input image to network')
+parser.add_argument('--nz', type=int, default=1000, help='size of the latent z vector')
+parser.add_argument('--l1size', type=int, default=100)
+parser.add_argument('--l2size', type=int, default=30)
+parser.add_argument('--niter', type=int, default=500, help='number of epochs to train for')
+parser.add_argument('--lr', type=float, default=0.0001, help='learning rate, default=0.0002')
+parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
+parser.add_argument('--cuda', action='store_true', help='enables cuda')
+parser.add_argument('--workers', default=3, help='number of threads for the dataloader')
+parser.add_argument('--debug', action='store_true', help='shrinks the dataset')
+
+opt = parser.parse_args()
+
 n_fft = 2**11
 n_mels = 256
-encode_size = 200
-middle_size = 75
-l_rate = 1e-3
-n_epochs = 400
-num_workers = 3
+encode_size = opt.l1size
+middle_size = opt.l2size
+l_rate = opt.lr
+n_epochs = opt.niter
+num_workers = opt.workers
 batch_size = 1
 device = "cuda:1"
-DEBUG = True
+DEBUG = opt.debug
 LOG = False
 log_intervall = 50
 ipath = "./mels_set_f8820_h735_b256"
@@ -94,8 +114,6 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         train_acc.append(np.abs((X - out).detach().cpu()).mean())
         if LOG and idx != 0 and idx % log_intervall == 0:
             tqdm.write("Current acc: {}".format(train_acc[-1]))
-        import pdb
-        pdb.set_trace()
     train_acc = np.array(train_acc)# - np.mean(train_acc)
     train_acc = train_acc.mean()
     # train_max = np.max(train_acc)
