@@ -11,16 +11,16 @@ class LSTM(nn.Module):
         self.batch_size = batch_size
         self.num_layers = num_layers
 
-        self.hidden_dim1 = 128
+        self.hidden_dim1 = 64
         self.hidden_dim2 = 64
-        self.hidden_dim3 = 32
+        self.hidden_dim3 = 64
 
-        self.lstm_hidden = 64
-        self.linear_dim = 32
+        self.lstm_hidden = 128
+        self.linear_dim = 64
 
-        self.conv1 = nn.Conv1d(self.input_dim, self.hidden_dim1, 3)
-        self.conv2 = nn.Conv1d(self.hidden_dim1, self.hidden_dim2, 3)
-        self.conv3 = nn.Conv1d(self.hidden_dim2, self.hidden_dim3, 3)
+        self.conv1 = nn.Conv1d(self.input_dim, self.hidden_dim1, 5)
+        self.conv2 = nn.Conv1d(self.hidden_dim1, self.hidden_dim2, 5)
+        self.conv3 = nn.Conv1d(self.hidden_dim2, self.hidden_dim3, 5)
 
         self.batchnorm1 = nn.BatchNorm1d(self.hidden_dim1, momentum=0.9)
         self.batchnorm2 = nn.BatchNorm1d(self.hidden_dim2, momentum=0.9)
