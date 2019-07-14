@@ -108,6 +108,8 @@ if not opt.fresh:
     if len(states) >= 1:
         state = os.path.join(statepath, states[-1])
         if os.path.isfile(state):
+            import pdb
+            pdb.set_trace()
             vae.load_state_dict(torch.load(state)['state_dict'])
             optimizer.load_state_dict(torch.load(state)['optim'])
             print("successfully loaded %s" % (state))
