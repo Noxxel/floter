@@ -108,8 +108,8 @@ if not opt.fresh:
     if len(states) >= 1:
         state = os.path.join(statepath, states[-1])
         if os.path.isfile(state):
-            vae.load_state_dict(torch.load(state('state_dict')))
-            lossf.load_state_dict(torch.load(state('optim')))
+            vae.load_state_dict(torch.load(state)('state_dict'))
+            optimizer.load_state_dict(torch.load(state)('optim'))
             print("successfully loaded %s" % (state))
             loaded_epoch = int(states[-1][4:-4])
             starting_epoch = loaded_epoch+1
