@@ -45,7 +45,7 @@ if __name__ == '__main__':
     parser.add_argument('--ngf', type=int, default=64)
     parser.add_argument('--ndf', type=int, default=16)
     parser.add_argument('--niter', type=int, default=300, help='number of epochs to train for')
-    parser.add_argument('--lr', type=float, default=0.00015, help='learning rate, default=0.0002')
+    parser.add_argument('--lr', type=float, default=0.0001, help='learning rate, default=0.0002')
     parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
     parser.add_argument('--cuda', action='store_true', help='enables cuda')
     parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
@@ -107,43 +107,35 @@ if __name__ == '__main__':
             m.weight.data.normal_(1.0, 0.02)
             m.bias.data.fill_(0)
 
-    starting_epoch = 0
-    netG = dcgan.Generator(ngpu, nz=nz, ngf=ngf).to(device)
-    netG.apply(weights_init)
-    if not opt.fresh and opt.netG != '':
-        netG.load_state_dict(torch.load(opt.netG))
-    elif not opt.fresh:
-        outf_files = os.listdir(out_path)
-        states = [of for of in outf_files if 'netG_epoch_' in of]
-        states.sort()
-        if len(states) >= 1:
-            state = os.path.join(out_path, states[-1])
-            if os.path.isfile(state):
-                netG.load_state_dict(torch.load(state))
-                print("successfully loaded %s" % (state))
-                loaded_epoch = int(states[-1][-7:-4])
-                starting_epoch = loaded_epoch+1
-    print(netG)
-
     netD = dcgan.Discriminator(ngpu, ndf=ndf).to(device)
     netD.apply(weights_init)
-    if not opt.fresh and opt.netD != '':
-        netD.load_state_dict(torch.load(opt.netD))
-        starting_epoch = int(opt.netD[-7:-4]) + 1
-        print("continueing with epoch {}".format(starting_epoch))
-    elif not opt.fresh:
+
+    netG = dcgan.Generator(ngpu, nz=nz, ngf=ngf).to(device)
+    netG.apply(weights_init)
+
+    starting_epoch = 0
+    if not opt.fresh:
         outf_files = os.listdir(out_path)
-        states = [of for of in outf_files if 'netD_epoch_' in of]
+        states = [of for of in outf_files if 'net_state_epoch_' in of]
         states.sort()
         if len(states) >= 1:
             state = os.path.join(out_path, states[-1])
             if os.path.isfile(state):
                 netD.load_state_dict(torch.load(state))
-                print("successfully loaded %s" % (state))
-                loaded_epoch = int(states[-1][-7:-4])
-                if loaded_epoch != starting_epoch-1:
-                    raise Exception("loaded states of discriminator ({}) and generator ({}) don't match!".format(loaded_epoch, starting_epoch))
-    print(netD)
+                netG.load_state_dict(torch.load(state))
+                print("successfully loaded {}".format(state))
+                print("continueing with epoch {}".format(starting_epoch))
+                starting_epoch = int(states[-1][-6:-3])
+
+    if opt.netD != '':
+        netD.load_state_dict(torch.load(opt.netD))
+        print("successfully loaded {}".format(opt.netD))
+    if opt.netG != '':
+        netG.load_state_dict(torch.load(opt.netG))
+        print("successfully loaded {}".format(opt.netG))
+    
+    # print(netG)
+    # print(netD)
 
     criterion = nn.BCELoss()
 
@@ -155,8 +147,8 @@ if __name__ == '__main__':
     optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
-    schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=10, verbose=True)
-    schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=10, verbose=True)
+    schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=10, verbose=True, factor=0.25)
+    schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=10, verbose=True, factor=0.25)
 
     for epoch in tqdm(range(starting_epoch, opt.niter)):
         torch.cuda.empty_cache()
@@ -168,7 +160,6 @@ if __name__ == '__main__':
         errG = None
         running_G = 0
 
-        epoch_best = 100000
         for i, data in enumerate(tqdm(dataloader, 0)):
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
@@ -211,12 +202,6 @@ if __name__ == '__main__':
             tqdm.write('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
                   % (epoch, opt.niter, i, len(dataloader),
                      errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
-            # best generated image in this epoch
-            if errG.item() < epoch_best:
-                epoch_best = errG.item()
-                vutils.save_image(fake.detach(),
-                        os.path.join(out_path , 'best_fake_in_epoch_{:03d}.png'.format(epoch)),
-                        normalize=True)
 
             if i % 100 == 0:
                 vutils.save_image(real_cpu,
@@ -237,6 +222,9 @@ if __name__ == '__main__':
 
         netG.to("cpu")
         netD.to("cpu")
-        # do checkpointing
-        torch.save(netD.state_dict(), os.path.join(out_path, 'netD_epoch_{:0=3d}.pth'.format(epoch)))
-        torch.save(netG.state_dict(), os.path.join(out_path, 'netG_epoch_{:0=3d}.pth'.format(epoch)))
+        # save state
+        state = {'netD':netD.state_dict(), 'netG':netG.state_dict(), 'optimD':optimizerD.state_dict(), 'optimG':optimizerG.state_dict()}
+        filename = os.path.join(out_path, "net_state_epoch_{:0=3d}.nn".format(epoch))
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+        torch.save(state, filename)
