@@ -159,7 +159,7 @@ for epoch in tqdm(range(starting_epoch, n_epochs), desc='Epoch'):
 
     scheduler.step(train_running_loss)
 
-    tqdm.write("Epoch: {:d} | Train Loss: {:.2f} | Train Diff: {:.2f}".format(epoch, train_running_loss / len(TLoader), train_acc))
+    tqdm.write("Epoch: {:d} | Train Loss: {:.3f} | Train Diff: {:.3f}".format(epoch, train_running_loss, train_acc))
 
     if (epoch)%10 == 0:
         state = {'state_dict':vae.state_dict(), 'optim':optimizer.state_dict()}
