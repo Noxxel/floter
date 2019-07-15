@@ -40,8 +40,9 @@ ipath = "./song_in"
 opath = "./song_out"
 statepath = "./states/vae_b{}_{}".format(n_mels, opt.l2size)
 
-if not os.path.isdir(ipath):
-    raise Exception("no input song provided!")
+os.makedirs(ipath, exist_ok=True)
+os.makedirs(opath, exist_ok=True)
+os.makedirs(statepath, exist_ok=True)
 
 input_songs = os.listdir(ipath)
 if not len(input_songs) > 0:
