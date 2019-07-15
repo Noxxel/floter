@@ -18,7 +18,7 @@ n_layers = 2
 NORMALIZE = True
 
 n_epochs = 400
-batch_size = 32
+batch_size = 16
 l_rate = 1e-4
 num_workers = 6
 
