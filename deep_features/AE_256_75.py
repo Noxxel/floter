@@ -1,0 +1,146 @@
+import torch
+from torch import nn, optim
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
+from dataset import SoundfileDataset
+from tqdm import tqdm
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+
+print("Starting")
+n_fft = 2**11
+n_mels = 256
+encode_size = 200
+middle_size = 75
+l_rate = 1e-3
+n_epochs = 400
+num_workers = 3
+batch_size = 1
+device = "cuda:0"
+DEBUG = True
+LOG = False
+log_intervall = 50
+#ipath = "./mels_set_f8820_h735_b256"
+ipath = "./mels_set_f{}_b{}".format(n_fft, n_mels)
+statepath = "./conv_ae_b{}_{}".format(n_mels, middle_size)
+
+class AutoEncoder(nn.Module):
+    def __init__(self, input_size, encode=100, middle=25):
+        super(AutoEncoder, self).__init__()
+
+        self.input_size = input_size
+        self.encode_size = encode
+        self.middle = middle
+        
+        self.conv1 = nn.Conv1d(self.input_size, self.encode_size, 3)
+        self.conv2 = nn.Conv1d(self.encode_size, self.middle, 3)
+
+        self.t_conv1 = nn.ConvTranspose1d(self.middle, self.encode_size, 3)
+        self.t_conv2 = nn.ConvTranspose1d(self.encode_size, self.input_size, 3)
+
+        self.relu = nn.ReLU()
+        self.sig = nn.Sigmoid()
+    
+    def encode(self, X):
+        X = self.conv1(X)
+        X = self.relu(X)
+        X = self.conv2(X)
+        X = self.relu(X)
+        return X
+    
+    def decode(self, X):
+        X = self.t_conv1(X)
+        X = self.relu(X)
+        X = self.t_conv2(X)
+        X = self.relu(X)
+        X = self.sig(X)
+        return X
+
+    def forward(self, X):
+        X = self.encode(X)
+        X = self.decode(X)
+        return X
+
+dset = SoundfileDataset(ipath=ipath, out_type="mel", normalize=True)
+
+if DEBUG:
+    dset.data = dset.data[:1000]
+
+tset, vset = dset.get_split(sampler=False, split_size=0.2)
+TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
+VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=num_workers)
+
+convAE = AutoEncoder(n_mels, encode=encode_size, middle=middle_size)
+lossf = nn.MSELoss()
+optimizer = optim.Adam(convAE.parameters(), lr=l_rate)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
+
+val_loss_list, val_acc_list, epoch_list = [], [], []
+lossf.to(device)
+convAE.to(device)
+print("Beginning Training with for {} frequency buckets".format(n_mels))
+for epoch in tqdm(range(n_epochs), desc='Epoch'):
+    train_running_loss = 0.
+    train_acc = []
+    convAE.train()
+    for idx, (X, _) in enumerate(tqdm(TLoader, desc="Training")):
+        X = X.squeeze().to(device)
+        convAE.zero_grad()
+        out = convAE(X)
+        loss = lossf(out, X)
+        loss.backward()
+        optimizer.step()
+        train_running_loss += loss.detach().item()
+        train_acc.append(np.abs((X - out).detach().cpu()).sum())
+        if LOG and idx != 0 and idx % log_intervall == 0:
+            tqdm.write("Current loss: {}".format(train_running_loss/idx))
+    train_acc = np.array(train_acc)# - np.mean(train_acc)
+    train_max = np.max(train_acc)
+    train_acc = (train_acc / train_max).mean()
+    tqdm.write("Epoch: {:d} | Train Loss: {:.2f} | Train Div: {:.2f}".format(epoch, train_running_loss / len(TLoader), train_acc))
+    val_running_loss = 0.0
+    val_acc = []
+    convAE.eval()
+    for idx, (X, _) in enumerate(tqdm(VLoader, desc="Validation")):
+        X = X.squeeze().to(device)
+        out = convAE(X)
+        loss = lossf(out, X)
+        val_running_loss += loss.detach().item()
+        val_acc.append(np.abs((X - out).detach().cpu()).sum())
+    
+    val_acc = np.array(val_acc)# - np.mean(val_acc)
+    val_max = np.max(val_acc)
+    val_acc = (val_acc / val_max).mean()
+    scheduler.step(val_running_loss/len(VLoader))
+    tqdm.write("Epoch: {:d} | Val Loss: {:.2f} | Val Div: {:.2f}".format(epoch, val_running_loss / len(VLoader), val_acc))
+    
+    epoch_list.append(epoch)
+    val_loss_list.append(val_running_loss / len(VLoader))
+    val_acc_list.append(val_acc)
+
+    if (epoch+1)%10 == 0:
+        state = {'state_dict':convAE.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'val_acc': val_acc_list}
+        filename = "{}/vae_{:02d}.nn".format(statepath, epoch)
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+        torch.save(state, filename)
+        torch.cuda.empty_cache()
+
+# visualization loss
+plt.plot(epoch_list, val_loss_list)
+plt.ylim(0, np.max(val_loss_list))
+plt.xlabel("# of epochs")
+plt.ylabel("Loss")
+plt.title("VAE_b{}: Loss vs # epochs".format(n_mels))
+plt.savefig("{}/val_loss.png".format(statepath))
+plt.clf()
+
+# visualization accuracy
+plt.plot(epoch_list, val_acc_list, color="red")
+plt.ylim(0, 100)
+plt.xlabel("# of epochs")
+plt.ylabel("Divergence")
+plt.title("VAE_b{}: Divergence vs # epochs".format(n_mels))
+plt.savefig("{}/val_acc.png".format(statepath))
+plt.clf()
