@@ -202,9 +202,7 @@ if __name__ == '__main__':
             D_G_z2 = output.mean().item()
             optimizerG.step()
 
-            tqdm.write('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
-                  % (epoch, opt.niter, i, len(dataloader),
-                     errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
+            tqdm.write('[{:d}/{:d}][{:d}/{:d}] Loss_D: {:.4f} Loss_G: {:.4f} D(x): {:.4f} D(G(z)): {:.4f} / {:.4f} lrD: {:.2E} lrG: {:.2E}'.format(epoch, opt.niter, i, len(dataloader), errD.item(), errG.item(), D_x, D_G_z1, D_G_z2), optimizerD.param_groups[0]["lr"], optimizerG.param_groups[0]["lr"])
 
             if i % 100 == 0:
                 vutils.save_image(real_cpu,
