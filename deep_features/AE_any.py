@@ -127,7 +127,7 @@ if __name__ == '__main__':
         loaded_epoch = int(states[-1][4:-4])
         starting_epoch = loaded_epoch+1
 
-    print("Beginning Training with for {} frequency buckets".format(n_mels))
+    print("Beginning Training with {} frequency buckets".format(n_mels))
     for epoch in tqdm(range(starting_epoch, n_epochs), desc='Epoch'):
 
         train_running_loss = 0.0
