@@ -164,7 +164,9 @@ if __name__ == '__main__':
         netD.to(device)
 
         errD = None
+        running_D = 0
         errG = None
+        running_G = 0
 
         epoch_best = 100000
         for i, data in enumerate(tqdm(dataloader, 0)):
@@ -191,6 +193,7 @@ if __name__ == '__main__':
             errD_fake.backward()
             D_G_z1 = output.mean().item()
             errD = errD_real + errD_fake
+            running_D += errD.item()
             optimizerD.step()
 
             ############################
@@ -201,6 +204,7 @@ if __name__ == '__main__':
             output = netD(fake)
             errG = criterion(output, label)
             errG.backward()
+            running_G += errG.item()
             D_G_z2 = output.mean().item()
             optimizerG.step()
 
@@ -224,6 +228,9 @@ if __name__ == '__main__':
                         normalize=True)
             del real_cpu
             del fake
+
+        running_D /= len(dataloader)
+        running_G /= len(dataloader)
         
         schedulerD.step(errD)
         schedulerG.step(errG)
