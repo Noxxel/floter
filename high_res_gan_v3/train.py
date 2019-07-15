@@ -113,26 +113,25 @@ if __name__ == '__main__':
     netG = dcgan.Generator(ngpu, nz=nz, ngf=ngf).to(device)
     netG.apply(weights_init)
 
+    load_state = ""
     starting_epoch = 0
     if not opt.fresh:
         outf_files = os.listdir(out_path)
         states = [of for of in outf_files if 'net_state_epoch_' in of]
         states.sort()
         if len(states) >= 1:
-            state = os.path.join(out_path, states[-1])
-            if os.path.isfile(state):
-                netD.load_state_dict(torch.load(state))
-                netG.load_state_dict(torch.load(state))
-                print("successfully loaded {}".format(state))
+            load_state = os.path.join(out_path, states[-1])
+            if os.path.isfile(load_state):
+                netD.load_state_dict(torch.load(load_state)["netD"])
+                netG.load_state_dict(torch.load(load_state)["netG"])
+                print("successfully loaded {}".format(load_state))
                 print("continueing with epoch {}".format(starting_epoch))
                 starting_epoch = int(states[-1][-6:-3])
 
-    if opt.netD != '':
+    if opt.loadstate != '':
         netD.load_state_dict(torch.load(opt.netD))
-        print("successfully loaded {}".format(opt.netD))
-    if opt.netG != '':
         netG.load_state_dict(torch.load(opt.netG))
-        print("successfully loaded {}".format(opt.netG))
+        print("successfully loaded {}".format(opt.loadstate))
     
     # print(netG)
     # print(netD)
@@ -146,6 +145,10 @@ if __name__ == '__main__':
     # setup optimizer
     optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+
+    if os.path.isfile(load_state):
+        optimizerD.load_state_dict(torch.load(load_state)["optimD"])
+        optimizerG.load_state_dict(torch.load(load_state)["optimG"])
 
     schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=10, verbose=True, factor=0.25)
     schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=10, verbose=True, factor=0.25)
