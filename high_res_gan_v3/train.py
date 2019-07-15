@@ -112,6 +112,10 @@ if __name__ == '__main__':
     netG = dcgan.Generator(ngpu, nz=nz, ngf=ngf).to(device)
     netG.apply(weights_init)
 
+    lrD = []
+    lrG = []
+    lossD = []
+    lossG = []
     load_state = ""
     starting_epoch = 0
     if not opt.fresh:
@@ -121,8 +125,13 @@ if __name__ == '__main__':
         if len(states) >= 1:
             load_state = os.path.join(out_path, states[-1])
             if os.path.isfile(load_state):
-                netD.load_state_dict(torch.load(load_state)["netD"])
-                netG.load_state_dict(torch.load(load_state)["netG"])
+                tmp_load = torch.load(load_state)
+                netD.load_state_dict(tmp_load["netD"])
+                netG.load_state_dict(tmp_load["netG"])
+                lrD = tmp_load["lrD"]
+                lrG = tmp_load["lrG"]
+                lossD = tmp_load["lossD"]
+                lossG = tmp_load["lossG"]
                 print("successfully loaded {}".format(load_state))
                 print("continueing with epoch {}".format(starting_epoch))
                 starting_epoch = int(states[-1][-6:-3])
@@ -146,22 +155,24 @@ if __name__ == '__main__':
     optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
     if os.path.isfile(load_state):
-        optimizerD.load_state_dict(torch.load(load_state)["optimD"])
-        optimizerG.load_state_dict(torch.load(load_state)["optimG"])
+        tmp_load = torch.load(load_state)
+        optimizerD.load_state_dict(tmp_load["optimD"])
+        optimizerG.load_state_dict(tmp_load["optimG"])
+        lrD = tmp_load["lrD"]
+        lrG = tmp_load["lrG"]
+        lossD = tmp_load["lossD"]
+        lossG = tmp_load["lossG"]
 
-    schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=10, verbose=True, factor=0.25)
-    schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=10, verbose=True, factor=0.25)
+    schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=5, factor=0.25)
+    schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=5, factor=0.25)
 
     for epoch in tqdm(range(starting_epoch, opt.niter)):
         torch.cuda.empty_cache()
         netG.to(device)
         netD.to(device)
 
-        errD = None
         running_D = 0
-        errG = None
         running_G = 0
-
         for i, data in enumerate(tqdm(dataloader, 0)):
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
@@ -182,10 +193,10 @@ if __name__ == '__main__':
             fake = netG(noise)
             label.fill_(fake_label)
             output = netD(fake.detach())
-            errD_fake = criterion(output, label)
-            errD_fake.backward()
-            D_G_z1 = output.mean().item()
-            errD = errD_real + errD_fake
+            errD_fake= criterion(output, label)
+            errD_fakebackward()
+            D_G_z1 = ouput.mean().item()
+            errD = errDreal + errD_fake
             running_D += errD.item()
             optimizerD.step()
 
@@ -213,17 +224,22 @@ if __name__ == '__main__':
                         normalize=True)
             del real_cpu
             del fake
-
+        
         running_D /= len(dataloader)
         running_G /= len(dataloader)
+
+        lrD.append(optimizerD.param_groups[0]["lr"])
+        lrG.append(optimizerG.param_groups[0]["lr"])
+        lossD.append(running_D)
+        lossG.append(running_G)
         
-        schedulerD.step(errD)
-        schedulerG.step(errG)
+        schedulerD.step(running_D)
+        schedulerG.step(running_G)
 
         netG.to("cpu")
         netD.to("cpu")
         # save state
-        state = {'netD':netD.state_dict(), 'netG':netG.state_dict(), 'optimD':optimizerD.state_dict(), 'optimG':optimizerG.state_dict()}
+        state = {'netD':netD.state_dict(), 'netG':netG.state_dict(), 'optimD':optimizerD.state_dict(), 'optimG':optimizerG.state_dict(), 'lrD':lrD, 'lrG':lrG, 'lossD':lossD, 'lossG':lossG}
         filename = os.path.join(out_path, "net_state_epoch_{:0=3d}.nn".format(epoch))
         if not os.path.isdir(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename), exist_ok=True)
