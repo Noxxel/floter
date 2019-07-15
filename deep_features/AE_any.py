@@ -34,7 +34,7 @@ opt = parser.parse_args()
 print(opt)
 
 n_fft = 2**11
-hop_length = 2*9
+hop_length = 2**9
 n_mels = 128
 
 encode_size = opt.l1size
@@ -119,7 +119,7 @@ if not opt.fresh:
             vae.load_state_dict(torch.load(state)['state_dict'])
 
 optimizer = optim.Adam(vae.parameters(), lr=l_rate)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True, factor=0.5)
 
 if not opt.fresh and os.path.isfile(state):
     optimizer.load_state_dict(torch.load(state)['optim'])
