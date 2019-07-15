@@ -194,9 +194,9 @@ if __name__ == '__main__':
             label.fill_(fake_label)
             output = netD(fake.detach())
             errD_fake= criterion(output, label)
-            errD_fakebackward()
-            D_G_z1 = ouput.mean().item()
-            errD = errDreal + errD_fake
+            errD_fake.backward()
+            D_G_z1 = output.mean().item()
+            errD = errD_real + errD_fake
             running_D += errD.item()
             optimizerD.step()
 
