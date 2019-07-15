@@ -38,7 +38,6 @@ class AutoEncoder(nn.Module):
         X = self.fc3(X)
         X = self.relu(X)
         X = self.fc4(X)
-        X = self.relu(X)
         X = self.sig(X)
         return X
 

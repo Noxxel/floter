@@ -25,7 +25,7 @@ class SoundfileDataset(Dataset):
         
         #np.seterr(all='ignore')
         
-        if out_type == 'mel':
+        if out_type == 'mel' or out_type == 'ae':
             d = {k:v for k,v in d.items() if os.path.isfile(os.path.join(ipath, v['path'][:-3] + "npy")) and v["track"]["genre_top"] != ""}
         
         # Generate class-idx-converter
