@@ -79,13 +79,11 @@ vae.eval()
 if opt.debug:
     for original_mel, s in zip(mels, input_songs):
         original_mel = original_mel.to(device)
-        decoded_mel = vae(original_mel / (-80)).cpu()
+        decoded_mel = vae(original_mel / (-80)).detach().cpu()
         decoded_mel = decoded_mel * (-80)
 
         plt.figure(figsize=(24, 6))
-        import pdb
-        pdb.set_trace()
-        dsp.specshow(original_mel.cpu().numpy().T, y_axis="mel", x_axis="time", sr=sr)
+        dsp.specshow(original_mel.detach().cpu().numpy().T, y_axis="mel", x_axis="time", sr=sr)
         plt.title("original mel spectrogram")
         plt.colorbar(format='%+2.0f dB')
         plt.tight_layout()
