@@ -211,16 +211,16 @@ if __name__ == '__main__':
             if errG.item() < epoch_best:
                 epoch_best = errG.item()
                 vutils.save_image(fake.detach(),
-                        '%s/best_fake_in_epoch_%03d.png' % (out_path, epoch),
+                        os.path.join(out_path , 'best_fake_in_epoch_{:03d}.png'.format(epoch)),
                         normalize=True)
 
             if i % 100 == 0:
                 vutils.save_image(real_cpu,
-                        '%s/real_samples.png' % out_path,
+                        os.path.join(out_path , 'real_samples.png'),
                         normalize=True)
                 fake = netG(fixed_noise)
                 vutils.save_image(fake.detach(),
-                        '%s/fake_samples_epoch_%03d.png' % (out_path, epoch),
+                        os.path.join(out_path , 'fake_samples_epoch_{:03d}.png'.format(epoch)),
                         normalize=True)
             del real_cpu
             del fake
@@ -231,5 +231,5 @@ if __name__ == '__main__':
         netG.to("cpu")
         netD.to("cpu")
         # do checkpointing
-        torch.save(netG.state_dict(), '{}/netG_epoch_{:0=3d}.pth'.format(out_path, epoch))
-        torch.save(netD.state_dict(), '{}/netD_epoch_{:0=3d}.pth'.format(out_path, epoch))
+        torch.save(netD.state_dict(), os.path.join(out_path, 'netD_epoch_{:0=3d}.pth'.format(epoch)))
+        torch.save(netG.state_dict(), os.path.join(out_path, 'netG_epoch_{:0=3d}.pth'.format(epoch)))
