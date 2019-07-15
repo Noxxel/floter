@@ -27,6 +27,7 @@ parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. de
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
 parser.add_argument('--workers', type=int, default=2, help='number of threads for the dataloader')
 parser.add_argument('--debug', action='store_true', help='shrinks the dataset')
+parser.add_argument('--log', action='store_true', help='log during epochs')
 parser.add_argument('--fresh', action='store_true', help='force a fresh start without loading states')
 
 opt = parser.parse_args()
@@ -44,8 +45,8 @@ num_workers = opt.workers
 batch_size = 1
 device = torch.device("cuda:0")
 DEBUG = opt.debug
-LOG = False
-log_intervall = 50
+LOG = opt.log
+log_intervall = 200
 # ipath = "./mels_set_f8820_h735_b256"
 ipath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
 statepath = "./out/vae_b{}_{}".format(n_mels, middle_size)
@@ -93,8 +94,10 @@ if DEBUG:
     print('warning, debugging turnned on!')
     dset.data = dset.data[:100]
 
-tset = dset.get_train(sampler=False)
+tset, vset = dset.get_split(sampler=False, split_size=0.2)
+
 TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
+VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=num_workers)
 
 vae = AutoEncoder(n_mels, encode=encode_size, middle=middle_size)
 vae.to(device)
@@ -124,22 +127,10 @@ if not opt.fresh and os.path.isfile(state):
     loaded_epoch = int(states[-1][4:-4])
     starting_epoch = loaded_epoch+1
 
-# if not opt.fresh:
-#     outf_files = os.listdir(statepath)
-#     states = [of for of in outf_files if "vae_" in of]
-#     states.sort()
-#     if len(states) >= 1:
-#         state = os.path.join(statepath, states[-1])
-#         if os.path.isfile(state):
-#             vae.load_state_dict(torch.load(state)['state_dict'])
-#             optimizer.load_state_dict(torch.load(state)['optim'])
-#             print("successfully loaded %s" % (state))
-#             loaded_epoch = int(states[-1][4:-4])
-#             starting_epoch = loaded_epoch+1
-
 print("Beginning Training with for {} frequency buckets".format(n_mels))
 for epoch in tqdm(range(starting_epoch, n_epochs), desc='Epoch'):
-    train_running_loss = 0.
+
+    train_running_loss = 0.0
     train_acc = []
     vae.train()
     for idx, (X, _) in enumerate(tqdm(TLoader, desc="Training")):
@@ -154,14 +145,27 @@ for epoch in tqdm(range(starting_epoch, n_epochs), desc='Epoch'):
         if LOG and idx != 0 and idx % log_intervall == 0:
             tqdm.write("Current acc: {}".format(train_acc[-1]))
     
-    train_acc = np.array(train_acc)# - np.mean(train_acc)
-    train_acc = train_acc.mean()
-
+    train_acc = np.array(train_acc).mean()
     train_running_loss /= len(TLoader)
 
-    scheduler.step(train_running_loss)
+    val_running_loss = 0.0
+    val_acc = []
+    vae.eval()
+    for idx, (X, _) in enumerate(tqdm(VLoader, desc="Evaluation")):
+        X = X.squeeze().to(device)
+        out = vae(X)
+        loss = lossf(out, X)
+        val_running_loss += loss.detach().item()
+        val_acc.append(np.abs((X - out).detach().cpu()).mean())
+        if LOG and idx != 0 and idx % log_intervall == 0:
+            tqdm.write("Current acc: {}".format(val_acc[-1]))
 
-    tqdm.write("Epoch: {:d} | Train Loss: {:.3f} | Train Diff: {:.3f}".format(epoch, train_running_loss, train_acc))
+    val_acc = np.array(val_acc).mean()
+    val_running_loss /= len(VLoader)
+
+    scheduler.step(val_running_loss)
+
+    tqdm.write("Epoch: {:d} | Train Loss: {:.3f} | Val Loss: {:.3f} | Train Diff: {:.3f} | Val Diff: {:.3f}".format(epoch, train_running_loss, val_running_loss, train_acc, val_acc))
 
     if (epoch)%10 == 0:
         state = {'state_dict':vae.state_dict(), 'optim':optimizer.state_dict()}

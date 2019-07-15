@@ -5,8 +5,12 @@ import pickle
 import multiprocessing
 from tqdm import tqdm
 
+n_fft = 2**11
+hop_length = 2**9
+n_mels = 128
+
 INPATH  = "./fma_small"
-OUTPATH = "./mels_set_f8820_h735_b256"
+OUTPATH = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
 
 def save_mel(paths):
     
@@ -14,11 +18,7 @@ def save_mel(paths):
     
     try:
 
-        song, sr = librosa.load(inpath, mono=True, sr=44100)
-
-        n_fft = 8820        # shortest human-disting. sound (music)
-        hop_length = 735    # => 75% overlap of frames
-        n_mels = 256
+        song, sr = librosa.load(inpath, mono=True, sr=22050)
 
         if len(song) < n_fft:
             return
