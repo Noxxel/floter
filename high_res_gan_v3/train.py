@@ -193,7 +193,7 @@ if __name__ == '__main__':
             fake = netG(noise)
             label.fill_(fake_label)
             output = netD(fake.detach())
-            errD_fake= criterion(output, label)
+            errD_fake = criterion(output, label)
             errD_fake.backward()
             D_G_z1 = output.mean().item()
             errD = errD_real + errD_fake
