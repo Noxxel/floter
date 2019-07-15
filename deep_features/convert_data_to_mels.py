@@ -6,7 +6,7 @@ import multiprocessing
 from tqdm import tqdm
 
 n_fft = 2**11
-hop_length = 2**9
+hop_length = 367
 n_mels = 128
 
 INPATH  = "./fma_small"
