@@ -170,7 +170,7 @@ if __name__ == '__main__':
 
         if (epoch)%10 == 0:
             state = {'state_dict':vae.state_dict(), 'optim':optimizer.state_dict()}
-            filename = "{}/vae_{:02d}.nn".format(statepath, epoch)
+            filename = "{}/vae_{:03d}.nn".format(statepath, epoch)
             if not os.path.isdir(os.path.dirname(filename)):
                 os.makedirs(os.path.dirname(filename), exist_ok=True)
             torch.save(state, filename)
