@@ -135,7 +135,7 @@ class SoundfileDataset(Dataset):
                 X = X.T[:self.n_time_steps,:]
             #normalize data
             if self.normalize:
-                X = ((X / -80) * 2) - 1 #librosa.power_to_db scales from -80 to 0
+                X = (X / -80) #librosa.power_to_db scales from -80 to 0
         else:
             try:
                 song, sr = librosa.load(os.path.join(self.ipath, this.path))

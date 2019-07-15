@@ -89,7 +89,7 @@ dset = SoundfileDataset(ipath=ipath, out_type="mel", normalize=True)
 
 if DEBUG:
     print('warning, debugging turnned on!')
-    dset.data = dset.data[:1000]
+    dset.data = dset.data[:100]
 
 tset = dset.get_train(sampler=False)
 TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
@@ -98,12 +98,12 @@ vae = AutoEncoder(n_mels, encode=encode_size, middle=middle_size)
 vae.to(device)
 lossf = nn.MSELoss()
 lossf.to(device)
-# scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
-starting_epoch = 0
-state = None
 if not os.path.exists(statepath):
     os.makedirs(statepath)
+
+starting_epoch = 0
+state = ''
 if not opt.fresh:
     outf_files = os.listdir(statepath)
     states = [of for of in outf_files if "vae_" in of]
@@ -114,6 +114,7 @@ if not opt.fresh:
             vae.load_state_dict(torch.load(state)['state_dict'])
 
 optimizer = optim.Adam(vae.parameters(), lr=l_rate)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
 if not opt.fresh and os.path.isfile(state):
     optimizer.load_state_dict(torch.load(state)['optim'])
@@ -121,18 +122,18 @@ if not opt.fresh and os.path.isfile(state):
     loaded_epoch = int(states[-1][4:-4])
     starting_epoch = loaded_epoch+1
 
-if not opt.fresh:
-    outf_files = os.listdir(statepath)
-    states = [of for of in outf_files if "vae_" in of]
-    states.sort()
-    if len(states) >= 1:
-        state = os.path.join(statepath, states[-1])
-        if os.path.isfile(state):
-            vae.load_state_dict(torch.load(state)['state_dict'])
-            optimizer.load_state_dict(torch.load(state)['optim'])
-            print("successfully loaded %s" % (state))
-            loaded_epoch = int(states[-1][4:-4])
-            starting_epoch = loaded_epoch+1
+# if not opt.fresh:
+#     outf_files = os.listdir(statepath)
+#     states = [of for of in outf_files if "vae_" in of]
+#     states.sort()
+#     if len(states) >= 1:
+#         state = os.path.join(statepath, states[-1])
+#         if os.path.isfile(state):
+#             vae.load_state_dict(torch.load(state)['state_dict'])
+#             optimizer.load_state_dict(torch.load(state)['optim'])
+#             print("successfully loaded %s" % (state))
+#             loaded_epoch = int(states[-1][4:-4])
+#             starting_epoch = loaded_epoch+1
 
 print("Beginning Training with for {} frequency buckets".format(n_mels))
 for epoch in tqdm(range(starting_epoch, n_epochs), desc='Epoch'):
@@ -150,11 +151,15 @@ for epoch in tqdm(range(starting_epoch, n_epochs), desc='Epoch'):
         train_acc.append(np.abs((X - out).detach().cpu()).mean())
         if LOG and idx != 0 and idx % log_intervall == 0:
             tqdm.write("Current acc: {}".format(train_acc[-1]))
+    
     train_acc = np.array(train_acc)# - np.mean(train_acc)
     train_acc = train_acc.mean()
-    # train_max = np.max(train_acc)
-    # train_acc = (train_acc / train_max).mean()
-    tqdm.write("Epoch: {:d} | Train Loss: {:.2f} | Train Div: {:.2f}".format(epoch, train_running_loss / len(TLoader), train_acc))
+
+    train_running_loss /= len(TLoader)
+
+    scheduler.step(train_running_loss)
+
+    tqdm.write("Epoch: {:d} | Train Loss: {:.2f} | Train Diff: {:.2f}".format(epoch, train_running_loss / len(TLoader), train_acc))
 
     if (epoch)%10 == 0:
         state = {'state_dict':vae.state_dict(), 'optim':optimizer.state_dict()}
