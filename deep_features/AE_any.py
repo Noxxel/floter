@@ -124,8 +124,9 @@ if __name__ == '__main__':
     if not opt.fresh and os.path.isfile(state):
         optimizer.load_state_dict(torch.load(state)['optim'])
         print("successfully loaded %s" % (state))
-        loaded_epoch = int(states[-1][4:-4])
+        loaded_epoch = int(states[-1][4:-3])
         starting_epoch = loaded_epoch+1
+        print("resuming with epoch {}".format(starting_epoch))
 
     print("Beginning Training with {} frequency buckets".format(n_mels))
     for epoch in tqdm(range(starting_epoch, n_epochs), desc='Epoch'):
