@@ -33,7 +33,9 @@ opt = parser.parse_args()
 print(opt)
 
 n_fft = 2**11
-n_mels = 256
+hop_length = 2*9
+n_mels = 128
+
 encode_size = opt.l1size
 middle_size = opt.l2size
 l_rate = opt.lr
@@ -44,8 +46,8 @@ device = torch.device("cuda:0")
 DEBUG = opt.debug
 LOG = False
 log_intervall = 50
-ipath = "./mels_set_f8820_h735_b256"
-#ipath = "./mels_set_f{}_b{}".format(n_fft, n_mels)
+# ipath = "./mels_set_f8820_h735_b256"
+ipath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
 statepath = "./out/vae_b{}_{}".format(n_mels, middle_size)
 print('output-path: {}'.format(statepath))
 
