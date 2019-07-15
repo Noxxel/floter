@@ -11,19 +11,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 n_fft = 2**11
-hop_length = 2**10
+hop_length = 2**9
 n_mels = 128
-n_time_steps = 646
-n_layers = 3
+n_time_steps = 1290
+n_layers = 2
 NORMALIZE = True
 
 n_epochs = 400
-batch_size = 16
+batch_size = 32
 l_rate = 1e-4
 num_workers = 6
 
 DEBUG = False
-LOG = True
+LOG = False
 log_intervall = 50
 
 #datapath = "./mels_set_db"
@@ -45,7 +45,7 @@ VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True,
 model = LSTM(n_mels, batch_size, num_layers=n_layers)
 loss_function = nn.NLLLoss()
 optimizer = optim.Adam(model.parameters(), lr=l_rate)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True, factor=0.5)
 
 val_loss_list, val_accuracy_list, epoch_list = [], [], []
 loss_function.to(device)

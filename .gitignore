@@ -11,3 +11,4 @@ high_res_gan_v2/out/
 conv_*/
 vae_*/
 lstm_*/
+GAN/

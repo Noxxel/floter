@@ -130,13 +130,14 @@ class SoundfileDataset(Dataset):
 
         if self.out_type == 'mel':
             X = np.load(os.path.join(self.ipath, this.path[:-3]) + "npy")
+            
             if self.n_time_steps is None:
                 X = X.T
             else:
                 X = X.T[:self.n_time_steps,:]
             #normalize data
             if self.normalize:
-                X = ((X / -80) * 2) - 1 #librosa.power_to_db scales from -80 to 0
+                X = ((X / 80) * 2) + 1 #librosa.power_to_db scales from -80 to 0
                 
         else:
             try:
