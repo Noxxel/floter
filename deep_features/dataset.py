@@ -128,7 +128,7 @@ class SoundfileDataset(Dataset):
     def __getitem__(self, idx):
         this = self.data[idx]
 
-        if self.out_type == 'mel':
+        if self.out_type == 'mel' or self.out_type == 'ae':
             X = np.load(os.path.join(self.ipath, this.path[:-3]) + "npy")
             
             if self.n_time_steps is None:
@@ -136,9 +136,10 @@ class SoundfileDataset(Dataset):
             else:
                 X = X.T[:self.n_time_steps,:]
             #normalize data
-            if self.normalize:
-                X = ((X / 80) * 2) + 1 #librosa.power_to_db scales from -80 to 0
-                
+            if self.normalize and self.out_type == 'mel':
+                X = (X / -80) * 2 - 1 #librosa.power_to_db scales from -80 to 0
+            elif self.normalize and self.out_type == 'ae':
+                X = (X / -80) #librosa.power_to_db scales from -80 to 0
         else:
             try:
                 song, sr = librosa.load(os.path.join(self.ipath, this.path))
@@ -186,6 +187,22 @@ class SoundfileDataset(Dataset):
             train_set = Subset(self, train_indices)
             valid_set = Subset(self, val_indices)
             return train_set, valid_set
+
+    def get_train(self, sampler=True):
+        shuffle_dataset = True
+        random_seed= 4 # chosen by diceroll, 100% random
+        dataset_size = self.__len__()
+        indices = list(range(dataset_size))
+        if shuffle_dataset :
+            np.random.seed(random_seed)
+            np.random.shuffle(indices)
+        # Creating PT data samplers and loaders:
+        if sampler:
+            train_sampler = SubsetRandomSampler(indices)
+            return train_sampler
+        else:
+            train_set = Subset(self, indices)
+            return train_set
 
     def get_indices(self, shuffle=True):
         validation_split = .3
