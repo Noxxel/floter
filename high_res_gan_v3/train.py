@@ -121,16 +121,16 @@ if __name__ == '__main__':
             if os.path.isfile(state):
                 netG.load_state_dict(torch.load(state))
                 print("successfully loaded %s" % (state))
-                loaded_epoch = int(states[-1][11:-4])
+                loaded_epoch = int(states[-1][-7:-4])
                 starting_epoch = loaded_epoch+1
     print(netG)
-
-
 
     netD = dcgan.Discriminator(ngpu, ndf=ndf).to(device)
     netD.apply(weights_init)
     if not opt.fresh and opt.netD != '':
         netD.load_state_dict(torch.load(opt.netD))
+        starting_epoch = int(opt.netD[-7:-4]) + 1
+        print("continueing with epoch {}".format(starting_epoch))
     elif not opt.fresh:
         outf_files = os.listdir(out_path)
         states = [of for of in outf_files if 'netD_epoch_' in of]
@@ -140,7 +140,7 @@ if __name__ == '__main__':
             if os.path.isfile(state):
                 netD.load_state_dict(torch.load(state))
                 print("successfully loaded %s" % (state))
-                loaded_epoch = int(states[-1][11:-4])
+                loaded_epoch = int(states[-1][-7:-4])
                 if loaded_epoch != starting_epoch-1:
                     raise Exception("loaded states of discriminator ({}) and generator ({}) don't match!".format(loaded_epoch, starting_epoch))
     print(netD)
@@ -155,10 +155,16 @@ if __name__ == '__main__':
     optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
+    schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=10, verbose=True)
+    schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=10, verbose=True)
+
     for epoch in tqdm(range(starting_epoch, opt.niter)):
         torch.cuda.empty_cache()
         netG.to(device)
         netD.to(device)
+
+        errD = None
+        errG = None
 
         epoch_best = 100000
         for i, data in enumerate(tqdm(dataloader, 0)):
@@ -218,6 +224,9 @@ if __name__ == '__main__':
                         normalize=True)
             del real_cpu
             del fake
+        
+        schedulerD.step(errD)
+        schedulerG.step(errG)
 
         netG.to("cpu")
         netD.to("cpu")
