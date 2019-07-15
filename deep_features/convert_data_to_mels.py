@@ -5,9 +5,9 @@ import pickle
 import multiprocessing
 from tqdm import tqdm
 
-n_fft = 2**11 # overlap
-hop_length = 367 # something
-n_mels = 128 # y-axis in mel spectro
+n_fft = 2**11
+hop_length = 367
+n_mels = 128
 
 INPATH  = "./fma_small"
 OUTPATH = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
