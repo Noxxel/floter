@@ -18,7 +18,7 @@ n_layers = 2
 NORMALIZE = True
 
 n_epochs = 400
-batch_size = 32
+batch_size = 16
 l_rate = 1e-4
 num_workers = 6
 
@@ -45,17 +45,17 @@ VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True,
 model = LSTM(n_mels, batch_size, num_layers=n_layers)
 loss_function = nn.NLLLoss()
 optimizer = optim.Adam(model.parameters(), lr=l_rate)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True, factor=0.5)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
 val_loss_list, val_accuracy_list, epoch_list = [], [], []
 loss_function.to(device)
 model.to(device)
+model.hidden = model.init_hidden(device)
 
 for epoch in tqdm(range(n_epochs), desc='Epoch'):
     train_running_loss, train_acc = 0.0, 0.0
 
     for idx, (X, y) in enumerate(tqdm(TLoader, desc="Training")):
-        model.hidden = model.init_hidden(device)
         X, y = X.to(device), y.to(device)
         model.zero_grad()
         out = model(X)
@@ -68,11 +68,10 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
             tqdm.write("Current loss: {}".format(train_running_loss/idx))
 
     tqdm.write("Epoch:  %d | NLLoss: %.4f | Train Accuracy: %.2f" % (epoch, train_running_loss / len(TLoader), train_acc / len(TLoader)))
-
     val_running_loss, val_acc = 0.0, 0.0
     model.eval()
+    
     for X, y in tqdm(VLoader, desc="Validation"):
-        model.hidden = model.init_hidden(device)
         X, y = X.to(device), y.to(device)
         out = model(X)
         val_loss = loss_function(out, y)

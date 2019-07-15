@@ -12,15 +12,14 @@ class LSTM(nn.Module):
         self.num_layers = num_layers
 
         self.hidden_dim1 = 128
-        self.hidden_dim2 = 96   
+        self.hidden_dim2 = 96  
         self.hidden_dim3 = 64
         self.lstm_hidden = 128
         self.linear_dim = 64
         
-
-        self.conv1 = nn.Conv1d(self.input_dim, self.hidden_dim1, 5)
-        self.conv2 = nn.Conv1d(self.hidden_dim1, self.hidden_dim2, 5)
-        self.conv3 = nn.Conv1d(self.hidden_dim2, self.hidden_dim3, 5)
+        self.conv1 = nn.Conv1d(self.input_dim, self.hidden_dim1, 7)
+        self.conv2 = nn.Conv1d(self.hidden_dim1, self.hidden_dim2, 7)
+        self.conv3 = nn.Conv1d(self.hidden_dim2, self.hidden_dim3, 7)
 
         self.batchnorm1 = nn.BatchNorm1d(self.hidden_dim1, momentum=0.9)
         self.batchnorm2 = nn.BatchNorm1d(self.hidden_dim2, momentum=0.9)
@@ -32,8 +31,8 @@ class LSTM(nn.Module):
         self.linear = nn.Linear(self.lstm_hidden, self.linear_dim)
         self.normLin = nn.BatchNorm1d(self.linear_dim, momentum=0.9)
 
-        #self.output = nn.Linear(self.linear_dim, output_dim)
-        self.output = nn.Linear(self.lstm_hidden, output_dim)
+        self.output = nn.Linear(self.linear_dim, output_dim)
+        #self.output = nn.Linear(self.lstm_hidden, output_dim)
 
         self.maxpool = nn.MaxPool1d(2)
         self.relu = nn.ReLU()
@@ -70,6 +69,9 @@ class LSTM(nn.Module):
         lstm_out, hidden = self.lstm(X.view(X.shape[0],X.shape[2],X.shape[1]), self.hidden)
         #print(lstm_out.shape)
         X = self.normLSTM(lstm_out[:,-1].view(X.shape[0], -1))
+        X = self.relu(X)
+        X = self.linear(X)
+        X = self.normLin(X)
         #print(X.shape)
         X = self.output(X)
         X = F.log_softmax(X, dim=1)

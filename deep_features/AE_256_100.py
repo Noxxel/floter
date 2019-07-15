@@ -67,8 +67,8 @@ if DEBUG:
     dset.data = dset.data[:1000]
 
 tset, vset = dset.get_split(sampler=False, split_size=0.2)
-TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers, pin_memory=True)
-VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=num_workers, pin_memory=True)
+TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
+VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=num_workers)
 
 vae = AutoEncoder(n_mels, encode=encode_size, middle=middle_size)
 lossf = nn.MSELoss()
