@@ -1,4 +1,6 @@
+print("GODDAMNITPYTHONNOTAGAIN!")
 import torch
+import torch.optim as optim
 from torch.utils.data import DataLoader
 from model import LSTM
 from dataset import SoundfileDataset
@@ -11,7 +13,7 @@ from colorhash import ColorHash as cHash
 n_fft = 2**11
 hop_length = 2**9
 n_mels = 128
-n_time_steps = None
+n_time_steps = 1290
 NORMALIZE = True
 batch_size = 1
 num_workers = 1
@@ -19,7 +21,7 @@ n_layers = 2
 
 datapath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
 modelpath = "./lstm_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
-modelName = "lstm_249.nn"
+modelName = "lstm_29.nn"
 
 device = "cuda"
 
@@ -32,12 +34,14 @@ VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=False
 
 model = LSTM(n_mels, batch_size, num_layers=n_layers)
 
-model.hidden = model.init_hidden(device)
-stateD = torch.load(os.path.join(modelpath, modelName))
+stateD = torch.load(os.path.join(modelpath, modelName), map_location=device)
 model.load_state_dict(stateD['state_dict'])
+#print(stateD['optim'])
+#exit()
 model.to(device)
-model.eval()
+model.hidden = model.init_hidden(device)
 
+model.eval()
 total_train = np.zeros(8)
 correct_train = np.zeros(9)
 total_val = np.zeros(8)
@@ -45,6 +49,7 @@ correct_val = np.zeros(9)
 
 running_acc = 0.0
 for X, y in tqdm(TLoader, desc="Training"):
+    
     X, y = X.to(device), y.to(device)
     out = model(X)
     running_acc += model.get_accuracy(out, y)
@@ -82,6 +87,7 @@ colors_acc = [cHash(g).hex for g in genres_acc]
 plt.figure(figsize=(16, 8))
 plt.bar(list(range(8)), total_train, tick_label=genres, color=colors)
 plt.title("Genre distribution of training set")
+plt.tight_layout()
 plt.savefig("train_dist.png")
 plt.clf()
 
@@ -91,12 +97,15 @@ correct_train[8] = total * 100
 plt.figure(figsize=(16, 8))
 plt.bar(list(range(9)), correct_train, tick_label=genres_acc, color=colors_acc)
 plt.title("Accuracy on training set")
+plt.ylim(0, 100)
+plt.tight_layout()
 plt.savefig("train_acc.png")
 plt.clf()
 
 plt.figure(figsize=(16, 8))
 plt.bar(list(range(8)), total_val, tick_label=genres, color=colors)
 plt.title("Genre distribution of validation set")
+plt.tight_layout()
 plt.savefig("val_dist.png")
 plt.clf()
 
@@ -106,5 +115,7 @@ correct_val[8] = total * 100
 plt.figure(figsize=(16, 8))
 plt.bar(list(range(9)), correct_val, tick_label=genres_acc, color=colors_acc)
 plt.title("Accuracy on validation set")
+plt.ylim(0, 100)
+plt.tight_layout()
 plt.savefig("val_acc.png")
 plt.clf()

@@ -1,4 +1,4 @@
-
+print("FUCKTHISFUCKINGSHIT")
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -19,8 +19,8 @@ NORMALIZE = True
 
 n_epochs = 400
 batch_size = 16
-l_rate = 1e-4
-num_workers = 6
+l_rate = 1e-3
+num_workers = 4
 
 DEBUG = False
 LOG = False
@@ -28,7 +28,7 @@ log_intervall = 50
 
 #datapath = "./mels_set_db"
 datapath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
-statepath = "./lstm_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
+statepath = "./lstm_f{}_h{}_b{}_cpu".format(n_fft, hop_length, n_mels)
 #statepath = "conv_small_b128"
 
 device = "cuda"
@@ -54,7 +54,7 @@ model.hidden = model.init_hidden(device)
 
 for epoch in tqdm(range(n_epochs), desc='Epoch'):
     train_running_loss, train_acc = 0.0, 0.0
-
+    model.train()
     for idx, (X, y) in enumerate(tqdm(TLoader, desc="Training")):
         X, y = X.to(device), y.to(device)
         model.zero_grad()
@@ -86,12 +86,13 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
                 val_acc / len(VLoader),
             )
         )
-    model.train()
+    
     epoch_list.append(epoch)
     val_accuracy_list.append(val_acc / len(VLoader))
     val_loss_list.append(val_running_loss / len(VLoader))
 
     if (epoch+1)%10 == 0:
+        model.to("cpu")
         state = {'state_dict':model.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'accuracy':val_accuracy_list}
         filename = "{}/lstm_{:02d}.nn".format(statepath, epoch)
         if not os.path.isdir(os.path.dirname(filename)):
@@ -99,6 +100,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         torch.save(state, filename)
         del state
         torch.cuda.empty_cache()
+        model.to(device)
 
 # visualization loss
 plt.plot(epoch_list, val_loss_list)
