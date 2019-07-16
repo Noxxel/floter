@@ -324,7 +324,7 @@ if __name__ == "__main__":
             elif real_imgs.shape[0] < mels.shape[0]:
                 real_imgs = real_imgs[:mels.shape[0]]
             assert real_imgs.shape[0] == mels.shape[0]
-
+            
             mels = mels.to(device2)
             real_imgs = real_imgs.to(device)
 
