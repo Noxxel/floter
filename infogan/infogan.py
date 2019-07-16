@@ -251,7 +251,7 @@ if __name__ == "__main__":
                 lossG = tmp_load["lossG"]
                 lossI = tmp_load["lossI"]
                 print("successfully loaded {}".format(load_state))
-                starting_epoch = int(states[-1][-6:-3])
+                starting_epoch = int(states[-1][-6:-3])+1
                 print("continueing with epoch {}".format(starting_epoch))
 
     # Configure data loaders
