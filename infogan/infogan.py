@@ -341,10 +341,6 @@ if __name__ == "__main__":
         generator.to(device)
         discriminator.to(device)
 
-        adversarial_loss.to(device)
-        categorical_loss.to(device)
-        continuous_loss.to(device)
-
         running_D = 0
         running_G = 0
         running_I = 0
@@ -460,13 +456,10 @@ if __name__ == "__main__":
         # save state
         discriminator.cpu()
         generator.cpu()
-        
-        adversarial_loss.cpu()
-        categorical_loss.cpu()
-        continuous_loss.cpu()
 
         state = {'idis':discriminator.state_dict(), 'igen':generator.state_dict(), 'optimD':optimizer_D.state_dict(), 'optimG':optimizer_G.state_dict(), 'optimI':optimizer_info.state_dict(), 'lossD':lossD, 'lossG':lossG, 'lossI':lossI}
         filename = os.path.join(opath, "infogan_state_epoch_{:0=3d}.nn".format(epoch))
         if not os.path.isdir(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename), exist_ok=True)
         torch.save(state, filename)
+        del state
