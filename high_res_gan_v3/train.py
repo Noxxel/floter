@@ -251,7 +251,7 @@ if __name__ == '__main__':
             errD_fake.backward()
             D_G_z1 = output.mean().item()
             errD = errD_real + errD_fake
-            running_D += errD.item()
+            running_D += errD.cpu().item()
             optimizerD.step()
 
             ############################
@@ -262,7 +262,7 @@ if __name__ == '__main__':
             output = netD(fake)
             errG = criterion(output, label)
             errG.backward()
-            running_G += errG.item()
+            running_G += errG.cpu().item()
             D_G_z2 = output.mean().item()
             optimizerG.step()
 
@@ -278,6 +278,7 @@ if __name__ == '__main__':
                         normalize=True)
             del real_cpu
             del fake
+            del noise
         
         running_D /= len(dataloader)
         running_G /= len(dataloader)
