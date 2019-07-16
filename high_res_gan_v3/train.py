@@ -233,7 +233,7 @@ if __name__ == '__main__':
             elif opt.ae:
                 noise = vae.encode(mels.to(device)).unsqueeze(2).unsqueeze(2)
             elif opt.mel:
-                noise = mels.to(device)
+                noise = mels.to(device).unsqueeze(2).unsqueeze(2)
             fake = netG(noise)
             label.fill_(fake_label)
             output = netD(fake.detach())
