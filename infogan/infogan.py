@@ -275,6 +275,11 @@ if __name__ == "__main__":
     optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
     optimizer_info = torch.optim.Adam(itertools.chain(generator.parameters(), discriminator.parameters()), lr=opt.lr, betas=(opt.b1, opt.b2))
 
+    generator.to(device)
+    discriminator.to(device)
+    generatr.train()
+    discriminator.train()
+
     if os.path.isfile(load_state):
         # tmp_dev = device
         tmp_load = torch.load(load_state)
@@ -293,9 +298,6 @@ if __name__ == "__main__":
         #     for k, v in value.items():
         #         if isinstance(v, torch.Tensor):
         #             value[k] = v.to(tmp_dev)
-
-    generator.to(device)
-    discriminator.to(device)
 
     # Static generator inputs for sampling
     static_z = torch.tensor(np.zeros((1 ** 2, opt.latent_dim)), dtype=torch.float32).to(device)
