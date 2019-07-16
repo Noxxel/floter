@@ -168,7 +168,7 @@ if __name__ == "__main__":
     num_workers = opt.workers
     device = torch.device("cuda:{}".format(opt.gpu) if opt.cuda else "cpu")
     device2 = torch.device("cuda:{}".format(0 if opt.gpu == 1 else 1) if opt.cuda else "cpu")
-    # device2 = device
+    device2 = device
     ipath = "../deep_features/mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
     opath = "./out"
     statepath = ""
