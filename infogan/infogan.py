@@ -281,9 +281,11 @@ if __name__ == "__main__":
     
     if os.path.isfile(load_state):
         tmp_load = torch.load(load_state)
-        optimizer_D.load_state_dict(tmp_load["optimD"]).cpu()
-        optimizer_G.load_state_dict(tmp_load["optimG"]).cpu()
-        optimizer_info.load_state_dict(tmp_load["optimI"]).cpu()
+        import pdb
+        pdb.set_trace()
+        optimizer_D.load_state_dict(tmp_load["optimD"])
+        optimizer_G.load_state_dict(tmp_load["optimG"])
+        optimizer_info.load_state_dict(tmp_load["optimI"])
 
     # Static generator inputs for sampling
     static_z = torch.tensor(np.zeros((1 ** 2, opt.latent_dim)), dtype=torch.float32).to(device)
