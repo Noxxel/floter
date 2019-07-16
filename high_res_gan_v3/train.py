@@ -165,9 +165,17 @@ if __name__ == '__main__':
                 del tmp_load
 
     if opt.loadstate != '':
-        netD.load_state_dict(torch.load(opt.netD))
-        netG.load_state_dict(torch.load(opt.netG))
+        tmp_load = torch.load(load_state)
+        netD.load_state_dict(torch.load(opt.loadstate))
+        netG.load_state_dict(torch.load(opt.loadstate))
+        lrD = tmp_load["lrD"]
+        lrG = tmp_load["lrG"]
+        lossD = tmp_load["lossD"]
+        lossG = tmp_load["lossG"]
         print("successfully loaded {}".format(opt.loadstate))
+        starting_epoch = int(states[-1][-6:-3])
+        print("continueing with epoch {}".format(starting_epoch))
+        del tmp_load
     
     # load pretrained autoencoder
     vae = None
