@@ -277,7 +277,7 @@ if __name__ == "__main__":
 
     generator.to(device)
     discriminator.to(device)
-    generatr.train()
+    generator.train()
     discriminator.train()
 
     if os.path.isfile(load_state):
