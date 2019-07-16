@@ -9,6 +9,7 @@ import torchvision.transforms as transforms
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.utils as vutils
+import numpy as np
 
 from tqdm import tqdm
 from skimage import io, transform
@@ -53,12 +54,20 @@ if __name__ == '__main__':
     parser.add_argument('--outf', default='./out/', help='folder to output images and model checkpoints')
     parser.add_argument('--manualSeed', type=int, help='manual seed')
     parser.add_argument('--fresh', action='store_true', help='perform a fresh start instead of continuing from last checkpoint')
+    parser.add_argument('--ae', action='store_true', help='train with autoencoder')
+    parser.add_argument('--mel', action='store_true', help='train with raw mel spectograms')
 
     opt = parser.parse_args()
     print(opt)
 
+    n_fft = 2**11
+    hop_length = 367
+    n_mels = 128
+
+
     folder_name = 'nz_{}_ngf_{}_ndf_{}_bs_{}/'.format(opt.nz, opt.ngf, opt.ndf, opt.batchSize)
     out_path = os.path.join(opt.outf, folder_name)
+    ipath = "../deep_features/mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
 
     try:
         os.makedirs(out_path)
@@ -89,6 +98,11 @@ if __name__ == '__main__':
     assert dataset
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize,
                                              shuffle=True, num_workers=int(opt.workers))
+
+    Mset = SoundfileDataset(ipath=ipath, out_type="gan")
+    Mset.data = Mset.data[:len(Iset)]
+    assert Mset
+    Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers))
 
     device = torch.device("cuda:0" if opt.cuda else "cpu")
     ngpu = int(opt.ngpu)
@@ -141,12 +155,27 @@ if __name__ == '__main__':
         netG.load_state_dict(torch.load(opt.netG))
         print("successfully loaded {}".format(opt.loadstate))
     
+    # load pretrained autoencoder
+    vae = None
+    if opt.ae:
+        vae = AutoEncoder(n_mels, encode=opt.l1size, middle=opt.l2size)
+        files = os.listdir(statepath)
+        states = [f for f in files if "vae_" in f]
+        states.sort()
+        if not len(states) > 0:
+            raise Exception("no states for autoencoder provided!")
+        state = os.path.join(statepath, states[-1])
+        if os.path.isfile(state):
+            vae.load_state_dict(torch.load(state)['state_dict'])
+        vae.to(device)
+        vae.eval()
+    
     # print(netG)
     # print(netD)
 
     criterion = nn.BCELoss()
 
-    fixed_noise = torch.randn(opt.batchSize, nz, 1, 1, device=device)
+    fixed_noise = torch.tensor(np.array(Mset[i] for i in range(1337,1337+opt.batchSize)), dtype=torch.float32)
     real_label = 1
     fake_label = 0
 
@@ -173,7 +202,7 @@ if __name__ == '__main__':
 
         running_D = 0
         running_G = 0
-        for i, data in enumerate(tqdm(dataloader, 0)):
+        for i, (data, mels) in enumerate(zip(tqdm(dataloader), Mloader)):
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
@@ -189,7 +218,13 @@ if __name__ == '__main__':
             D_x = output.mean().item()
 
             # train with fake
-            noise = torch.randn(batch_size, nz, 1, 1, device=device)
+            noise = None
+            if not opt.ae or opt.mel:
+                noise = torch.randn(batch_size, nz, 1, 1, device=device)
+            elif opt.ae:
+                noise = vae.encode(mels.to(device))
+            elif opt.mel:
+                noise = mels.to(device)
             fake = netG(noise)
             label.fill_(fake_label)
             output = netD(fake.detach())

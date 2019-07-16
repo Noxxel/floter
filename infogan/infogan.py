@@ -73,7 +73,7 @@ class Generator(nn.Module):
             nn.BatchNorm2d(256, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Upsample(scale_factor=2),
-            nn.Conv2d(128, 128, 3, stride=1, padding=1),
+            nn.Conv2d(256, 128, 3, stride=1, padding=1),
             nn.BatchNorm2d(128, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Upsample(scale_factor=2),
@@ -319,6 +319,8 @@ if __name__ == "__main__":
         running_G = 0
         running_I = 0
         for i, (real_imgs, mels) in enumerate(zip(tqdm(Iloader), Mloader)):
+            assert real.imgs.shape[0] == mels.shape[0]
+
             mels = mels.to(device2)
             real_imgs = real_imgs.to(device)
 
