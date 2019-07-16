@@ -177,7 +177,8 @@ if __name__ == "__main__":
 
     os.makedirs(ipath, exist_ok=True)
     os.makedirs(opath, exist_ok=True)
-    os.makedirs(statepath, exist_ok=True)
+    if statepath != "":
+        os.makedirs(statepath, exist_ok=True)
 
     # load pretrained autoencoder
     vae = None
