@@ -215,6 +215,8 @@ if __name__ == '__main__':
         torch.cuda.empty_cache()
         netG.to(device)
         netD.to(device)
+        
+        criterion.to(device)
 
         running_D = 0
         running_G = 0
@@ -287,8 +289,11 @@ if __name__ == '__main__':
         schedulerD.step(running_D)
         schedulerG.step(running_G)
 
-        netG.to("cpu")
-        netD.to("cpu")
+        netG.cpu()
+        netD.cpu()
+
+        criterion.cpu()
+        
         # save state
         state = {'netD':netD.state_dict(), 'netG':netG.state_dict(), 'optimD':optimizerD.state_dict(), 'optimG':optimizerG.state_dict(), 'lrD':lrD, 'lrG':lrG, 'lossD':lossD, 'lossG':lossG}
         filename = os.path.join(out_path, "net_state_epoch_{:0=3d}.nn".format(epoch))

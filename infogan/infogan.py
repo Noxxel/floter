@@ -304,10 +304,10 @@ if __name__ == "__main__":
     c1 = None
     c2 = None
     if opt.ae:
-        c1 = vae.encode(Mset[1337].to(device2)).detach().to(device).unsqueeze(0)
+        c1 = vae.encode(Mset[69].to(device2)).detach().to(device).unsqueeze(0)
         c2 = vae.encode(Mset[42].to(device2)).detach().to(device).unsqueeze(0)
     elif opt.mel:
-        c1 = Mset[1337].to(device).unsqueeze(0)
+        c1 = Mset[69].to(device).unsqueeze(0)
         c2 = Mset[42].to(device).unsqueeze(0)
     assert len(Iset) == len(Mset)
 
@@ -333,6 +333,10 @@ if __name__ == "__main__":
 
         generator.to(device)
         discriminator.to(device)
+
+        adversarial_loss.to(device)
+        categorical_loss.to(device)
+        continuous_loss.to(device)
 
         running_D = 0
         running_G = 0
@@ -449,6 +453,10 @@ if __name__ == "__main__":
         # save state
         discriminator.cpu()
         generator.cpu()
+        
+        adversarial_loss.cpu()
+        categorical_loss.cpu()
+        continuous_loss.cpu()
 
         state = {'idis':discriminator.state_dict(), 'igen':generator.state_dict(), 'optimD':optimizer_D.state_dict(), 'optimG':optimizer_G.state_dict(), 'optimI':optimizer_info.state_dict(), 'lossD':lossD, 'lossG':lossG, 'lossI':lossI}
         filename = os.path.join(opath, "infogan_state_epoch_{:0=3d}.nn".format(epoch))
