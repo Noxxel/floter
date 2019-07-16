@@ -25,7 +25,7 @@ class SoundfileDataset(Dataset):
         
         #np.seterr(all='ignore')
         
-        if out_type == 'mel' or out_type == 'ae':
+        if out_type == 'mel' or out_type == 'ae' or out_type == 'gan':
             d = {k:v for k,v in d.items() if os.path.isfile(os.path.join(ipath, v['path'][:-3] + "npy")) and v["track"]["genre_top"] != ""}
         
         # Generate class-idx-converter
@@ -42,16 +42,16 @@ class SoundfileDataset(Dataset):
         for key, val in tqdm(d.items(), desc="build dataset"):
             try:          # |id is actually not needed here
                 tmp = Struct(id=key, path=val['path'], duration=int(val["track"]["duration"]),
-                             label=self.lbl2idx[ val['track']['genre_top'] ])
-                             #labels=[int(x) for x in val['track']['genres_all'][1:-1].split(",")])
+                            label=self.lbl2idx[ val['track']['genre_top'] ])
+                            #labels=[int(x) for x in val['track']['genres_all'][1:-1].split(",")])
             except ValueError as e:
                 continue
             
             self.data.append(tmp)
 
-        self.ipath = ipath       # path of image data
+        self.ipath = ipath
         self.hotvec = hotvec     # whether to return labels as one-hot-vec
-        self.out_type = out_type # 'raw' or 'mel' or other stuff
+        self.out_type = out_type
         self.n_time_steps = n_time_steps
         self.normalize = normalize
 
@@ -128,18 +128,23 @@ class SoundfileDataset(Dataset):
     def __getitem__(self, idx):
         this = self.data[idx]
 
-        if self.out_type == 'mel' or self.out_type == 'ae':
+        if self.out_type == 'mel' or self.out_type == 'ae' or self.out_type == 'gan':
             X = np.load(os.path.join(self.ipath, this.path[:-3]) + "npy")
+            X = X.T
             
-            if self.n_time_steps is None:
-                X = X.T
+            if self.out_type == 'gan':
+                randIndex = np.random.randint(0, X.shape[0])
+                X = X[randIndex, :]
+                if self.normalize:
+                    X = X / (-80)
             else:
-                X = X.T[:self.n_time_steps,:]
-            #normalize data
-            if self.normalize and self.out_type == 'mel':
-                X = (X / -80) * 2 - 1 #librosa.power_to_db scales from -80 to 0
-            elif self.normalize and self.out_type == 'ae':
-                X = (X / -80) #librosa.power_to_db scales from -80 to 0
+                if self.n_time_steps is not None:
+                    X = X[:self.n_time_steps,:]
+                #normalize data
+                if self.normalize and self.out_type == 'mel':
+                    X = (X / -80) * 2 - 1 #librosa.power_to_db scales from -80 to 0
+                elif self.normalize and self.out_type == 'ae':
+                    X = (X / -80) # atuo encoder produces vectors in range 0 to 1
         else:
             try:
                 song, sr = librosa.load(os.path.join(self.ipath, this.path))
@@ -223,21 +228,16 @@ class SoundfileDataset(Dataset):
     
 if __name__ == "__main__":
 
-    dset = SoundfileDataset(ipath="./mels_set_f8820_h735_b256",out_type='mel', n_time_steps=1800)
+    dset = SoundfileDataset(ipath="./mels_set_f2048_h367_b128",out_type='gan', n_time_steps=1800)
 
     print("### Benchmarking dataloading speed ###")
-    #TODO: compare to training with offline-preprocessed data, to see if preprocessing is bottleneck
     dataloader = DataLoader(dset, num_workers=1, batch_size=1)
     minLen = 10000000
     sizes = set()
     for i, [X, y] in enumerate(tqdm(dataloader)):
-        sizes.add(X.shape[1])
-        if X.shape[1] < minLen:
-            minLen = X.shape[1]
-        if X.shape[1] < 1798:
-            tqdm.write("Small song")
-            tqdm.write(str(X.shape[1]))
-            tqdm.write(dset.data[i].path)
+        sizes.add(X.shape[0])
+        if X.shape[0] < minLen:
+            minLen = X.shape[0]
     
     print(sizes)
     print(minLen)
