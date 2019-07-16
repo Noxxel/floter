@@ -274,9 +274,6 @@ if __name__ == "__main__":
     optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
     optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
     optimizer_info = torch.optim.Adam(itertools.chain(generator.parameters(), discriminator.parameters()), lr=opt.lr, betas=(opt.b1, opt.b2))
-    
-    generator.to(device)
-    discriminator.to(device)
 
     if os.path.isfile(load_state):
         # tmp_dev = device
@@ -296,6 +293,9 @@ if __name__ == "__main__":
         #     for k, v in value.items():
         #         if isinstance(v, torch.Tensor):
         #             value[k] = v.to(tmp_dev)
+
+    generator.to(device)
+    discriminator.to(device)
 
     # Static generator inputs for sampling
     static_z = torch.tensor(np.zeros((1 ** 2, opt.latent_dim)), dtype=torch.float32).to(device)
@@ -431,8 +431,6 @@ if __name__ == "__main__":
 
             info_loss = lambda_cat * categorical_loss(pred_label, gt_labels) + lambda_con * continuous_loss(pred_code, code_input)
             running_I += info_loss.item()
-
-            torch.cuda.empty_cache()
 
             info_loss.backward()
             optimizer_info.step()
