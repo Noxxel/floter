@@ -244,6 +244,7 @@ if __name__ == "__main__":
                 print("successfully loaded {}".format(load_state))
                 starting_epoch = int(states[-1][-6:-3])+1
                 print("continueing with epoch {}".format(starting_epoch))
+                del tmp_load
     # else:
     generator.apply(weights_init_normal)
     discriminator.apply(weights_init_normal)
@@ -298,6 +299,7 @@ if __name__ == "__main__":
         #     for k, v in value.items():
         #         if isinstance(v, torch.Tensor):
         #             value[k] = v.to(tmp_dev)
+        del tmp_load
 
     # Static generator inputs for sampling
     static_z = torch.tensor(np.zeros((1 ** 2, opt.latent_dim)), dtype=torch.float32).to(device)
