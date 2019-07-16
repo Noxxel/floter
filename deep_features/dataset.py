@@ -68,6 +68,7 @@ class SoundfileDataset(Dataset):
                 X = X[randIndex, :]
                 if self.normalize:
                     X = X / (-80)
+                return torch.as_tensor(X, dtype=torch.float32)
             else:
                 if self.n_time_steps is not None:
                     X = X[:self.n_time_steps,:]

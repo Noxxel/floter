@@ -9,11 +9,14 @@ import torchvision.transforms as transforms
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.utils as vutils
+import numpy as np
 
 from tqdm import tqdm
 from skimage import io, transform
 from torch.utils.data import Dataset, DataLoader
 
+from dataset import SoundfileDataset
+from AE_any import AutoEncoder
 
 class DatasetCust(Dataset):
     def __init__(self, data_path, transform = None):
@@ -53,12 +56,28 @@ if __name__ == '__main__':
     parser.add_argument('--outf', default='./out/', help='folder to output images and model checkpoints')
     parser.add_argument('--manualSeed', type=int, help='manual seed')
     parser.add_argument('--fresh', action='store_true', help='perform a fresh start instead of continuing from last checkpoint')
+    parser.add_argument('--ae', action='store_true', help='train with autoencoder')
+    parser.add_argument('--mel', action='store_true', help='train with raw mel spectograms')
+    parser.add_argument('--conv', action='store_true', help='flo-net')
+    parser.add_argument("--l1size", type=int, default=64, help="layer sizes of ae")
+    parser.add_argument("--l2size", type=int, default=16, help="layer sizes of ae")
 
     opt = parser.parse_args()
     print(opt)
 
+    n_fft = 2**11
+    hop_length = 367
+    n_mels = 128
+
+    statepath = ""
+    if opt.ae:
+        statepath = "./states/vae_b{}_{}".format(n_mels, opt.l2size)
+    elif opt.conv:
+        statepath = "./states/conv"
+
     folder_name = 'nz_{}_ngf_{}_ndf_{}_bs_{}/'.format(opt.nz, opt.ngf, opt.ndf, opt.batchSize)
     out_path = os.path.join(opt.outf, folder_name)
+    ipath = "../deep_features/mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
 
     try:
         os.makedirs(out_path)
@@ -76,6 +95,10 @@ if __name__ == '__main__':
     if torch.cuda.is_available() and not opt.cuda:
         print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
+    # dataloaders
+    Mset = SoundfileDataset(ipath=ipath, out_type="gan")
+    assert Mset
+    Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers))
 
     dataset = DatasetCust(opt.dataroot,
                            transform=transforms.Compose([
@@ -87,8 +110,12 @@ if __name__ == '__main__':
     nc=3
 
     assert dataset
+    assert len(dataset) > len(Mset)
+    dataset.data = dataset.data[:len(Mset)]
+    assert len(Mset) == len(dataset)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize,
                                              shuffle=True, num_workers=int(opt.workers))
+
 
     device = torch.device("cuda:0" if opt.cuda else "cpu")
     ngpu = int(opt.ngpu)
@@ -133,20 +160,40 @@ if __name__ == '__main__':
                 lossD = tmp_load["lossD"]
                 lossG = tmp_load["lossG"]
                 print("successfully loaded {}".format(load_state))
-                print("continueing with epoch {}".format(starting_epoch))
                 starting_epoch = int(states[-1][-6:-3])
+                print("continueing with epoch {}".format(starting_epoch))
+                del tmp_load
 
     if opt.loadstate != '':
         netD.load_state_dict(torch.load(opt.netD))
         netG.load_state_dict(torch.load(opt.netG))
         print("successfully loaded {}".format(opt.loadstate))
     
+    # load pretrained autoencoder
+    vae = None
+    if opt.ae:
+        vae = AutoEncoder(n_mels, encode=opt.l1size, middle=opt.l2size)
+        files = os.listdir(statepath)
+        states = [f for f in files if "vae_" in f]
+        states.sort()
+        if not len(states) > 0:
+            raise Exception("no states for autoencoder provided!")
+        state = os.path.join(statepath, states[-1])
+        if os.path.isfile(state):
+            vae.load_state_dict(torch.load(state)['state_dict'])
+        vae.to(device)
+        vae.eval()
+    
     # print(netG)
     # print(netD)
 
     criterion = nn.BCELoss()
 
-    fixed_noise = torch.randn(opt.batchSize, nz, 1, 1, device=device)
+    fixed_noise = None
+    if opt.ae:
+        fixed_noise = torch.tensor([vae.encode(Mset[i].to(device)).detach().cpu().numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
+    elif opt.mel:
+        fixed_noise = torch.tensor([Mset[i].numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
     real_label = 1
     fake_label = 0
 
@@ -162,18 +209,20 @@ if __name__ == '__main__':
         lrG = tmp_load["lrG"]
         lossD = tmp_load["lossD"]
         lossG = tmp_load["lossG"]
+        del tmp_load
 
-    schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=5, factor=0.25)
-    schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=5, factor=0.25)
+    schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=30, factor=0.5)
+    schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=5, factor=0.2)
 
     for epoch in tqdm(range(starting_epoch, opt.niter)):
         torch.cuda.empty_cache()
+
         netG.to(device)
         netD.to(device)
 
         running_D = 0
         running_G = 0
-        for i, data in enumerate(tqdm(dataloader, 0)):
+        for i, (data, mels) in enumerate(tqdm(zip(dataloader, Mloader), total=len(dataloader))):
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
@@ -189,7 +238,13 @@ if __name__ == '__main__':
             D_x = output.mean().item()
 
             # train with fake
-            noise = torch.randn(batch_size, nz, 1, 1, device=device)
+            noise = None
+            if opt.ae:
+                noise = vae.encode(mels.to(device)).unsqueeze(2).unsqueeze(2)
+            elif opt.mel:
+                noise = mels.to(device).unsqueeze(2).unsqueeze(2)
+            else:
+                noise = torch.randn(batch_size, nz, 1, 1, device=device)
             fake = netG(noise)
             label.fill_(fake_label)
             output = netD(fake.detach())
@@ -197,7 +252,7 @@ if __name__ == '__main__':
             errD_fake.backward()
             D_G_z1 = output.mean().item()
             errD = errD_real + errD_fake
-            running_D += errD.item()
+            running_D += errD.cpu().item()
             optimizerD.step()
 
             ############################
@@ -208,7 +263,7 @@ if __name__ == '__main__':
             output = netD(fake)
             errG = criterion(output, label)
             errG.backward()
-            running_G += errG.item()
+            running_G += errG.cpu().item()
             D_G_z2 = output.mean().item()
             optimizerG.step()
 
@@ -224,23 +279,26 @@ if __name__ == '__main__':
                         normalize=True)
             del real_cpu
             del fake
+            del noise
         
         running_D /= len(dataloader)
         running_G /= len(dataloader)
 
-        lrD.append(optimizerD.param_groups[0]["lr"])
-        lrG.append(optimizerG.param_groups[0]["lr"])
+        lrD.append(optimizerD.param_groups[0]["lr"].cpu())
+        lrG.append(optimizerG.param_groups[0]["lr"].cpu())
         lossD.append(running_D)
         lossG.append(running_G)
         
         schedulerD.step(running_D)
         schedulerG.step(running_G)
 
-        netG.to("cpu")
-        netD.to("cpu")
+        netG.cpu()
+        netD.cpu()
+
         # save state
         state = {'netD':netD.state_dict(), 'netG':netG.state_dict(), 'optimD':optimizerD.state_dict(), 'optimG':optimizerG.state_dict(), 'lrD':lrD, 'lrG':lrG, 'lossD':lossD, 'lossG':lossG}
         filename = os.path.join(out_path, "net_state_epoch_{:0=3d}.nn".format(epoch))
         if not os.path.isdir(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename), exist_ok=True)
         torch.save(state, filename)
+        del state

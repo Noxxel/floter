@@ -70,7 +70,7 @@ if __name__ == '__main__':
     print(opt)
 
     n_fft = 2**11
-    hop_length = 2**9
+    hop_length = 367
     n_mels = 128
 
     encode_size = opt.l1size
