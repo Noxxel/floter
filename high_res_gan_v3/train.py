@@ -107,7 +107,7 @@ if __name__ == '__main__':
                                              shuffle=True, num_workers=int(opt.workers))
 
     Mset = SoundfileDataset(ipath=ipath, out_type="gan")
-    Mset.data = Mset.data[:len(Iset)]
+    Mset.data = Mset.data[:len(dataset)]
     assert Mset
     Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers))
 
