@@ -150,6 +150,7 @@ if __name__ == "__main__":
     parser.add_argument("--workers", type=int, default=2, help="threads for the dataloaders")
     parser.add_argument("--l1size", type=int, default=64, help="layer sizes of ae")
     parser.add_argument("--l2size", type=int, default=16, help="layer sizes of ae")
+    parser.add_argument('--debug', action='store_true', help='smaller dataset')
     
     opt = parser.parse_args()
     print(opt)
