@@ -325,13 +325,14 @@ if __name__ == "__main__":
         running_I = 0
         for i, (real_imgs, mels) in enumerate(zip(Iloader, tqdm(Mloader))):
             assert real_imgs.shape[0] == mels.shape[0]
+            current_b_size = real_imgs.shape[0]
 
             mels = mels.to(device2)
             real_imgs = real_imgs.to(device)
 
             # Adversarial ground truths
-            valid = torch.tensor(np.ones((opt.batch_size, 1)), dtype=torch.float32).to(device)
-            fake = torch.tensor(np.zeros((opt.batch_size, 1)), dtype=torch.float32).to(device)
+            valid = torch.tensor(np.ones((current_b_size, 1)), dtype=torch.float32).to(device)
+            fake = torch.tensor(np.zeros((current_b_size, 1)), dtype=torch.float32).to(device)
 
             # Configure input
             # labels = to_categorical(labels.numpy(), num_columns=1)
@@ -342,9 +343,9 @@ if __name__ == "__main__":
             optimizer_G.zero_grad()
 
             # Sample noise and labels as generator input
-            z = torch.tensor(np.random.normal(0, 1, (opt.batch_size, opt.latent_dim)), dtype=torch.float32).to(device)
-            label_input = to_categorical(np.random.randint(0, 1, opt.batch_size), num_columns=1).to(device)
-            # code_input = torch.tensor(np.random.uniform(-1, 1, (opt.batch_size, opt.code_dim)), dtype=torch.float32)
+            z = torch.tensor(np.random.normal(0, 1, (current_b_size, opt.latent_dim)), dtype=torch.float32).to(device)
+            label_input = to_categorical(np.random.randint(0, 1, current_b_size), num_columns=1).to(device)
+            # code_input = torch.tensor(np.random.uniform(-1, 1, (current_b_size, opt.code_dim)), dtype=torch.float32)
             code_input = None
             if opt.mel:
                 code_input = mels
@@ -391,15 +392,15 @@ if __name__ == "__main__":
             optimizer_info.zero_grad()
 
             # Sample labels
-            sampled_labels = np.random.randint(0, 1, opt.batch_size)
+            sampled_labels = np.random.randint(0, 1, current_b_size)
 
             # Ground truth labels
             gt_labels = torch.tensor(sampled_labels, dtype=torch.long).to(device)
 
             # Sample noise, labels and code as generator input
-            z = torch.tensor(np.random.normal(0, 1, (opt.batch_size, opt.latent_dim)), dtype=torch.float32).to(device)
+            z = torch.tensor(np.random.normal(0, 1, (current_b_size, opt.latent_dim)), dtype=torch.float32).to(device)
             label_input = to_categorical(sampled_labels, num_columns=1).to(device)
-            code_input = torch.tensor(np.random.uniform(-1, 1, (opt.batch_size, opt.code_dim)), dtype=torch.float32).to(device)
+            code_input = torch.tensor(np.random.uniform(-1, 1, (current_b_size, opt.code_dim)), dtype=torch.float32).to(device)
 
             gen_imgs = generator(z, label_input, code_input)
             pred_label, pred_code = discriminator(gen_imgs)[1:]
