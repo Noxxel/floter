@@ -344,7 +344,7 @@ if __name__ == "__main__":
         running_D = 0
         running_G = 0
         running_I = 0
-        for i, (real_imgs, mels) in enumerate(zip(tqdm(Iloader), Mloader)):
+        for i, (real_imgs, mels) in enumerate(tqdm(zip(Iloader, Mloader), total=len(Iloader))):
             assert real_imgs.shape[0] == mels.shape[0]
             current_b_size = real_imgs.shape[0]
 

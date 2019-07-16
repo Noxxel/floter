@@ -221,7 +221,7 @@ if __name__ == '__main__':
 
         running_D = 0
         running_G = 0
-        for i, (data, mels) in enumerate(zip(tqdm(dataloader), Mloader)):
+        for i, (data, mels) in enumerate(tqdm(zip(dataloader, Mloader), total=len(dataloader))):
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
