@@ -184,7 +184,7 @@ if __name__ == '__main__':
 
     criterion = nn.BCELoss()
 
-    fixed_noise = torch.tensor([Mset[i] for i in range(1337,1337+opt.batchSize)], dtype=torch.float32)
+    fixed_noise = torch.tensor([Mset[i].numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32)
     real_label = 1
     fake_label = 0
 
@@ -231,7 +231,7 @@ if __name__ == '__main__':
             if not opt.ae or opt.mel:
                 noise = torch.randn(batch_size, nz, 1, 1, device=device)
             elif opt.ae:
-                noise = vae.encode(mels.to(device))
+                noise = vae.encode(mels.to(device)).unsqueeze(2).unsqueeze(2)
             elif opt.mel:
                 noise = mels.to(device)
             fake = netG(noise)
