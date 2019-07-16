@@ -432,6 +432,8 @@ if __name__ == "__main__":
             info_loss = lambda_cat * categorical_loss(pred_label, gt_labels) + lambda_con * continuous_loss(pred_code, code_input)
             running_I += info_loss.item()
 
+            torch.cuda.empty_cache()
+
             info_loss.backward()
             optimizer_info.step()
 
