@@ -184,7 +184,7 @@ if __name__ == '__main__':
 
     criterion = nn.BCELoss()
 
-    fixed_noise = torch.tensor([vae.encode(Mset[i].to(device)).detach().cpu().numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32)
+    fixed_noise = torch.tensor([vae.encode(Mset[i].to(device)).detach().unsqueeze(2).unsqueeze(2).cpu().numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32)
     real_label = 1
     fake_label = 0
 
