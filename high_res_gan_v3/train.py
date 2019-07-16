@@ -161,6 +161,7 @@ if __name__ == '__main__':
                 print("successfully loaded {}".format(load_state))
                 starting_epoch = int(states[-1][-6:-3])
                 print("continueing with epoch {}".format(starting_epoch))
+                del tmp_load
 
     if opt.loadstate != '':
         netD.load_state_dict(torch.load(opt.netD))
@@ -207,13 +208,14 @@ if __name__ == '__main__':
         lrG = tmp_load["lrG"]
         lossD = tmp_load["lossD"]
         lossG = tmp_load["lossG"]
+        del tmp_load
 
     schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=30, factor=0.5)
     schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=5, factor=0.2)
 
     for epoch in tqdm(range(starting_epoch, opt.niter)):
         torch.cuda.empty_cache()
-        
+
         netG.to(device)
         netD.to(device)
         
