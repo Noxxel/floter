@@ -15,6 +15,8 @@ from tqdm import tqdm
 from skimage import io, transform
 from torch.utils.data import Dataset, DataLoader
 
+from dataset import SoundfileDataset
+from AE_any import AutoEncoder
 
 class DatasetCust(Dataset):
     def __init__(self, data_path, transform = None):
@@ -64,6 +66,11 @@ if __name__ == '__main__':
     hop_length = 367
     n_mels = 128
 
+    statepath = ""
+    if opt.ae:
+        statepath = "./states/vae_b{}_{}".format(n_mels, opt.l2size)
+    elif opt.conv:
+        statepath = "./states/conv"
 
     folder_name = 'nz_{}_ngf_{}_ndf_{}_bs_{}/'.format(opt.nz, opt.ngf, opt.ndf, opt.batchSize)
     out_path = os.path.join(opt.outf, folder_name)
