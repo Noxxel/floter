@@ -218,6 +218,11 @@ if __name__ == '__main__':
         lossD = tmp_load["lossD"]
         lossG = tmp_load["lossG"]
         del tmp_load
+    
+    for pg in optimizerD.param_groups:
+        pg["lr"] = opt.lr
+    for pg in optimizerG.param_groups:
+        pg["lr"] = opt.lr
 
     # schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=30, factor=0.5)
     # schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=5, factor=0.2)
