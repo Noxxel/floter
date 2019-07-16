@@ -328,6 +328,9 @@ if __name__ == "__main__":
     # ----------
     #  Training
     # ----------
+
+    generator.cpu()
+    discriminator.cpu()
     for epoch in tqdm(range(starting_epoch, opt.n_epochs)):
         torch.cuda.empty_cache()
 
