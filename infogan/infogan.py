@@ -221,17 +221,7 @@ if __name__ == "__main__":
     generator = Generator(latent_dim=opt.latent_dim, n_classes=1, code_dim=opt.code_dim, img_size=opt.img_size, channels=opt.channels)
     discriminator = Discriminator()
 
-    if opt.cuda:
-        generator.to(device)
-        discriminator.to(device)
-        adversarial_loss.to(device)
-        categorical_loss.to(device)
-        continuous_loss.to(device)
-
     # Initialize weights
-    generator.apply(weights_init_normal)
-    discriminator.apply(weights_init_normal)
-
     lossD = []
     lossG = []
     lossI = []
@@ -253,6 +243,16 @@ if __name__ == "__main__":
                 print("successfully loaded {}".format(load_state))
                 starting_epoch = int(states[-1][-6:-3])+1
                 print("continueing with epoch {}".format(starting_epoch))
+    else:
+        generator.apply(weights_init_normal)
+        discriminator.apply(weights_init_normal)
+    
+    if opt.cuda:
+        generator.to(device)
+        discriminator.to(device)
+        adversarial_loss.to(device)
+        categorical_loss.to(device)
+        continuous_loss.to(device)
 
     # Configure data loaders
     Mset = SoundfileDataset(ipath=ipath, out_type="gan")
