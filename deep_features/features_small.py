@@ -1,26 +1,27 @@
-
+print("FUCKTHISFUCKINGSHIT")
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from model_small import LSTM
+from model_small import ConvClassifier
 from dataset import SoundfileDataset
 from tqdm import tqdm
 import os
 import numpy as np
-import matplotlib.pyplot as plt
+print("fuckitevenmore")
+
 
 n_fft = 2**11
-hop_length = 2**10
+hop_length = 2**9
 n_mels = 128
-n_time_steps = 646
+n_time_steps = 1290
 n_layers = 2
 NORMALIZE = True
 
 n_epochs = 400
 batch_size = 16
-l_rate = 1e-4
-num_workers = 6
+l_rate = 1e-3
+num_workers = 4
 
 DEBUG = False
 LOG = False
@@ -28,10 +29,10 @@ log_intervall = 50
 
 #datapath = "./mels_set_db"
 datapath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
-statepath = "./lstm_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
+statepath = "./conv_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
 #statepath = "conv_small_b128"
 
-device = "cuda"
+device = "cuda:1"
 
 dset = SoundfileDataset("./all_metadata.p", ipath=datapath, out_type="mel", normalize=NORMALIZE, n_time_steps=n_time_steps)
 if DEBUG:
@@ -42,7 +43,7 @@ tset, vset = dset.get_split(sampler=False)
 TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
 VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=num_workers)
 
-model = LSTM(n_mels, batch_size, num_layers=n_layers)
+model = ConvClassifier(n_mels, batch_size, num_layers=n_layers)
 loss_function = nn.NLLLoss()
 optimizer = optim.Adam(model.parameters(), lr=l_rate)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
@@ -50,7 +51,6 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose
 val_loss_list, val_accuracy_list, epoch_list = [], [], []
 loss_function.to(device)
 model.to(device)
-model.hidden = model.init_hidden(device)
 
 for epoch in tqdm(range(n_epochs), desc='Epoch'):
     train_running_loss, train_acc = 0.0, 0.0
@@ -100,6 +100,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         del state
         torch.cuda.empty_cache()
 
+import matplotlib.pyplot as plt
 # visualization loss
 plt.plot(epoch_list, val_loss_list)
 plt.ylim(0, np.max(val_loss_list))

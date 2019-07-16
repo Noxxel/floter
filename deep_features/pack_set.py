@@ -4,9 +4,17 @@ import pickle
 import multiprocessing
 from tqdm import tqdm
 
+n_fft = 2**11
+hop_length = 367
+#hop_length = 2**9
+n_mels = 128
+
 #PATH = "./mels_set_f8820_h735_b256"
-PATH = "./mels_set_f1024_b128"
-timesteps = 1798
+PATH = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
+timesteps = 1800
+
+if not os.path.isdir(PATH):
+    raise RuntimeError(f"{PATH} no such directory!")
 
 def main():
     d = pickle.load(open("./all_metadata.p", 'rb'))
@@ -16,14 +24,15 @@ def main():
     print(len(l))
     full = []
     
-    for path in tqdm(l):
-        X = np.load(path)
-        print(X.shape)
-        exit()
+    for p in tqdm(l):
+        X = np.load(p)
+        #print(X.shape)
+        #exit()
         X = X.T[:timesteps,:]
         full.append(X)
-    full = np.array(full)
+
+    full = np.array(full).reshape(-1, 128)
+    print(full.shape)
     np.save(os.path.join(PATH, "full_set.npy"), full.astype(np.float32))
 
-if __name__ == '__main__':
-    main()
+main()

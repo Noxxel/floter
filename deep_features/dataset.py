@@ -1,15 +1,13 @@
 import torch
-import random
-import torchvision.transforms as tf
 from torch.utils.data import Dataset, DataLoader
 import os
 from collections import namedtuple
-from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import Subset
 import pickle
 from tqdm import tqdm
 import numpy as np
 import librosa
+
 
 class SoundfileDataset(Dataset):
 
@@ -32,6 +30,7 @@ class SoundfileDataset(Dataset):
         classes = set()
         for key, val in tqdm(d.items(), desc="build class set"):
             classes.add(val['track']['genre_top'])
+        classes = sorted(classes)
         self.idx2lbl = dict(enumerate(classes))
         self.lbl2idx = {v:k for k,v in self.idx2lbl.items()}
         self.n_classes = len(classes)
@@ -55,73 +54,6 @@ class SoundfileDataset(Dataset):
         self.n_time_steps = n_time_steps
         self.normalize = normalize
 
-    def calc_entropy(self, song):
-        fsize = 1024
-        ssize = 512
-        
-        lenY = song.shape[0]
-        lenCut = lenY - (lenY % ssize)
-        if(lenY < fsize):
-            print("SONG TOO SHORT!!!")
-            return np.array([0, 0, 0, 0, 0, 0])
-
-        energy = np.square(song[:lenCut].reshape(-1,ssize))
-        energylist = np.concatenate((energy[:-1], energy[1:]), axis=1)
-
-        framelist = energylist.sum(axis=1)
-        p = np.nan_to_num(energylist / framelist[:,None]) #whole frame might be 0 causing division by zero
-        entropy = -(p * np.nan_to_num(np.log2(p))).sum(axis=1) #same goes for log
-
-        blocksize = []
-        blocksize.append(1)
-
-        numbox = []
-        numbox.append((np.absolute(song[:-1] - song[1:])).sum() + lenY)
-    
-        if((lenY % 2) != 0): #double boxsize, half max and min
-            uppervalues = (song[:-1].reshape(-1, 2)).max(axis=1)
-            lowervalues = (song[:-1].reshape(-1, 2)).min(axis=1)
-        else:
-            uppervalues = (song.reshape(-1, 2)).max(axis=1)
-            lowervalues = (song.reshape(-1, 2)).min(axis=1)
-
-        maxScale = int(np.floor(np.log(lenY) / np.log(2)))
-        for scale in range(1, maxScale):
-            blocksize.append(blocksize[scale-1]*2)
-
-            numcols = len(uppervalues)
-            dummy = (uppervalues - lowervalues).sum() + numcols
-
-            rising = np.less(uppervalues[:-1], lowervalues[1:])
-            dummy += ((lowervalues[1:] - uppervalues[:-1]) * rising).sum() #sum where signal is rising
-
-            falling = np.greater(lowervalues[:-1], uppervalues[1:])
-            dummy += ((lowervalues[:-1] - uppervalues[1:]) * falling).sum() #sum where signal is falling
-            
-            numbox.append(dummy/blocksize[scale])
-
-            if((numcols % 2) != 0): #double boxsize, half max and min
-                uppervalues = (uppervalues[:-1].reshape(-1, 2)).max(axis=1)
-                lowervalues = (lowervalues[:-1].reshape(-1, 2)).min(axis=1)
-            else:
-                uppervalues = (uppervalues.reshape(-1, 2)).max(axis=1)
-                lowervalues = (lowervalues.reshape(-1, 2)).min(axis=1)
-
-        N = np.log(numbox)
-        R = np.log(1/np.array(blocksize))
-        m = np.linalg.lstsq(R[:,None],N, rcond=None) #slope of curve is fractal dimension
-
-        avg = np.average(entropy)
-        std = np.std(entropy)
-        mxe = np.max(entropy)
-        mne = np.min(entropy)
-        entdif = entropy[:-1] - entropy[1:]
-        med = max(entdif.min(), entdif.max(), key=abs)
-        frd = m[0][0]
-
-        return np.array([avg, std, mxe, mne, med, frd])
-
-
     def __len__(self):
         return len(self.data)
 
@@ -131,7 +63,6 @@ class SoundfileDataset(Dataset):
         if self.out_type == 'mel' or self.out_type == 'ae' or self.out_type == 'gan':
             X = np.load(os.path.join(self.ipath, this.path[:-3]) + "npy")
             X = X.T
-            
             if self.out_type == 'gan':
                 randIndex = np.random.randint(0, X.shape[0])
                 X = X[randIndex, :]
@@ -185,14 +116,10 @@ class SoundfileDataset(Dataset):
             np.random.shuffle(indices)
         train_indices, val_indices = indices[split:], indices[:split]
         # Creating PT data samplers and loaders:
-        if sampler:
-            train_sampler = SubsetRandomSampler(train_indices)
-            valid_sampler = SubsetRandomSampler(val_indices)
-            return train_sampler, valid_sampler
-        else:
-            train_set = Subset(self, train_indices)
-            valid_set = Subset(self, val_indices)
-            return train_set, valid_set
+
+        train_set = Subset(self, train_indices)
+        valid_set = Subset(self, val_indices)
+        return train_set, valid_set
 
     def get_train(self, sampler=True):
         shuffle_dataset = True
@@ -203,12 +130,9 @@ class SoundfileDataset(Dataset):
             np.random.seed(random_seed)
             np.random.shuffle(indices)
         # Creating PT data samplers and loaders:
-        if sampler:
-            train_sampler = SubsetRandomSampler(indices)
-            return train_sampler
-        else:
-            train_set = Subset(self, indices)
-            return train_set
+
+        train_set = Subset(self, indices)
+        return train_set
 
     def get_indices(self, shuffle=True):
         validation_split = .3
