@@ -211,8 +211,8 @@ if __name__ == '__main__':
         lossG = tmp_load["lossG"]
         del tmp_load
 
-    schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=30, factor=0.5)
-    schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=5, factor=0.2)
+    # schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=30, factor=0.5)
+    # schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=5, factor=0.2)
 
     for epoch in tqdm(range(starting_epoch, opt.niter)):
         torch.cuda.empty_cache()
@@ -289,8 +289,8 @@ if __name__ == '__main__':
         lossD.append(running_D)
         lossG.append(running_G)
         
-        schedulerD.step(running_D)
-        schedulerG.step(running_G)
+        # schedulerD.step(running_D)
+        # schedulerG.step(running_G)
 
         netG.cpu()
         netD.cpu()
