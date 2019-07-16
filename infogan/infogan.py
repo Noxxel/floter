@@ -128,10 +128,6 @@ class Discriminator(nn.Module):
         return validity, label, latent_code
 
 if __name__ == "__main__":
-    os.makedirs("images/static/", exist_ok=True)
-    os.makedirs("images/varying_c1/", exist_ok=True)
-    os.makedirs("images/varying_c2/", exist_ok=True)
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataroot', required=False, default="../data/flowers", help='path to dataset')
     parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")
