@@ -319,7 +319,7 @@ if __name__ == "__main__":
         running_G = 0
         running_I = 0
         for i, (real_imgs, mels) in enumerate(zip(tqdm(Iloader), Mloader)):
-            assert real.imgs.shape[0] == mels.shape[0]
+            assert real_imgs.shape[0] == mels.shape[0]
 
             mels = mels.to(device2)
             real_imgs = real_imgs.to(device)
