@@ -251,8 +251,8 @@ if __name__ == "__main__":
                 lossG = tmp_load["lossG"]
                 lossI = tmp_load["lossI"]
                 print("successfully loaded {}".format(load_state))
-                print("continueing with epoch {}".format(starting_epoch))
                 starting_epoch = int(states[-1][-6:-3])
+                print("continueing with epoch {}".format(starting_epoch))
 
     # Configure data loaders
     Mset = SoundfileDataset(ipath=ipath, out_type="gan")
@@ -291,7 +291,8 @@ if __name__ == "__main__":
     static_z = torch.tensor(np.zeros((1 ** 2, opt.latent_dim)), dtype=torch.float32).to(device)
     static_label = to_categorical(np.array([num for _ in range(1) for num in range(1)]), num_columns=1).to(device)
     static_code = torch.tensor(np.zeros((1 ** 2, opt.code_dim)), dtype=torch.float32).to(device)
-    c1, c2 = None
+    c1 = None
+    c2 = None
     if opt.ae:
         c1 = vae.encode(Mset[1337].to(device2)).detach().to(device).unsqueeze(0)
         c2 = vae.encode(Mset[42].to(device2)).detach().to(device).unsqueeze(0)
