@@ -309,7 +309,6 @@ if __name__ == "__main__":
     # ----------
     #  Training
     # ----------
-    print("starting with epoch {}".format(starting_epoch))
     for epoch in tqdm(range(starting_epoch, opt.n_epochs)):
         torch.cuda.empty_cache()
 
