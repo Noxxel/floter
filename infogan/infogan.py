@@ -273,22 +273,23 @@ if __name__ == "__main__":
     optimizer_info = torch.optim.Adam(itertools.chain(generator.parameters(), discriminator.parameters()), lr=opt.lr, betas=(opt.b1, opt.b2))
     
     if os.path.isfile(load_state):
+        tmp_dev = torch.device("cpu")
         tmp_load = torch.load(load_state)
         optimizer_D.load_state_dict(tmp_load["optimD"])
         for value in optimizer_D.state.values():
             for k, v in value.items():
                 if isinstance(v, torch.Tensor):
-                    value[k] = v.to(device)
+                    value[k] = v.to(tmp_dev)
         optimizer_G.load_state_dict(tmp_load["optimG"])
         for value in optimizer_G.state.values():
             for k, v in value.items():
                 if isinstance(v, torch.Tensor):
-                    value[k] = v.to(device)
+                    value[k] = v.to(tmp_dev)
         optimizer_info.load_state_dict(tmp_load["optimI"])
         for value in optimizer_info.state.values():
             for k, v in value.items():
                 if isinstance(v, torch.Tensor):
-                    value[k] = v.to(device)
+                    value[k] = v.to(tmp_dev)
 
     # Static generator inputs for sampling
     static_z = torch.tensor(np.zeros((1 ** 2, opt.latent_dim)), dtype=torch.float32).to(device)
