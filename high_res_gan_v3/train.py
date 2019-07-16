@@ -187,7 +187,11 @@ if __name__ == '__main__':
 
     criterion = nn.BCELoss()
 
-    fixed_noise = torch.tensor([vae.encode(Mset[i].to(device)).detach().cpu().numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
+    fixed_noise = None
+    if opt.ae:
+        fixed_noise = torch.tensor([vae.encode(Mset[i].to(device)).detach().cpu().numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
+    elif opt.mel:
+        fixed_noise = torch.tensor([Mset[i].numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
     real_label = 1
     fake_label = 0
 
@@ -231,12 +235,12 @@ if __name__ == '__main__':
 
             # train with fake
             noise = None
-            if not opt.ae or opt.mel:
-                noise = torch.randn(batch_size, nz, 1, 1, device=device)
-            elif opt.ae:
+            if opt.ae:
                 noise = vae.encode(mels.to(device)).unsqueeze(2).unsqueeze(2)
             elif opt.mel:
                 noise = mels.to(device).unsqueeze(2).unsqueeze(2)
+            else:
+                noise = torch.randn(batch_size, nz, 1, 1, device=device)
             fake = netG(noise)
             label.fill_(fake_label)
             output = netD(fake.detach())
