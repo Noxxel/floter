@@ -270,14 +270,14 @@ if __name__ == "__main__":
     assert len(Iset) == len(Mset)
     Iloader = torch.utils.data.DataLoader(Iset, batch_size=opt.batch_size, shuffle=True, num_workers=int(opt.workers))
 
-    generator.to(device)
-    discriminator.to(device)
-    
     # Optimizers
     optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
     optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
     optimizer_info = torch.optim.Adam(itertools.chain(generator.parameters(), discriminator.parameters()), lr=opt.lr, betas=(opt.b1, opt.b2))
     
+    generator.to(device)
+    discriminator.to(device)
+
     if os.path.isfile(load_state):
         # tmp_dev = device
         tmp_load = torch.load(load_state)
@@ -380,8 +380,6 @@ if __name__ == "__main__":
 
             # Loss measures generator's ability to fool the discriminator
             validity = discriminator(gen_imgs)[0].to(device)
-
-            adversarial_loss.to(device)
             g_loss = adversarial_loss(validity, valid)
             running_G += g_loss.item()
 
@@ -401,8 +399,6 @@ if __name__ == "__main__":
             # Loss for fake images
             fake_pred = discriminator(gen_imgs.detach())[0].to(device)
             d_fake_loss = adversarial_loss(fake_pred, fake)
-
-            adversarial_loss.cpu()
 
             # Total discriminator loss
             d_loss = (d_real_loss + d_fake_loss) / 2
@@ -461,6 +457,7 @@ if __name__ == "__main__":
         discriminator.cpu()
         generator.cpu()
         
+        adversarial_loss.cpu()
         categorical_loss.cpu()
         continuous_loss.cpu()
 
