@@ -248,8 +248,6 @@ if __name__ == "__main__":
         discriminator.apply(weights_init_normal)
     
     if opt.cuda:
-        generator.to(device)
-        discriminator.to(device)
         adversarial_loss.to(device)
         categorical_loss.to(device)
         continuous_loss.to(device)
