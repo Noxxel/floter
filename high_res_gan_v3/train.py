@@ -94,6 +94,10 @@ if __name__ == '__main__':
     if torch.cuda.is_available() and not opt.cuda:
         print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
+    # dataloaders
+    Mset = SoundfileDataset(ipath=ipath, out_type="gan")
+    assert Mset
+    Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers))
 
     dataset = DatasetCust(opt.dataroot,
                            transform=transforms.Compose([
@@ -105,13 +109,12 @@ if __name__ == '__main__':
     nc=3
 
     assert dataset
+    assert len(dataset) > len(Mset)
+    dataset.data = dataset.data[:len(Mset)]
+    assert len(Mset) == len(dataset)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize,
                                              shuffle=True, num_workers=int(opt.workers))
 
-    Mset = SoundfileDataset(ipath=ipath, out_type="gan")
-    Mset.data = Mset.data[:len(dataset)]
-    assert Mset
-    Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers))
 
     device = torch.device("cuda:0" if opt.cuda else "cpu")
     ngpu = int(opt.ngpu)
