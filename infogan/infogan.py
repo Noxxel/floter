@@ -267,12 +267,12 @@ if __name__ == "__main__":
                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                            ]))
     assert Iset
-    Iloader = torch.utils.data.DataLoader(Iset, batch_size=opt.batch_size, shuffle=True, num_workers=int(opt.workers))
+    Iloader = torch.utils.data.DataLoader(Iset, batch_size=opt.batch_size, shuffle=True, num_workers=int(opt.workers), drop_last=True)
 
     Mset = SoundfileDataset(ipath=ipath, out_type="gan")
     Mset.data = Mset.data[:len(Iset)]
     assert Mset
-    Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.batch_size, shuffle=True, num_workers=int(opt.workers))
+    Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.batch_size, shuffle=True, num_workers=int(opt.workers), drop_last=True)
 
     # Optimizers
     optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
@@ -324,7 +324,7 @@ if __name__ == "__main__":
             elif real_imgs.shape[0] < mels.shape[0]:
                 real_imgs = real_imgs[:mels.shape[0]]
             assert real_imgs.shape[0] == mels.shape[0]
-            
+
             mels = mels.to(device2)
             real_imgs = real_imgs.to(device)
 
