@@ -419,6 +419,9 @@ if __name__ == "__main__":
             # --------------
             tqdm.write("[Epoch {:d}/{:d}] [Batch {:d}/{:d}] [D loss: {:.3f}] [G loss: {:.3f}] [info loss: {:.3f}]".format(epoch, opt.n_epochs, i, len(Iloader), d_loss.item(), g_loss.item(), info_loss.item()))
 
+            del gen_imgs
+            del real_imgs
+
         sample_image(n_row=1, epoch=epoch)
             
         running_D /= len(Iloader)
