@@ -291,8 +291,13 @@ if __name__ == "__main__":
     static_z = torch.tensor(np.zeros((1 ** 2, opt.latent_dim)), dtype=torch.float32).to(device)
     static_label = to_categorical(np.array([num for _ in range(1) for num in range(1)]), num_columns=1).to(device)
     static_code = torch.tensor(np.zeros((1 ** 2, opt.code_dim)), dtype=torch.float32).to(device)
-    c1 = vae.encode(Mset[1337].to(device2)).detach().to(device).unsqueeze(0)
-    c2 = vae.encode(Mset[42].to(device2)).detach().to(device).unsqueeze(0)
+    c1, c2 = None
+    if opt.ae:
+        c1 = vae.encode(Mset[1337].to(device2)).detach().to(device).unsqueeze(0)
+        c2 = vae.encode(Mset[42].to(device2)).detach().to(device).unsqueeze(0)
+    elif opt.mel:
+        c1 = Mset[1337].to(device).unsqueeze(0)
+        c2 = Mset[42].to(device).unsqueeze(0)
     assert len(Iset) == len(Mset)
 
     def sample_image(n_row, epoch):
