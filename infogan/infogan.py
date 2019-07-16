@@ -275,7 +275,7 @@ if __name__ == "__main__":
     )
     
     if os.path.isfile(load_state):
-        tmp_load = torch.load(load_state)
+        tmp_load = torch.load(load_state, map_location=torch.device("cpu"))
         optimizer_D.load_state_dict(tmp_load["optimD"])
         optimizer_G.load_state_dict(tmp_load["optimG"])
         optimizer_info.load_state_dict(tmp_load["optimI"])
