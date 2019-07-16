@@ -284,8 +284,8 @@ if __name__ == '__main__':
         running_D /= len(dataloader)
         running_G /= len(dataloader)
 
-        lrD.append(optimizerD.param_groups[0]["lr"].cpu())
-        lrG.append(optimizerG.param_groups[0]["lr"].cpu())
+        lrD.append(optimizerD.param_groups[0]["lr"])
+        lrG.append(optimizerG.param_groups[0]["lr"])
         lossD.append(running_D)
         lossG.append(running_G)
         
