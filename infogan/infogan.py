@@ -259,6 +259,10 @@ if __name__ == "__main__":
                 starting_epoch = int(states[-1][-6:-3])
 
     # Configure data loaders
+    Mset = SoundfileDataset(ipath=ipath, out_type="gan")
+    assert Mset
+    Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.batch_size, shuffle=True, num_workers=int(opt.workers))
+
     Iset = DatasetCust(opt.dataroot,
                            transform=transforms.Compose([
                                transforms.ToPILImage(),
@@ -267,12 +271,12 @@ if __name__ == "__main__":
                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                            ]))
     assert Iset
-    Iloader = torch.utils.data.DataLoader(Iset, batch_size=opt.batch_size, shuffle=True, num_workers=int(opt.workers), drop_last=True)
 
-    Mset = SoundfileDataset(ipath=ipath, out_type="gan")
-    Mset.data = Mset.data[:len(Iset)]
-    assert Mset
-    Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.batch_size, shuffle=True, num_workers=int(opt.workers), drop_last=True)
+    assert len(Iset) > len(Mset)
+    Iset.data = Iset.data[:len(Mset)]
+    assert len(Iset) == len(Mset)
+    Iloader = torch.utils.data.DataLoader(Iset, batch_size=opt.batch_size, shuffle=True, num_workers=int(opt.workers))
+
 
     # Optimizers
     optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
@@ -293,6 +297,7 @@ if __name__ == "__main__":
     static_code = torch.tensor(np.zeros((1 ** 2, opt.code_dim)), dtype=torch.float32).to(device)
     c1 = vae.encode(Mset[1337].to(device2)).detach().to(device).unsqueeze(0)
     c2 = vae.encode(Mset[42].to(device2)).detach().to(device).unsqueeze(0)
+    assert len(Iset) == len(Mset)
 
     def sample_image(n_row, epoch):
         """Saves a grid of generated digits ranging from 0 to n_classes"""
@@ -318,11 +323,7 @@ if __name__ == "__main__":
         running_D = 0
         running_G = 0
         running_I = 0
-        for i, (real_imgs, mels) in enumerate(zip(tqdm(Iloader), Mloader)):
-            if real_imgs.shape[0] > mels.shape[0]:
-                mels = mels[:real_imgs.shape[0]]
-            elif real_imgs.shape[0] < mels.shape[0]:
-                real_imgs = real_imgs[:mels.shape[0]]
+        for i, (real_imgs, mels) in enumerate(zip(Iloader, tqdm(Mloader))):
             assert real_imgs.shape[0] == mels.shape[0]
 
             mels = mels.to(device2)
