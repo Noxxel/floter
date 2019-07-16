@@ -243,9 +243,9 @@ if __name__ == "__main__":
                 print("successfully loaded {}".format(load_state))
                 starting_epoch = int(states[-1][-6:-3])+1
                 print("continueing with epoch {}".format(starting_epoch))
-    else:
-        generator.apply(weights_init_normal)
-        discriminator.apply(weights_init_normal)
+    # else:
+    generator.apply(weights_init_normal)
+    discriminator.apply(weights_init_normal)
 
     # Configure data loaders
     Mset = SoundfileDataset(ipath=ipath, out_type="gan")
@@ -270,15 +270,25 @@ if __name__ == "__main__":
     # Optimizers
     optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
     optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
-    optimizer_info = torch.optim.Adam(
-        itertools.chain(generator.parameters(), discriminator.parameters()), lr=opt.lr, betas=(opt.b1, opt.b2)
-    )
+    optimizer_info = torch.optim.Adam(itertools.chain(generator.parameters(), discriminator.parameters()), lr=opt.lr, betas=(opt.b1, opt.b2))
     
     if os.path.isfile(load_state):
-        tmp_load = torch.load(load_state, map_location=torch.device("cpu"))
+        tmp_load = torch.load(load_state)
         optimizer_D.load_state_dict(tmp_load["optimD"])
+        for value in optimizer_D.state.values():
+            for k, v in value.items():
+                if isinstance(v, torch.Tensor):
+                    value[k] = v.to(device)
         optimizer_G.load_state_dict(tmp_load["optimG"])
+        for value in optimizer_G.state.values():
+            for k, v in value.items():
+                if isinstance(v, torch.Tensor):
+                    value[k] = v.to(device)
         optimizer_info.load_state_dict(tmp_load["optimI"])
+        for value in optimizer_info.state.values():
+            for k, v in value.items():
+                if isinstance(v, torch.Tensor):
+                    value[k] = v.to(device)
 
     # Static generator inputs for sampling
     static_z = torch.tensor(np.zeros((1 ** 2, opt.latent_dim)), dtype=torch.float32).to(device)
@@ -297,6 +307,7 @@ if __name__ == "__main__":
     def sample_image(n_row, epoch):
         """Saves a grid of generated digits ranging from 0 to n_classes"""
         # Static sample
+        generator.eval()
         z = torch.tensor(np.random.normal(0, 1, (n_row ** 2, opt.latent_dim)), dtype=torch.float32).to(device)
         static_sample = generator(z, static_label, static_code)
         save_image(static_sample.detach().cpu(), "images/static_{:03d}.png".format(epoch), nrow=n_row, normalize=True)
@@ -305,6 +316,7 @@ if __name__ == "__main__":
         sample2 = generator(static_z, static_label, c2)
         save_image(sample1.detach().cpu(), "images/c1_{:03d}.png".format(epoch), nrow=n_row, normalize=True)
         save_image(sample2.detach().cpu(), "images/c2_{:03d}.png".format(epoch), nrow=n_row, normalize=True)
+        generator.train()
 
     # ----------
     #  Training
@@ -314,10 +326,6 @@ if __name__ == "__main__":
 
         generator.to(device)
         discriminator.to(device)
-
-        adversarial_loss.to(device)
-        categorical_loss.to(device)
-        continuous_loss.to(device)
 
         running_D = 0
         running_G = 0
@@ -434,10 +442,6 @@ if __name__ == "__main__":
         # save state
         discriminator.cpu()
         generator.cpu()
-
-        adversarial_loss.cpu()
-        categorical_loss.cpu()
-        continuous_loss.cpu()
 
         state = {'idis':discriminator.state_dict(), 'igen':generator.state_dict(), 'optimD':optimizer_D.state_dict(), 'optimG':optimizer_G.state_dict(), 'optimI':optimizer_info.state_dict(), 'lossD':lossD, 'lossG':lossG, 'lossI':lossI}
         filename = os.path.join(opath, "infogan_state_epoch_{:0=3d}.nn".format(epoch))
