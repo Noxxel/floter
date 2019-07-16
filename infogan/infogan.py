@@ -34,7 +34,7 @@ class DatasetCust(Dataset):
         img_name = os.path.join(self.data_path, self.data[idx])
         image = io.imread(img_name)
         image = image.transpose((2, 0, 1))
-        sample = torch.from_numpy(image)
+        sample = torch.tensor(image, requires_grad=False)
 
         if self.transform:
             sample = self.transform(sample)
