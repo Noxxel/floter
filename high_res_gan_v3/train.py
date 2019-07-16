@@ -213,6 +213,7 @@ if __name__ == '__main__':
 
     for epoch in tqdm(range(starting_epoch, opt.niter)):
         torch.cuda.empty_cache()
+        
         netG.to(device)
         netD.to(device)
         
@@ -293,7 +294,7 @@ if __name__ == '__main__':
         netD.cpu()
 
         criterion.cpu()
-        
+
         # save state
         state = {'netD':netD.state_dict(), 'netG':netG.state_dict(), 'optimD':optimizerD.state_dict(), 'optimG':optimizerG.state_dict(), 'lrD':lrD, 'lrG':lrG, 'lossD':lossD, 'lossG':lossG}
         filename = os.path.join(out_path, "net_state_epoch_{:0=3d}.nn".format(epoch))
