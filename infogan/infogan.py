@@ -246,11 +246,6 @@ if __name__ == "__main__":
     else:
         generator.apply(weights_init_normal)
         discriminator.apply(weights_init_normal)
-    
-    if opt.cuda:
-        adversarial_loss.to(device)
-        categorical_loss.to(device)
-        continuous_loss.to(device)
 
     # Configure data loaders
     Mset = SoundfileDataset(ipath=ipath, out_type="gan")
@@ -281,8 +276,6 @@ if __name__ == "__main__":
     
     if os.path.isfile(load_state):
         tmp_load = torch.load(load_state)
-        import pdb
-        pdb.set_trace()
         optimizer_D.load_state_dict(tmp_load["optimD"])
         optimizer_G.load_state_dict(tmp_load["optimG"])
         optimizer_info.load_state_dict(tmp_load["optimI"])
@@ -319,8 +312,13 @@ if __name__ == "__main__":
     print("starting with epoch {}".format(starting_epoch))
     for epoch in tqdm(range(starting_epoch, opt.n_epochs)):
         torch.cuda.empty_cache()
+
         generator.to(device)
         discriminator.to(device)
+
+        adversarial_loss.to(device)
+        categorical_loss.to(device)
+        continuous_loss.to(device)
 
         running_D = 0
         running_G = 0
@@ -434,6 +432,10 @@ if __name__ == "__main__":
         # save state
         discriminator.cpu()
         generator.cpu()
+
+        adversarial_loss.cpu()
+        categorical_loss.cpu()
+        continuous_loss.cpu()
 
         state = {'idis':discriminator.state_dict(), 'igen':generator.state_dict(), 'optimD':optimizer_D.state_dict(), 'optimG':optimizer_G.state_dict(), 'optimI':optimizer_info.state_dict(), 'lossD':lossD, 'lossG':lossG, 'lossI':lossI}
         filename = os.path.join(opath, "infogan_state_epoch_{:0=3d}.nn".format(epoch))
