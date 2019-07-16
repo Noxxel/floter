@@ -159,8 +159,8 @@ if __name__ == '__main__':
                 lossD = tmp_load["lossD"]
                 lossG = tmp_load["lossG"]
                 print("successfully loaded {}".format(load_state))
-                print("continueing with epoch {}".format(starting_epoch))
                 starting_epoch = int(states[-1][-6:-3])
+                print("continueing with epoch {}".format(starting_epoch))
 
     if opt.loadstate != '':
         netD.load_state_dict(torch.load(opt.netD))
