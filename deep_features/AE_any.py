@@ -124,10 +124,11 @@ if __name__ == '__main__':
     if not opt.fresh and os.path.isfile(state):
         optimizer.load_state_dict(torch.load(state)['optim'])
         print("successfully loaded %s" % (state))
-        loaded_epoch = int(states[-1][4:-4])
+        loaded_epoch = int(states[-1][4:-3])
         starting_epoch = loaded_epoch+1
+        print("resuming with epoch {}".format(starting_epoch))
 
-    print("Beginning Training with for {} frequency buckets".format(n_mels))
+    print("Beginning Training with {} frequency buckets".format(n_mels))
     for epoch in tqdm(range(starting_epoch, n_epochs), desc='Epoch'):
 
         train_running_loss = 0.0
@@ -169,7 +170,7 @@ if __name__ == '__main__':
 
         if (epoch)%10 == 0:
             state = {'state_dict':vae.state_dict(), 'optim':optimizer.state_dict()}
-            filename = "{}/vae_{:02d}.nn".format(statepath, epoch)
+            filename = "{}/vae_{:03d}.nn".format(statepath, epoch)
             if not os.path.isdir(os.path.dirname(filename)):
                 os.makedirs(os.path.dirname(filename), exist_ok=True)
             torch.save(state, filename)
