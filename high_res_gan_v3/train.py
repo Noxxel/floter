@@ -205,7 +205,7 @@ if __name__ == '__main__':
     #load pretrained LSTM model
     conv = None
     if opt.conv:
-        conv = LSTM(opt.l1size, 1)
+        conv = LSTM(n_mels, opt.batchSize)
         files = os.listdir(statepath)
         states = [f for f in files if "lstm_" in f]
         states.sort()
@@ -214,6 +214,7 @@ if __name__ == '__main__':
         state = os.path.join(statepath, states[-1])
         if os.path.isfile(state):
             state = torch.load(state)
+            print(state['state_dict'])
             conv.load_state_dict(state['state_dict'])
         conv.to(device)
         conv.eval()
