@@ -60,9 +60,11 @@ class SoundfileDataset(Dataset):
     def __getitem__(self, idx):
         this = self.data[idx]
 
-        if self.out_type == 'mel' or self.out_type == 'ae' or self.out_type == 'gan':
+        if self.out_type == 'mel' or self.out_type == 'ae' or self.out_type == 'gan' or self.out_type == 'cgan':
             X = np.load(os.path.join(self.ipath, this.path[:-3]) + "npy")
             X = X.T
+            if self.out_type == 'cgan':
+                return torch.as_tensor(X, dtype=torch.float32)
             if self.out_type == 'gan':
                 randIndex = np.random.randint(0, X.shape[0])
                 X = X[randIndex, :]

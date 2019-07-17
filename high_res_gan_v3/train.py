@@ -103,7 +103,7 @@ if __name__ == '__main__':
     # dataloaders
     Mset = None
     if opt.conv:
-        Mset = SoundfileDataset(ipath=ipath, out_type='mel', n_time_steps=n_time_steps)
+        Mset = SoundfileDataset(ipath=ipath, out_type='cgan', n_time_steps=n_time_steps)
     else:
         Mset = SoundfileDataset(ipath=ipath, out_type="gan")
     assert Mset
@@ -230,7 +230,7 @@ if __name__ == '__main__':
     elif opt.mel:
         fixed_noise = torch.tensor([Mset[i].numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
     elif opt.conv:
-        feature_maps = torch.tensor([conv.convolve(Mset[i][0].to(device).unsqueeze(0)).detach().squeeze().cpu().numpy() for i in range(1337,1337+opt.batchSize)])
+        feature_maps = torch.tensor([conv.convolve(Mset[i].to(device).unsqueeze(0)).detach().squeeze().cpu().numpy() for i in range(1337,1337+opt.batchSize)])
         feature_maps = feature_maps.reshape(feature_maps.shape[0], feature_maps.shape[2], feature_maps.shape[1])
         rand_index = np.random.randint(0, feature_maps.shape[1], size=opt.batchSize)
         fixed_noise = (feature_maps[range(opt.batchSize), rand_index, :]).unsqueeze(2).unsqueeze(2).to(device)
