@@ -1,11 +1,20 @@
 wegener:
-floter/infogan/out/
+	(python infogan.py --cuda --mel --batch_size=4 --code_dim=128 --latent_dim=64 --workers=4)
+	floter/infogan/out/
+
 delaunay:
-floter_mnt/high_res_gan_v3/out/nz_128_ngf_64_ndf_16_bs_12/
+	(python train.py --cuda --batchSize=12 --workers=4 --nz=128 --mel)
+	floter_mnt/high_res_gan_v3/out/nz_128_ngf_64_ndf_16_bs_12/
+
 catmull:
-floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_12/
-floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_11/
+	(python train.py --cuda --manualSeed=1337 --batchSize=11 --workers=4 --nz=16 --ngf=64 --ndf=32 --ae)
+	floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_12/ (old)
+	floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_11/
+
 tutu:
-floter_mnt/infogan/out/
+	(python infogan.py --cuda --batch_size=18 --workers=4 --ae)
+	floter_mnt/infogan/out/
+
 kajiya:
-floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_10/
+	(python train.py --cuda --batchSize=10 --workers=4 --nz=16 --ngf=64 --ndf=32)
+	floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_10/
