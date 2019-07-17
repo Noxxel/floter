@@ -17,6 +17,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from dataset import SoundfileDataset
 from AE_any import AutoEncoder
+from model import LSTM
 
 class DatasetCust(Dataset):
     def __init__(self, data_path, transform = None):
@@ -58,22 +59,25 @@ if __name__ == '__main__':
     parser.add_argument('--fresh', action='store_true', help='perform a fresh start instead of continuing from last checkpoint')
     parser.add_argument('--ae', action='store_true', help='train with autoencoder')
     parser.add_argument('--mel', action='store_true', help='train with raw mel spectograms')
-    parser.add_argument('--conv', action='store_true', help='flo-net')
+    parser.add_argument('--conv', action='store_true', help='use input generated from an RCNN')
+
     parser.add_argument("--l1size", type=int, default=64, help="layer sizes of ae")
-    parser.add_argument("--l2size", type=int, default=16, help="layer sizes of ae")
+    parser.add_argument("--l2size", type=int, default=16, help="layer sizes of ae or conv")
 
     opt = parser.parse_args()
     print(opt)
 
     n_fft = 2**11
-    hop_length = 367
+    #hop_length = 367
+    hop_length = 2**9
     n_mels = 128
+    n_time_steps = 1290
 
     statepath = ""
     if opt.ae:
         statepath = "./states/vae_b{}_{}".format(n_mels, opt.l2size)
     elif opt.conv:
-        statepath = "./states/conv"
+        statepath = "./states/conv_b{}_{}".format(n_mels, opt.l2size)
 
     folder_name = 'nz_{}_ngf_{}_ndf_{}_bs_{}/'.format(opt.nz, opt.ngf, opt.ndf, opt.batchSize)
     out_path = os.path.join(opt.outf, folder_name)
@@ -96,7 +100,11 @@ if __name__ == '__main__':
         print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
     # dataloaders
-    Mset = SoundfileDataset(ipath=ipath, out_type="gan")
+    Mset = None
+    if opt.ae:
+        Mset = SoundfileDataset(ipath=ipath, out_type="gan")
+    if opt.conv:
+        Mset = SoundfileDataset(ipath=ipath, out_type='mel', n_time_steps=n_time_steps)
     assert Mset
     Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers))
 
@@ -188,10 +196,28 @@ if __name__ == '__main__':
             raise Exception("no states for autoencoder provided!")
         state = os.path.join(statepath, states[-1])
         if os.path.isfile(state):
-            vae.load_state_dict(torch.load(state)['state_dict'])
+            state = torch.load(state)
+            vae.load_state_dict(state['state_dict'])
         vae.to(device)
         vae.eval()
+        del state
     
+    #load pretrained LSTM model
+    conv = None
+    if opt.conv:
+        conv = LSTM(opt.l1size, 1)
+        files = os.listdir(statepath)
+        states = [f for f in files if "lstm_" in f]
+        states.sort()
+        if not len(states) > 0:
+            raise Exception("no states for autoencoder provided!")
+        state = os.path.join(statepath, states[-1])
+        if os.path.isfile(state):
+            state = torch.load(state)
+            conv.load_state_dict(state['state_dict'])
+        conv.to(device)
+        conv.eval()
+        del state
     # print(netG)
     # print(netD)
 
@@ -202,6 +228,12 @@ if __name__ == '__main__':
         fixed_noise = torch.tensor([vae.encode(Mset[i].to(device)).detach().cpu().numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
     elif opt.mel:
         fixed_noise = torch.tensor([Mset[i].numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
+    elif opt.conv:
+        feature_maps = [conv.convolve(Mset[i].to(device)).detach().cpu().numpy() for i in range(1337,1337+opt.batchSize)]
+        print(feature_maps.shape)
+        rand_index = np.random.randint(0, n_time_steps, size=opt.batchSize)
+        fixed_noise = 
+
     real_label = 1
     fake_label = 0
 
