@@ -226,9 +226,9 @@ if __name__ == '__main__':
     fixed_noise = None
     if opt.ae:
         fixed_noise = torch.tensor([vae.encode(Mset[i].to(device)).detach().cpu().numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
+        print(fixed_noise.shape)
     elif opt.mel:
         fixed_noise = torch.tensor([Mset[i].numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
-        print(fixed_noise.shape)
     elif opt.conv:
         feature_maps = torch.tensor([conv.convolve(Mset[i][0].to(device).unsqueeze(0)).detach().squeeze().cpu().numpy() for i in range(1337,1337+opt.batchSize)])
         feature_maps = feature_maps.reshape(feature_maps.shape[0], feature_maps.shape[2], feature_maps.shape[1])
