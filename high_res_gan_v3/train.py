@@ -232,8 +232,9 @@ if __name__ == '__main__':
         feature_maps = [conv.convolve(Mset[i].to(device)).detach().cpu().numpy() for i in range(1337,1337+opt.batchSize)]
         print(feature_maps.shape)
         rand_index = np.random.randint(0, n_time_steps, size=opt.batchSize)
-        fixed_noise = 
-
+        #fixed_noise = 
+    else:
+        fixed_noise = torch.randn(opt.batchSize, nz, 1, 1, device=device)
     real_label = 1
     fake_label = 0
 

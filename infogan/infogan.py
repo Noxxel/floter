@@ -192,6 +192,7 @@ if __name__ == "__main__":
         state = os.path.join(statepath, states[-1])
         if os.path.isfile(state):
             vae.load_state_dict(torch.load(state)['state_dict'])
+        del state
         vae.to(device2)
         vae.eval()
 
@@ -322,6 +323,8 @@ if __name__ == "__main__":
         generator.eval()
         z = torch.tensor(np.random.normal(0, 1, (n_row ** 2, opt.latent_dim)), dtype=torch.float32).to(device)
         static_sample = generator(z, static_label, static_code)
+        if not os.path.isdir("images"):
+            os.makedirs("images", exist_ok=True)
         save_image(static_sample.detach().cpu(), "images/static_{:03d}.png".format(epoch), nrow=n_row, normalize=True)
 
         sample1 = generator(static_z, static_label, c1)
