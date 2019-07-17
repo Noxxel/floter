@@ -233,7 +233,7 @@ if __name__ == '__main__':
         feature_maps = torch.tensor([conv.convolve(Mset[i][0].to(device).unsqueeze(0)).detach().squeeze().cpu().numpy() for i in range(1337,1337+opt.batchSize)])
         feature_maps = feature_maps.reshape(feature_maps.shape[0], feature_maps.shape[2], feature_maps.shape[1])
         rand_index = np.random.randint(0, feature_maps.shape[1], size=opt.batchSize)
-        fixed_noise = feature_maps[range(opt.batchSize), rand_index, :]
+        fixed_noise = (feature_maps[range(opt.batchSize), rand_index, :]).unsqueeze(2).unsqueeze(2).to(device)
         del feature_maps
         del rand_index
     else:
@@ -292,6 +292,8 @@ if __name__ == '__main__':
                 noise = vae.encode(mels.to(device)).unsqueeze(2).unsqueeze(2)
             elif opt.mel:
                 noise = mels.to(device).unsqueeze(2).unsqueeze(2)
+            elif opt.conv:
+                noise = conv.convolve(mels.to(device)).unsqueeze(2).unsqueeze(2)
             else:
                 noise = torch.randn(batch_size, nz, 1, 1, device=device)
             fake = netG(noise)
