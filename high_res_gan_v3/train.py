@@ -202,6 +202,8 @@ if __name__ == '__main__':
         fixed_noise = torch.tensor([vae.encode(Mset[i].to(device)).detach().cpu().numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
     elif opt.mel:
         fixed_noise = torch.tensor([Mset[i].numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
+    else:
+        fixed_noise = torch.randn(opt.batchSize, nz, 1, 1, device=device)
     real_label = 1
     fake_label = 0
 
