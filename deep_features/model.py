@@ -44,9 +44,7 @@ class LSTM(nn.Module):
         return (torch.zeros(self.num_layers, self.batch_size, self.lstm_hidden).to(device),
                 torch.zeros(self.num_layers, self.batch_size, self.lstm_hidden).to(device))
 
-
-    def forward(self, X):
-        #print(X.shape)
+    def convolve(self, X):
         X = self.conv1(X.view(X.shape[0],X.shape[2],X.shape[1]))
         X = self.batchnorm1(X)
         X = self.relu(X)
@@ -64,7 +62,30 @@ class LSTM(nn.Module):
         X = self.relu(X)
         X = self.maxpool(X)
         X = self.convDrop(X)
-        #print(X.shape)
+    
+        return X
+
+    def forward(self, X):
+        """ #print(X.shape)
+        X = self.conv1(X.view(X.shape[0],X.shape[2],X.shape[1]))
+        X = self.batchnorm1(X)
+        X = self.relu(X)
+        X = self.maxpool(X)
+        X = self.convDrop(X)
+
+        X = self.conv2(X)
+        X = self.batchnorm2(X)
+        X = self.relu(X)
+        X = self.maxpool(X)
+        X = self.convDrop(X)
+
+        X = self.conv3(X)
+        X = self.batchnorm3(X)
+        X = self.relu(X)
+        X = self.maxpool(X)
+        X = self.convDrop(X)
+        #print(X.shape) """
+        X = self.convolve(X)
         
         lstm_out, hidden = self.lstm(X.view(X.shape[0],X.shape[2],X.shape[1]), self.hidden)
         #print(lstm_out.shape)
