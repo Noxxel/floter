@@ -63,7 +63,7 @@ class LSTM(nn.Module):
         X = self.maxpool(X)
         X = self.convDrop(X)
     
-        return X
+        return X.view(X.shape[0],X.shape[2],X.shape[1])
 
     def forward(self, X):
         """ #print(X.shape)
@@ -87,7 +87,7 @@ class LSTM(nn.Module):
         #print(X.shape) """
         X = self.convolve(X)
         
-        lstm_out, hidden = self.lstm(X.view(X.shape[0],X.shape[2],X.shape[1]), self.hidden)
+        lstm_out, hidden = self.lstm(X, self.hidden)
         #print(lstm_out.shape)
         X = self.normLSTM(lstm_out[:,-1].view(X.shape[0], -1))
         X = self.relu(X)

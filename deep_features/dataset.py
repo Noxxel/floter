@@ -64,6 +64,7 @@ class SoundfileDataset(Dataset):
             X = np.load(os.path.join(self.ipath, this.path[:-3]) + "npy")
             X = X.T
             if self.out_type == 'cgan':
+                X = X[:self.n_time_steps,:]
                 return torch.as_tensor(X, dtype=torch.float32)
             if self.out_type == 'gan':
                 randIndex = np.random.randint(0, X.shape[0])
