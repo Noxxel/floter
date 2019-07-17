@@ -230,11 +230,12 @@ if __name__ == '__main__':
     elif opt.mel:
         fixed_noise = torch.tensor([Mset[i].numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
     elif opt.conv:
-        feature_maps = [conv.convolve(Mset[i][0].to(device).unsqueeze(0)).detach().cpu().numpy() for i in range(1337,1337+opt.batchSize)]
-        feature_maps = torch.tensor(feature_maps)
+        feature_maps = torch.tensor([conv.convolve(Mset[i][0].to(device).unsqueeze(0)).detach().squeeze().numpy() for i in range(1337,1337+opt.batchSize)])
+        feature_maps = feature_maps.reshape(feature_maps.shape[0], feature_maps.shape[2], feature_maps.shape[1])
         print(feature_maps.shape)
         rand_index = np.random.randint(0, n_time_steps, size=opt.batchSize)
-        #fixed_noise = 
+        fixed_noise = feature_maps[range(opt.batchSize), rand_index, :]
+        print(fixed_noise.shape)
     else:
         fixed_noise = torch.randn(opt.batchSize, nz, 1, 1, device=device)
     real_label = 1
