@@ -1,9 +1,11 @@
+wegener:
+floter/infogan/out/
 delaunay:
 floter_mnt/high_res_gan_v3/out/nz_128_ngf_64_ndf_16_bs_12/
 catmull:
-floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_16_bs_12/
-floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_16_bs_11/
+floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_12/
+floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_11/
 tutu:
 floter_mnt/infogan/out/
-wegener:
-floter/infogan/out
+kajiya:
+floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_10/
