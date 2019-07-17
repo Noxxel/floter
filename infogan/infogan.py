@@ -135,7 +135,7 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
     parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
     parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
-    parser.add_argument("--latent_dim", type=int, default=8, help="dimensionality of the latent space")
+    parser.add_argument("--latent_dim", type=int, default=84, help="dimensionality of the latent space")
     parser.add_argument("--code_dim", type=int, default=16, help="latent code")
     # parser.add_argument("--n_classes", type=int, default=10, help="number of classes for dataset")
     parser.add_argument("--img_size", type=int, default=512, help="size of each image dimension")
