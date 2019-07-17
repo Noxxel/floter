@@ -68,8 +68,9 @@ if __name__ == '__main__':
     print(opt)
 
     n_fft = 2**11
-    #hop_length = 367
-    hop_length = 2**9
+    hop_length = 367
+    if opt.conv:
+        hop_length = 2**9
     n_mels = 128
     n_time_steps = 1290
 
@@ -101,12 +102,11 @@ if __name__ == '__main__':
 
     # dataloaders
     Mset = None
-    if opt.ae:
-        Mset = SoundfileDataset(ipath=ipath, out_type="gan")
     if opt.conv:
         Mset = SoundfileDataset(ipath=ipath, out_type='mel', n_time_steps=n_time_steps)
+    else:
+        Mset = SoundfileDataset(ipath=ipath, out_type="gan")
     assert Mset
-    Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers))
 
     dataset = DatasetCust(opt.dataroot,
                            transform=transforms.Compose([
@@ -116,21 +116,21 @@ if __name__ == '__main__':
                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                            ]))
     nc=3
-
     assert dataset
+
     assert len(dataset) > len(Mset)
     dataset.data = dataset.data[:len(Mset)]
     assert len(Mset) == len(dataset)
+    
+    Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers))
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize,
                                              shuffle=True, num_workers=int(opt.workers))
-
 
     device = torch.device("cuda:0" if opt.cuda else "cpu")
     ngpu = int(opt.ngpu)
     nz = int(opt.nz)
     ngf = int(opt.ngf)
     ndf = int(opt.ndf)
-
 
     # custom weights initialization called on netG and netD
     def weights_init(m):
