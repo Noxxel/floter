@@ -192,6 +192,7 @@ if __name__ == "__main__":
         state = os.path.join(statepath, states[-1])
         if os.path.isfile(state):
             vae.load_state_dict(torch.load(state)['state_dict'])
+        del state
         vae.to(device2)
         vae.eval()
 
