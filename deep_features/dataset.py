@@ -65,6 +65,8 @@ class SoundfileDataset(Dataset):
             X = X.T
             if self.out_type == 'cgan':
                 X = X[:self.n_time_steps,:]
+                if self.normalize:
+                    X = X / (-80)
                 return torch.as_tensor(X, dtype=torch.float32)
             if self.out_type == 'gan':
                 randIndex = np.random.randint(0, X.shape[0])
