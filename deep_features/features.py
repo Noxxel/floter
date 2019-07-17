@@ -45,12 +45,15 @@ VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True,
 model = LSTM(n_mels, batch_size, num_layers=n_layers)
 loss_function = nn.NLLLoss()
 optimizer = optim.Adam(model.parameters(), lr=l_rate)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
+#scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
+stateD = torch.load("lstm_399.nn")
+model.load_state_dict(stateD['state_dict'])
 val_loss_list, val_accuracy_list, epoch_list = [], [], []
 loss_function.to(device)
 model.to(device)
 model.hidden = model.init_hidden(device)
+optimizer.load_state_dict(stateD['optim'])
 
 for epoch in tqdm(range(n_epochs), desc='Epoch'):
     train_running_loss, train_acc = 0.0, 0.0
@@ -78,7 +81,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         val_running_loss += val_loss.detach().item()
         val_acc += model.get_accuracy(out, y)
 
-    scheduler.step(val_loss)
+    #scheduler.step(val_loss)
     tqdm.write("Epoch:  %d | Val Loss %.4f  | Val Accuracy: %.2f"
             % (
                 epoch,
