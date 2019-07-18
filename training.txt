@@ -18,3 +18,7 @@ tutu:
 kajiya:
 	(python train.py --cuda --batchSize=10 --workers=4 --nz=16 --ngf=64 --ndf=32)
 	floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_10/
+
+dalton:
+    (python train.py --cuda --manualSeed=1337 --batchSize=8 --workers=4 --nz=32 --ngf=64 --ndf=32 --conv --l2size=32 --lr=0.00001)
+    floter/high_res_gan_v3/out/nz_32_ngf_64_ndf_32_bs_8
