@@ -29,6 +29,7 @@ if __name__ == '__main__':
     parser.add_argument('--workers', type=int, default=2, help='number of threads for the dataloader')
     parser.add_argument('--debug', action='store_true', help='shrinks the dataset')
     parser.add_argument('--image_size', type=int, default=512)
+    parser.add_argument('--epoch', type=int, default=-1, help='specify state by epoch')
 
     parser.add_argument('--dcgan', action='store_true', help='use dcgan')
     parser.add_argument('--info', action='store_true', help='use infogan')
@@ -130,6 +131,9 @@ if __name__ == '__main__':
         states.sort()
         if len(states) >= 1:
             load_state = os.path.join(dcgan_path, states[-1])
+            if opt.epoch >= 0:
+                states = [st for st in states if "epoch_{}".format(opt.epoch) in st]
+                load_state = os.path.join(dcgan_path, states[0])
             if os.path.isfile(load_state):
                 tmp_load = torch.load(load_state)
                 netG.load_state_dict(tmp_load["netG"])
