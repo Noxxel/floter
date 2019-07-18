@@ -181,9 +181,9 @@ if __name__ == "__main__":
         os.makedirs(statepath, exist_ok=True)
 
     # log parameters
-    log_file = os.open(os.path.join(opath, "params.txt"), os.O_WRONLY | os.O_CREAT | os.O_APPEND)
-    ret = os.write(log_file, opt)
-    os.close(log_file)
+    log_file = open(os.path.join(opath, "params.txt"), "w")
+    log_file.write(str(opt))
+    log_file.close()
 
     # load pretrained autoencoder
     vae = None

@@ -91,13 +91,13 @@ if __name__ == '__main__':
     ipath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
     statepath = os.path.join(os.path.join("./out", opt.opath), "vae_b{}_{}".format(n_mels, middle_size))
     print('final output-path: {}'.format(statepath))
-    
+
     os.makedirs(statepath, exist_ok=True)
 
     # log parameters
-    log_file = os.open(os.path.join(statepath, "params.txt"), os.O_CREAT | os.O_WRONLY | os.O_APPEND)
-    ret = os.write(log_file, opt)
-    os.close(log_file)
+    log_file = open(os.path.join(statepath, "params.txt"), "w")
+    log_file.write(str(opt))
+    log_file.close()
 
     dset = SoundfileDataset(ipath=ipath, out_type="ae", normalize=True)
 

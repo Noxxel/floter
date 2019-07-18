@@ -52,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('--cuda', action='store_true', help='enables cuda')
     parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
     parser.add_argument('--loadstate', default='', help="path to state (to continue training)")
-    parser.add_argument('--outf', default='./out/', help='folder to output images and model checkpoints')
+    parser.add_argument('--opath', default='./out/', help='folder to output images and model checkpoints')
     parser.add_argument('--manualSeed', type=int, help='manual seed')
     parser.add_argument('--fresh', action='store_true', help='perform a fresh start instead of continuing from last checkpoint')
     parser.add_argument('--ae', action='store_true', help='train with autoencoder')
@@ -82,15 +82,15 @@ if __name__ == '__main__':
         statepath = "./states/conv_b{}_{}".format(n_mels, opt.l2size)
 
     folder_name = 'nz_{}_ngf_{}_ndf_{}_bs_{}/'.format(opt.nz, opt.ngf, opt.ndf, opt.batchSize)
-    out_path = os.path.join(opt.outf, folder_name)
+    opath = os.path.join(opt.opath, folder_name)
     ipath = "../deep_features/mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
     
-    os.makedirs(out_path, exist_ok=True)
+    os.makedirs(opath, exist_ok=True)
 
     # log parameters
-    log_file = os.open(os.path.join(out_path, "params.txt"), os.O_WRONLY | os.O_CREAT | os.O_APPEND)
-    ret = os.write(log_file, opt)
-    os.close(log_file)
+    log_file = open(os.path.join(opath, "params.txt"), "w")
+    log_file.write(str(opt))
+    log_file.close()
 
     if opt.manualSeed is None:
         opt.manualSeed = random.randint(1, 10000)
@@ -157,11 +157,11 @@ if __name__ == '__main__':
     load_state = ""
     starting_epoch = 0
     if not opt.fresh:
-        outf_files = os.listdir(out_path)
+        outf_files = os.listdir(opath)
         states = [of for of in outf_files if 'net_state_epoch_' in of]
         states.sort()
         if len(states) >= 1:
-            load_state = os.path.join(out_path, states[-1])
+            load_state = os.path.join(opath, states[-1])
             if os.path.isfile(load_state):
                 tmp_load = torch.load(load_state)
                 netD.load_state_dict(tmp_load["netD"])
@@ -326,11 +326,11 @@ if __name__ == '__main__':
 
             if i % 100 == 0:
                 vutils.save_image(real_cpu,
-                        os.path.join(out_path , 'real_samples.png'),
+                        os.path.join(opath , 'real_samples.png'),
                         normalize=True)
                 fake = netG(fixed_noise)
                 vutils.save_image(fake.detach(),
-                        os.path.join(out_path , 'fake_samples_epoch_{:03d}.png'.format(epoch)),
+                        os.path.join(opath , 'fake_samples_epoch_{:03d}.png'.format(epoch)),
                         normalize=True)
             del real_cpu
             del fake
@@ -352,7 +352,7 @@ if __name__ == '__main__':
 
         # save state
         state = {'netD':netD.state_dict(), 'netG':netG.state_dict(), 'optimD':optimizerD.state_dict(), 'optimG':optimizerG.state_dict(), 'lrD':lrD, 'lrG':lrG, 'lossD':lossD, 'lossG':lossG}
-        filename = os.path.join(out_path, "net_state_epoch_{:0=3d}.nn".format(epoch))
+        filename = os.path.join(opath, "net_state_epoch_{:0=3d}.nn".format(epoch))
         if not os.path.isdir(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename), exist_ok=True)
         torch.save(state, filename)
