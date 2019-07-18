@@ -1,5 +1,6 @@
 wegener:
 	(python infogan.py --cuda --mel --batch_size=4 --code_dim=128 --latent_dim=64 --workers=4)
+	(python infogan.py --cuda --mel --batch_size=40 --code_dim=128 --latent_dim=64 --workers=4 --image_size=256)
 	floter/infogan/out/
 
 delaunay:
