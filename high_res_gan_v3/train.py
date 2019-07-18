@@ -166,7 +166,7 @@ if __name__ == '__main__':
                 lossD = tmp_load["lossD"]
                 lossG = tmp_load["lossG"]
                 print("successfully loaded {}".format(load_state))
-                starting_epoch = int(states[-1][-6:-3])
+                starting_epoch = int(states[-1][-6:-3]) + 1
                 print("continueing with epoch {}".format(starting_epoch))
                 del tmp_load
 
@@ -179,7 +179,7 @@ if __name__ == '__main__':
         lossD = tmp_load["lossD"]
         lossG = tmp_load["lossG"]
         print("successfully loaded {}".format(opt.loadstate))
-        starting_epoch = int(states[-1][-6:-3])
+        starting_epoch = int(states[-1][-6:-3]) + 1
         print("continueing with epoch {}".format(starting_epoch))
         del tmp_load
     
