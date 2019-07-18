@@ -167,6 +167,7 @@ if __name__ == '__main__':
     for m, s in tqdm(zip(mels, input_songs), desc="generating videos"):
         m = (m / (-80)).to(device)
         if opt.ae:
+            vae.to(device)
             m = vae.encode(m)
             vae.cpu()
         
@@ -175,9 +176,6 @@ if __name__ == '__main__':
 
         m_step_history = []
         for i, m_step in enumerate(tqdm(m, desc="generating images for {}".format(s))):
-            if i > 100:
-                break
-
             m_step_cur = m_step.unsqueeze(0).unsqueeze(2).unsqueeze(2)
 
             if opt.smooth:
@@ -194,10 +192,15 @@ if __name__ == '__main__':
                 img = igan(m_step_cur)
             vutils.save_image(img, os.path.join(opath, 'tmp/{:06d}.png'.format(i)), normalize=True)
 
-        command = ["ffmpeg", "-r", str(fps), "-f", "image2", "-s", str(opt.image_size)+"x"+str(opt.image_size), "-i", os.path.join(opath, "tmp/")+"%06d.png", "-vcodec", "libx264", "-crf", "25", "-pix_fmt", "yuv420p", os.path.join(opath, s[:-1]+"4")]
+        image_param = os.path.join(opath, "tmp/")+"%06d.png"
+        video_no_sound = os.path.join(opath, s[:-1]+"4") if not opt.smooth else os.path.join(opath, "smooth_{}".format(opt.smooth_count)+s[:-1]+"4")
+        video_sound = os.path.join(opath, s[:-4]+"_sound.mp4") if not opt.smooth else os.path.join(opath, "smooth_{}".format(opt.smooth_count)+s[:-4]+"_sound.mp4")
+        command = ["ffmpeg", "-r", str(fps), "-f", "image2", "-s", str(opt.image_size)+"x"+str(opt.image_size), "-i", image_param, "-vcodec", "libx264", "-crf", "25", "-pix_fmt", "yuv420p", video_no_sound]
         tqdm.write("running system command: {}".format(" ".join(command)))
+        subprocess.run(command)
 
-        command = ["ffmpeg", "-i", os.path.join(opath, s[:-1]+"4"), "-i", os.path.join(ipath, s), "-codec", "copy", os.path.join(opath, s[:-4]+"_sound.mp4")]
+        command = ["ffmpeg", "-i", video_no_sound, "-i", os.path.join(ipath, s), "-codec", "copy", video_sound]
         tqdm.write("running system command: {}".format(" ".join(command)))
+        subprocess.run(command)
 
     print("done")
