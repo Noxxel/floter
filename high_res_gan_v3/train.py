@@ -63,11 +63,16 @@ if __name__ == '__main__':
     parser.add_argument("--l2size", type=int, default=16, help="layer sizes of ae or conv")
 
     parser.add_argument('--n_fft', type=int, default=2**11)
-    parser.add_argument('--hop_length', type=int, default=367) #--> fps: 60.0817
+    parser.add_argument('--hop_length', type=int, default=367) # --> fps: 60.0817
     parser.add_argument('--n_mels', type=int, default=128)
 
     opt = parser.parse_args()
     print(opt)
+
+    # log parameters
+    log_file = os.open("params.txt",os.os.O_WRONLY | os.O_CREAT)
+    ret = os.write(log_file, opt)
+    os.close(log_file)
 
     n_fft = opt.n_fft
     hop_length = opt.hop_length
