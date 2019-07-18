@@ -162,11 +162,6 @@ if __name__ == '__main__':
 
     to_pil = tf.ToPILImage()
     for m, s in zip(mels, tqdm(input_songs, desc="generating videos")):
-        
-        if opt.debug:
-            print("ffmpeg -i {} -i {} -codec copy {}".format(os.path.join(opath, s[:-1]+"mp4"), os.path.join(ipath, s), os.path.join(opath, s[:-4]+"_sound.mp4")))
-            exit()
-
         m = (m / (-80)).to(device)
         if opt.ae:
             m = vae.encode(m)
@@ -183,9 +178,13 @@ if __name__ == '__main__':
                 img = igan(m_step)
             vutils.save_image(img, os.path.join(opath, 'tmp/{:06d}.png'.format(i)), normalize=True)
 
-        if os.system("ffmpeg -r {} -f image2 -s {}x{} -i tmp/%06d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p {}".format(fps, opt.image_size, opt.image_size, os.path.join(opath, s[:-1]+"mp4"))):
-            raise Exception("ffmpeg call failed!")
-        if os.system("ffmpeg -i {} -i {} -codec copy {}".format(os.path.join(opath, s[:-1]+"4"), os.path.join(ipath, s), os.path.join(opath, s[:-4]+"_sound.mp4"))):
-            raise Exception("ffmpeg call failed!")
+        command = "ffmpeg -r {} -f image2 -s {}x{} -i {}%06d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p {}".format(fps, opt.image_size, opt.image_size, os.path.join(opath, "tmp/"), os.path.join(opath, s[:-1]+"mp4"))
+        print("running system command: {}".format(command))
+        if os.system(command):
+            raise Exception("command failed: {}".format(command))
+        command = "ffmpeg -i {} -i {} -codec copy {}".format(os.path.join(opath, s[:-1]+"4"), os.path.join(ipath, s), os.path.join(opath, s[:-4]+"_sound.mp4"))
+        print("running system command: {}".format(command))
+        if os.system(command):
+            raise Exception("command failed: {}".format(command))
 
     print("done")
