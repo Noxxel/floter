@@ -69,11 +69,6 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     print(opt)
 
-    # log parameters
-    log_file = os.open("params.txt", os.O_WRONLY | os.O_CREAT | os.O_APPEND)
-    ret = os.write(log_file, opt)
-    os.close(log_file)
-
     n_fft = opt.n_fft
     hop_length = opt.hop_length
     n_mels = opt.n_mels
@@ -89,6 +84,11 @@ if __name__ == '__main__':
     folder_name = 'nz_{}_ngf_{}_ndf_{}_bs_{}/'.format(opt.nz, opt.ngf, opt.ndf, opt.batchSize)
     out_path = os.path.join(opt.outf, folder_name)
     ipath = "../deep_features/mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
+
+    # log parameters
+    log_file = os.open(os.path.join(out_path, "params.txt"), os.O_WRONLY | os.O_CREAT | os.O_APPEND)
+    ret = os.write(log_file, opt)
+    os.close(log_file)
 
     try:
         os.makedirs(out_path)

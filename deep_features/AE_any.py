@@ -73,11 +73,6 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     print(opt)
 
-    # log parameters
-    log_file = os.open("params.txt", os.O_WRONLY | os.O_CREAT | os.O_APPEND)
-    ret = os.write(log_file, opt)
-    os.close(log_file)
-
     n_fft = opt.n_fft
     hop_length = opt.hop_length
     n_mels = opt.n_mels
@@ -96,6 +91,11 @@ if __name__ == '__main__':
     ipath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
     statepath = os.path.join(os.path.join("./out", opt.opath), "vae_b{}_{}".format(n_mels, middle_size))
     print('final output-path: {}'.format(statepath))
+
+    # log parameters
+    log_file = os.open(os.path.join(statepath, "params.txt"), os.O_WRONLY | os.O_CREAT | os.O_APPEND)
+    ret = os.write(log_file, opt)
+    os.close(log_file)
 
     dset = SoundfileDataset(ipath=ipath, out_type="ae", normalize=True)
 
