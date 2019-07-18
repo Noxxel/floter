@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 import librosa
 import cv2
 import torchvision.utils as vutils
+import subprocess
 
 import dcgan
 from dataset import SoundfileDataset
@@ -43,6 +44,9 @@ if __name__ == '__main__':
     parser.add_argument('--n_fft', type=int, default=2**11)
     parser.add_argument('--hop_length', type=int, default=367) #--> fps: 60.0817
     parser.add_argument('--n_mels', type=int, default=128)
+
+    parser.add_argument('--smooth', action='store_true', help='attempt to smoothen the video by slowly moving in the feature-space')
+    parser.add_argument('--smooth_count', type=int, default=5, help='the amount of points in the feature space over which the mean is taken to generate images')
 
     opt = parser.parse_args()
     print(opt)
@@ -160,7 +164,6 @@ if __name__ == '__main__':
         igan = Generator(latent_dim=opt.latent_dim, n_classes=opt.n_classes, code_dim=opt.code_dim, img_size=opt.img_size, channels=opt.channels)
         igan.to(device)
 
-    to_pil = tf.ToPILImage()
     for m, s in zip(mels, tqdm(input_songs, desc="generating videos")):
         m = (m / (-80)).to(device)
         if opt.ae:
@@ -168,23 +171,29 @@ if __name__ == '__main__':
             vae.cpu()
         
         os.makedirs(os.path.join(opath, "tmp/"), exist_ok=True)
-        os.system("rm {}".format(os.path.join(opath, "tmp/*")))
-        img = None
+        subprocess.run(["rm", os.path.join(opath, "tmp/*")])
+
+        m_step_history = []
         for i, m_step in enumerate(tqdm(m, desc="generating images for {}".format(s))):
-            m_step = m_step.unsqueeze(0).unsqueeze(2).unsqueeze(2)
+            m_step_cur = m_step.unsqueeze(0).unsqueeze(2).unsqueeze(2)
+
+            if opt.smooth:
+                m_step_history.append(m_step_cur)
+                while len(m_step_history) > opt.smooth_count:
+                    del m_step_history[0]
+                meaned_step = torch.mean(torch.stack(m_step_history), dim=0)
+                m_step_cur = meaned_step
+
             if opt.dcgan:
-                img = netG(m_step)
+                img = netG(m_step_cur)
             if opt.info:
-                img = igan(m_step)
+                img = igan(m_step_cur)
             vutils.save_image(img, os.path.join(opath, 'tmp/{:06d}.png'.format(i)), normalize=True)
 
-        command = "ffmpeg -r {} -f image2 -s {}x{} -i {}%06d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p {}".format(fps, opt.image_size, opt.image_size, os.path.join(opath, "tmp/"), os.path.join(opath, s[:-1]+"mp4"))
-        print("running system command: {}".format(command))
-        if os.system(command):
-            raise Exception("command failed: {}".format(command))
-        command = "ffmpeg -i {} -i {} -codec copy {}".format(os.path.join(opath, s[:-1]+"4"), os.path.join(ipath, s), os.path.join(opath, s[:-4]+"_sound.mp4"))
-        print("running system command: {}".format(command))
-        if os.system(command):
-            raise Exception("command failed: {}".format(command))
+        command = ["ffmpeg", "-r", str(fps), "-f", "image2", "-s", str(opt.image_size)+"x"+str(opt.image_size), "-i", os.path.join(opath, "tmp/")+"%06d.png", "-vcodec", "libx264", "-crf", "25", "-pix_fmt", "yuv420p", os.path.join(opath, s[:-1]+"4")]
+        tqdm.write("running system command: {}".format(" ".join(command)))
+
+        command = ["ffmpeg", "-i", os.path.join(opath, s[:-1]+"4"), "-i", os.path.join(ipath, s), "-codec", "copy", os.path.join(opath, s[:-4]+"_sound.mp4")]
+        tqdm.write("running system command: {}".format(" ".join(command)))
 
     print("done")
