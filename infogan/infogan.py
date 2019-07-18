@@ -111,7 +111,7 @@ class Discriminator(nn.Module):
         )
 
         # The height and width of downsampled image
-        ds_size = opt.img_size // 2 ** 4
+        ds_size = opt.image_size // 2 ** 4
 
         # Output layers
         self.adv_layer = nn.Sequential(nn.Linear(128 * ds_size ** 2, 1))
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     parser.add_argument("--latent_dim", type=int, default=84, help="dimensionality of the latent space")
     parser.add_argument("--code_dim", type=int, default=16, help="latent code")
     # parser.add_argument("--n_classes", type=int, default=10, help="number of classes for dataset")
-    parser.add_argument("--img_size", type=int, default=512, help="size of each image dimension")
+    parser.add_argument("--image_size", type=int, default=512, help="size of each image dimension")
     parser.add_argument("--channels", type=int, default=3, help="number of image channels")
     parser.add_argument("--sample_interval", type=int, default=400, help="interval between image sampling")
     parser.add_argument('--fresh', action='store_true', help='perform a fresh start instead of continuing from last checkpoint')
@@ -221,7 +221,7 @@ if __name__ == "__main__":
     lambda_con = 0.1
 
     # Initialize generator and discriminator
-    generator = Generator(latent_dim=opt.latent_dim, n_classes=1, code_dim=opt.code_dim, img_size=opt.img_size, channels=opt.channels)
+    generator = Generator(latent_dim=opt.latent_dim, n_classes=1, code_dim=opt.code_dim, img_size=opt.image_size, channels=opt.channels)
     discriminator = Discriminator()
 
     # Initialize weights
@@ -259,7 +259,7 @@ if __name__ == "__main__":
     Iset = DatasetCust(opt.dataroot,
                            transform=transforms.Compose([
                                transforms.ToPILImage(),
-                               transforms.Resize((opt.img_size, opt.img_size)),
+                               transforms.Resize((opt.image_size, opt.image_size)),
                                transforms.ToTensor(),
                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                            ]))
