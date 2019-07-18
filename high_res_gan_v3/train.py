@@ -48,6 +48,7 @@ if __name__ == '__main__':
     parser.add_argument('--ndf', type=int, default=16)
     parser.add_argument('--niter', type=int, default=300, help='number of epochs to train for')
     parser.add_argument('--lr', type=float, default=0.0001, help='learning rate, default=0.0001')
+    parser.add_argument('--lrD', type=float, default=0.0001, help='learning rate, default=0.0001')
     parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
     parser.add_argument('--cuda', action='store_true', help='enables cuda')
     parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
@@ -244,7 +245,7 @@ if __name__ == '__main__':
     fake_label = 0
 
     # setup optimizer
-    optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+    optimizerD = optim.Adam(netD.parameters(), lr=opt.lrD, betas=(opt.beta1, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
     if os.path.isfile(load_state):
@@ -257,10 +258,10 @@ if __name__ == '__main__':
         lossG = tmp_load["lossG"]
         del tmp_load
     
-    for pg in optimizerD.param_groups:
-        pg["lr"] = opt.lr
-    for pg in optimizerG.param_groups:
-        pg["lr"] = opt.lr
+    # for pg in optimizerD.param_groups:
+    #     pg["lr"] = opt.lrD
+    # for pg in optimizerG.param_groups:
+    #     pg["lr"] = opt.lr
 
     # schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=30, factor=0.5)
     # schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=5, factor=0.2)
