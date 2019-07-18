@@ -69,10 +69,8 @@ if __name__ == '__main__':
 
     n_fft = 2**11
     hop_length = 367
-    if opt.conv:
-        hop_length = 2**9
     n_mels = 128
-    n_time_steps = 1290
+    n_time_steps = 1800
 
     statepath = ""
     if opt.ae:
