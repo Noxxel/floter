@@ -70,7 +70,7 @@ if __name__ == '__main__':
     print(opt)
 
     # log parameters
-    log_file = os.open("params.txt", os.O_WRONLY | os.O_CREAT)
+    log_file = os.open("params.txt", os.O_WRONLY | os.O_CREAT | os.O_APPEND)
     ret = os.write(log_file, opt)
     os.close(log_file)
 

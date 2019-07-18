@@ -73,6 +73,11 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     print(opt)
 
+    # log parameters
+    log_file = os.open("params.txt", os.O_WRONLY | os.O_CREAT | os.O_APPEND)
+    ret = os.write(log_file, opt)
+    os.close(log_file)
+
     n_fft = opt.n_fft
     hop_length = opt.hop_length
     n_mels = opt.n_mels
