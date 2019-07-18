@@ -1,5 +1,4 @@
 wegener:
-	(python infogan.py --cuda --mel --batch_size=4 --code_dim=128 --latent_dim=64 --workers=4)
 	(python infogan.py --cuda --mel --batch_size=40 --code_dim=128 --latent_dim=64 --workers=4 --image_size=256)
 	floter/infogan/out/
 
@@ -13,7 +12,7 @@ catmull:
 	floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_11/
 
 tutu:
-	(python infogan.py --cuda --batch_size=18 --workers=4 --ae --lr=0.0005)
+	(python infogan.py --cuda --batch_size=85 --workers=4 --ae --lr=0.00025 --image_size=256)
 	floter_mnt/infogan/out/
 
 kajiya:
