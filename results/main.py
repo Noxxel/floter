@@ -186,7 +186,8 @@ if __name__ == '__main__':
         
         os.makedirs(os.path.join(opath, "tmp/"), exist_ok=True)
         with open(os.devnull, 'w') as devnull:
-            subprocess.run(["rm", os.path.join(opath, "tmp/*")], stdout=devnull, stderr=devnull)
+            subprocess.run(["rm", "-r", os.path.join(opath, "tmp")], stdout=devnull, stderr=devnull)
+        os.makedirs(os.path.join(opath, "tmp/"), exist_ok=True)
         # subprocess.run(["rm", os.path.join(opath, "tmp/*")])
 
         m_step_history = []
@@ -218,4 +219,5 @@ if __name__ == '__main__':
         tqdm.write("running system command: {}".format(" ".join(command)))
         subprocess.run(command)
 
-    print("done")
+    with open(os.devnull, 'w') as devnull:
+        subprocess.run(["rm", "-r", os.path.join(opath, "tmp")], stdout=devnull, stderr=devnull)
