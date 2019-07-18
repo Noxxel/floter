@@ -48,6 +48,8 @@ if __name__ == '__main__':
     parser.add_argument('--smooth', action='store_true', help='attempt to smoothen the video by slowly moving in the feature-space')
     parser.add_argument('--smooth_count', type=int, default=5, help='the amount of points in the feature space over which the mean is taken to generate images')
 
+    parser.add_argument('--test', type=int, default=5, help='small sample song') # 068582.mp3
+
     opt = parser.parse_args()
     print(opt)
 
@@ -81,6 +83,8 @@ if __name__ == '__main__':
 
     input_songs = os.listdir(ipath)
     input_songs = [x for x in input_songs if x.endswith(".mp3")]
+    if opt.test:
+        input_songs = [x for x in input_songs if x == "068582.mp3"]
     if not len(input_songs) > 0:
         raise Exception("no input song provided!")
 
