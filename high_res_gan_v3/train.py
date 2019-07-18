@@ -84,16 +84,13 @@ if __name__ == '__main__':
     folder_name = 'nz_{}_ngf_{}_ndf_{}_bs_{}/'.format(opt.nz, opt.ngf, opt.ndf, opt.batchSize)
     out_path = os.path.join(opt.outf, folder_name)
     ipath = "../deep_features/mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
+    
+    os.makedirs(out_path, exist_ok=True)
 
     # log parameters
     log_file = os.open(os.path.join(out_path, "params.txt"), os.O_WRONLY | os.O_CREAT | os.O_APPEND)
     ret = os.write(log_file, opt)
     os.close(log_file)
-
-    try:
-        os.makedirs(out_path)
-    except OSError:
-        pass
 
     if opt.manualSeed is None:
         opt.manualSeed = random.randint(1, 10000)

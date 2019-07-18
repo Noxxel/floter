@@ -170,11 +170,6 @@ if __name__ == "__main__":
     opath = "./out"
     statepath = ""
 
-    # log parameters
-    log_file = os.open(os.path.join(opath, "params.txt"), os.O_WRONLY | os.O_CREAT | os.O_APPEND)
-    ret = os.write(log_file, opt)
-    os.close(log_file)
-
     if opt.ae:
         statepath = "./states/vae_b{}_{}".format(n_mels, opt.l2size)
     elif opt.conv:
@@ -184,6 +179,11 @@ if __name__ == "__main__":
     os.makedirs(opath, exist_ok=True)
     if statepath != "":
         os.makedirs(statepath, exist_ok=True)
+
+    # log parameters
+    log_file = os.open(os.path.join(opath, "params.txt"), os.O_WRONLY | os.O_CREAT | os.O_APPEND)
+    ret = os.write(log_file, opt)
+    os.close(log_file)
 
     # load pretrained autoencoder
     vae = None
