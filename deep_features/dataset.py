@@ -11,7 +11,7 @@ import librosa
 
 class SoundfileDataset(Dataset):
 
-    def __init__(self, path="./all_metadata.p", ipath="./mels_set", hotvec=False, out_type='raw', n_time_steps=None, normalize=True):
+    def __init__(self, path="./all_metadata.p", ipath="./mels_set", hotvec=False, out_type='raw', n_time_steps=None, normalize=True, filter_list=None):
         _, ext = os.path.splitext(path)
         if ext == ".p":
             d = pickle.load(open(path, 'rb'))
@@ -25,6 +25,9 @@ class SoundfileDataset(Dataset):
         
         if out_type == 'mel' or out_type == 'ae' or out_type == 'gan':
             d = {k:v for k,v in d.items() if os.path.isfile(os.path.join(ipath, v['path'][:-3] + "npy")) and v["track"]["genre_top"] != ""}
+
+        if filter_list:
+            d = {k:v for k,v in d.items() if v["track"]["genre_top"] not in filter_list}
         
         # Generate class-idx-converter
         classes = set()

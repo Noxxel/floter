@@ -1,20 +1,19 @@
-print("FUCKTHISFUCKINGSHIT")
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from model_small import ConvClassifier
+from model_small import LSTM
 from dataset import SoundfileDataset
 from tqdm import tqdm
 import os
 import numpy as np
-print("fuckitevenmore")
-
+import matplotlib.pyplot as plt
 
 n_fft = 2**11
-hop_length = 2**9
+hop_length = 367
+#hop_length = 2**9
 n_mels = 128
-n_time_steps = 1290
+n_time_steps = 1800
 n_layers = 2
 NORMALIZE = True
 
@@ -29,10 +28,10 @@ log_intervall = 50
 
 #datapath = "./mels_set_db"
 datapath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
-statepath = "./conv_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
+statepath = "./lstm_f{}_h{}_b{}_nomax".format(n_fft, hop_length, n_mels)
 #statepath = "conv_small_b128"
 
-device = "cuda:1"
+device = "cuda"
 
 dset = SoundfileDataset("./all_metadata.p", ipath=datapath, out_type="mel", normalize=NORMALIZE, n_time_steps=n_time_steps)
 if DEBUG:
@@ -43,7 +42,7 @@ tset, vset = dset.get_split(sampler=False)
 TLoader = DataLoader(tset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
 VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=num_workers)
 
-model = ConvClassifier(n_mels, batch_size, num_layers=n_layers)
+model = LSTM(n_mels, batch_size, num_layers=n_layers)
 loss_function = nn.NLLLoss()
 optimizer = optim.Adam(model.parameters(), lr=l_rate)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
@@ -51,10 +50,11 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose
 val_loss_list, val_accuracy_list, epoch_list = [], [], []
 loss_function.to(device)
 model.to(device)
+model.hidden = model.init_hidden(device)
 
 for epoch in tqdm(range(n_epochs), desc='Epoch'):
     train_running_loss, train_acc = 0.0, 0.0
-
+    model.train()
     for idx, (X, y) in enumerate(tqdm(TLoader, desc="Training")):
         X, y = X.to(device), y.to(device)
         model.zero_grad()
@@ -86,7 +86,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
                 val_acc / len(VLoader),
             )
         )
-    model.train()
+    
     epoch_list.append(epoch)
     val_accuracy_list.append(val_acc / len(VLoader))
     val_loss_list.append(val_running_loss / len(VLoader))
@@ -100,7 +100,6 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         del state
         torch.cuda.empty_cache()
 
-import matplotlib.pyplot as plt
 # visualization loss
 plt.plot(epoch_list, val_loss_list)
 plt.ylim(0, np.max(val_loss_list))
