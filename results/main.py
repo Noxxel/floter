@@ -38,12 +38,18 @@ parser.add_argument('--ngf', type=int, default=64)
 parser.add_argument('--ndf', type=int, default=32)
 parser.add_argument('--batch_size', type=int, default=11)
 
+parser.add_argument('--n_fft', type=int, default=2**11)
+parser.add_argument('--hop_length', type=int, default=367) #--> fps: 60.0817
+parser.add_argument('--n_mels', type=int, default=128)
+
 opt = parser.parse_args()
 print(opt)
 
-n_fft = 2**11
-hop_length = 367
-n_mels = 128
+n_fft = opt.n_fft
+hop_length = opt.hop_length
+n_mels = opt.n_mels
+
+fps = 60.0817
 nz = None
 
 ngpu = 1
@@ -154,6 +160,11 @@ if opt.info:
 
 to_pil = tf.ToPILImage()
 for m, s in zip(mels, tqdm(input_songs, desc="generating videos")):
+    
+    if opt.debug:
+        print("ffmpeg -i {} -i {} -codec copy {}".format(os.path.join(opath, s[:-1]+"mp4"), os.path.join(ipath, s), os.path.join(opath, s[:-4]+"_sound.mp4")))
+        exit()
+
     m = (m / (-80)).to(device)
     if opt.ae:
         m = vae.encode(m)
@@ -169,6 +180,8 @@ for m, s in zip(mels, tqdm(input_songs, desc="generating videos")):
             img = igan(m_step)
         vutils.save_image(img, os.path.join(opath, 'tmp/{:06d}.png'.format(i)), normalize=True)
 
-    # os.system("ffmpeg -i {} -i {} -codec copy {}".format(os.path.join(opath, s[:-3]+"avi"), os.path.join(ipath, s), os.path.join(opath, s[:-4]+"_sound.mp4")))
+    os.system("ffmpeg -r {} -f image2 -s {}x{} -i tmp/%06d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p {}".format(fps, opt.image_size, opt.image_size, os.path.join(opath, s[:-1]+"mp4")))
+    os.system("ffmpeg -i {} -i {} -codec copy {}".format(os.path.join(opath, s[:-1]+"4"), os.path.join(ipath, s), os.path.join(opath, s[:-4]+"_sound.mp4")))
+    os.system("rm -r {}".format(os.path.join(opath, "tmp/")))
 
 print("done")
