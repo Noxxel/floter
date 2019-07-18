@@ -1,5 +1,3 @@
-import dcgan
-
 import argparse
 import torch
 import os
@@ -15,6 +13,7 @@ from tqdm import tqdm
 from skimage import io, transform
 from torch.utils.data import Dataset, DataLoader
 
+import dcgan
 from dataset import SoundfileDataset
 from AE_any import AutoEncoder
 from model import LSTM
