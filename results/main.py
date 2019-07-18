@@ -75,7 +75,6 @@ if __name__ == '__main__':
     conv_path = "./gan/conv"
 
     os.makedirs(ipath, exist_ok=True)
-    os.makedirs(opath, exist_ok=True)
     os.makedirs(dcgan_path, exist_ok=True)
     os.makedirs(ae_path, exist_ok=True)
     os.makedirs(conv_path, exist_ok=True)
@@ -99,6 +98,8 @@ if __name__ == '__main__':
         X = librosa.power_to_db(X, ref=np.max)
 
         mels.append(torch.tensor(X.T, dtype=torch.float32))
+
+    loaded_epoch = 0
 
     # load pretrained autoencoder
     vae = None
@@ -132,6 +133,8 @@ if __name__ == '__main__':
                 del tmp_load
                 netG.to(device)
                 netG.eval()
+                
+                loaded_epoch = int(states[-1][-6:-3])
 
     # if opt.debug:
     #     for original_mel, s in zip(mels, input_songs):
@@ -163,6 +166,16 @@ if __name__ == '__main__':
     if opt.info:
         igan = Generator(latent_dim=opt.latent_dim, n_classes=opt.n_classes, code_dim=opt.code_dim, img_size=opt.img_size, channels=opt.channels)
         igan.to(device)
+    
+    if opt.ae or opt.mel:
+        opath = os.path.join(opath, "nz{}_epoch{}_ngf{}_ndf{}_bs{}/".format(nz, int(states[-1][-6:-3]), opt.ngf, opt.ndf, opt.batch_size))
+    elif opt.conv:
+        raise Exception("fix this!")
+    os.makedirs(opath, exist_ok=True)
+    # log parameters
+    log_file = open(os.path.join(opath, "params.txt"), "w")
+    log_file.write(str(opt))
+    log_file.close()
 
     for m, s in tqdm(zip(mels, input_songs), desc="generating videos"):
         m = (m / (-80)).to(device)
