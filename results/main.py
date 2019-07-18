@@ -185,7 +185,9 @@ if __name__ == '__main__':
             vae.cpu()
         
         os.makedirs(os.path.join(opath, "tmp/"), exist_ok=True)
-        subprocess.run(["rm", os.path.join(opath, "tmp/*")])
+        with open(os.devnull, 'w') as devnull:
+            subprocess.run(["rm", os.path.join(opath, "tmp/*")], stdout=devnull, stderr=devnull)
+        # subprocess.run(["rm", os.path.join(opath, "tmp/*")])
 
         m_step_history = []
         for i, m_step in enumerate(tqdm(m, desc="generating images for {}".format(s))):
