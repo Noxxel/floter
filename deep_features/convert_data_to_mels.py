@@ -1,3 +1,4 @@
+import argparse
 import librosa
 import numpy as np
 import os
@@ -5,12 +6,6 @@ import pickle
 import multiprocessing
 from tqdm import tqdm
 
-n_fft = 2**11
-hop_length = 367
-n_mels = 128
-
-INPATH  = "./fma_small"
-OUTPATH = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
 
 def save_mel(paths):
     
@@ -39,15 +34,28 @@ def save_mel(paths):
 
     return
 
-def main():
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--n_fft', type=int, default=2**11)
+    parser.add_argument('--hop_length', type=int, default=367) #--> fps: 60.0817
+    parser.add_argument('--n_mels', type=int, default=128)
+
+    opt = parser.parse_args()
+    print(opt)
+
+    n_fft = opt.n_fft
+    hop_length = opt.hop_length
+    n_mels = opt.n_mels
+
+    ipath  = "./fma_small"
+    opath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
+
     d = pickle.load(open("./all_metadata.p", 'rb'))
-    l = [(os.path.join(INPATH, x['path']), os.path.join(OUTPATH, x['path'][:-4] + '.npy')) for x in d.values()]
+    l = [(os.path.join(ipath, x['path']), os.path.join(opath, x['path'][:-4] + '.npy')) for x in d.values()]
     l = [x for x in l if os.path.isfile(x[0]) and not os.path.isfile(x[1])]
     del d
 
     pool = multiprocessing.Pool()
     imap = pool.imap(save_mel, l) 
     l = [x for x in tqdm(imap, total=len(l))]
-
-if __name__ == '__main__':
-    main()

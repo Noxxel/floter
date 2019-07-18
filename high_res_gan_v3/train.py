@@ -43,7 +43,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataroot', required=False, default="../data/flowers", help='path to dataset')
     parser.add_argument('--workers', type=int, help='number of data loading workers', default=2)
     parser.add_argument('--batchSize', type=int, default=16, help='input batch size')
-    parser.add_argument('--imageSize', type=int, default=512, help='the height / width of the input image to network')
+    parser.add_argument('--image_size', type=int, default=512, help='the height / width of the input image to network')
     parser.add_argument('--nz', type=int, default=1000, help='size of the latent z vector')
     parser.add_argument('--ngf', type=int, default=64)
     parser.add_argument('--ndf', type=int, default=16)
@@ -63,12 +63,17 @@ if __name__ == '__main__':
     parser.add_argument("--l1size", type=int, default=64, help="layer sizes of ae")
     parser.add_argument("--l2size", type=int, default=16, help="layer sizes of ae or conv")
 
+    parser.add_argument('--n_fft', type=int, default=2**11)
+    parser.add_argument('--hop_length', type=int, default=367) #--> fps: 60.0817
+    parser.add_argument('--n_mels', type=int, default=128)
+
     opt = parser.parse_args()
     print(opt)
 
-    n_fft = 2**11
-    hop_length = 367
-    n_mels = 128
+    n_fft = opt.n_fft
+    hop_length = opt.hop_length
+    n_mels = opt.n_mels
+    
     n_time_steps = 1800
 
     statepath = ""
@@ -108,7 +113,7 @@ if __name__ == '__main__':
     dataset = DatasetCust(opt.dataroot,
                            transform=transforms.Compose([
                                transforms.ToPILImage(),
-                               transforms.Resize((opt.imageSize, opt.imageSize)),
+                               transforms.Resize((opt.image_size, opt.image_size)),
                                transforms.ToTensor(),
                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                            ]))

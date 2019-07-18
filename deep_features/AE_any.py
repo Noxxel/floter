@@ -66,12 +66,16 @@ if __name__ == '__main__':
     parser.add_argument('--log', action='store_true', help='log during epochs')
     parser.add_argument('--fresh', action='store_true', help='force a fresh start without loading states')
 
+    parser.add_argument('--n_fft', type=int, default=2**11)
+    parser.add_argument('--hop_length', type=int, default=367) #--> fps: 60.0817
+    parser.add_argument('--n_mels', type=int, default=128)
+
     opt = parser.parse_args()
     print(opt)
 
-    n_fft = 2**11
-    hop_length = 367
-    n_mels = 128
+    n_fft = opt.n_fft
+    hop_length = opt.hop_length
+    n_mels = opt.n_mels
 
     encode_size = opt.l1size
     middle_size = opt.l2size
