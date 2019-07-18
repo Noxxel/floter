@@ -13,3 +13,4 @@ vae_*/
 lstm_*/
 GAN/
 */out/
+results/gen_stuff.sh

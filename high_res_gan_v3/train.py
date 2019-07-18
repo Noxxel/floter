@@ -1,5 +1,3 @@
-import dcgan
-
 import argparse
 import torch
 import os
@@ -15,6 +13,7 @@ from tqdm import tqdm
 from skimage import io, transform
 from torch.utils.data import Dataset, DataLoader
 
+import dcgan
 from dataset import SoundfileDataset
 from AE_any import AutoEncoder
 from model import LSTM
@@ -37,24 +36,24 @@ class DatasetCust(Dataset):
             sample = self.transform(sample)
         
         return sample
-        
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataroot', required=False, default="../data/flowers", help='path to dataset')
     parser.add_argument('--workers', type=int, help='number of data loading workers', default=2)
     parser.add_argument('--batchSize', type=int, default=16, help='input batch size')
-    parser.add_argument('--imageSize', type=int, default=512, help='the height / width of the input image to network')
+    parser.add_argument('--image_size', type=int, default=512, help='the height / width of the input image to network')
     parser.add_argument('--nz', type=int, default=1000, help='size of the latent z vector')
     parser.add_argument('--ngf', type=int, default=64)
     parser.add_argument('--ndf', type=int, default=16)
     parser.add_argument('--niter', type=int, default=300, help='number of epochs to train for')
-    parser.add_argument('--lr', type=float, default=0.0001, help='learning rate, default=0.0002')
+    parser.add_argument('--lr', type=float, default=0.0001, help='learning rate, default=0.0001')
+    parser.add_argument('--lrD', type=float, default=0.0001, help='learning rate, default=0.0001')
     parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
     parser.add_argument('--cuda', action='store_true', help='enables cuda')
     parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
     parser.add_argument('--loadstate', default='', help="path to state (to continue training)")
-    parser.add_argument('--outf', default='./out/', help='folder to output images and model checkpoints')
+    parser.add_argument('--opath', default='./out/', help='folder to output images and model checkpoints')
     parser.add_argument('--manualSeed', type=int, help='manual seed')
     parser.add_argument('--fresh', action='store_true', help='perform a fresh start instead of continuing from last checkpoint')
     parser.add_argument('--ae', action='store_true', help='train with autoencoder')
@@ -64,12 +63,17 @@ if __name__ == '__main__':
     parser.add_argument("--l1size", type=int, default=64, help="layer sizes of ae")
     parser.add_argument("--l2size", type=int, default=16, help="layer sizes of ae or conv")
 
+    parser.add_argument('--n_fft', type=int, default=2**11)
+    parser.add_argument('--hop_length', type=int, default=367) # --> fps: 60.0817
+    parser.add_argument('--n_mels', type=int, default=128)
+
     opt = parser.parse_args()
     print(opt)
 
-    n_fft = 2**11
-    hop_length = 367
-    n_mels = 128
+    n_fft = opt.n_fft
+    hop_length = opt.hop_length
+    n_mels = opt.n_mels
+    
     n_time_steps = 1800
 
     statepath = ""
@@ -79,13 +83,15 @@ if __name__ == '__main__':
         statepath = "./states/conv_b{}_{}".format(n_mels, opt.l2size)
 
     folder_name = 'nz_{}_ngf_{}_ndf_{}_bs_{}/'.format(opt.nz, opt.ngf, opt.ndf, opt.batchSize)
-    out_path = os.path.join(opt.outf, folder_name)
+    opath = os.path.join(opt.opath, folder_name)
     ipath = "../deep_features/mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
+    
+    os.makedirs(opath, exist_ok=True)
 
-    try:
-        os.makedirs(out_path)
-    except OSError:
-        pass
+    # log parameters
+    log_file = open(os.path.join(opath, "params.txt"), "w")
+    log_file.write(str(opt))
+    log_file.close()
 
     if opt.manualSeed is None:
         opt.manualSeed = random.randint(1, 10000)
@@ -109,7 +115,7 @@ if __name__ == '__main__':
     dataset = DatasetCust(opt.dataroot,
                            transform=transforms.Compose([
                                transforms.ToPILImage(),
-                               transforms.Resize((opt.imageSize, opt.imageSize)),
+                               transforms.Resize((opt.image_size, opt.image_size)),
                                transforms.ToTensor(),
                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                            ]))
@@ -152,11 +158,11 @@ if __name__ == '__main__':
     load_state = ""
     starting_epoch = 0
     if not opt.fresh:
-        outf_files = os.listdir(out_path)
+        outf_files = os.listdir(opath)
         states = [of for of in outf_files if 'net_state_epoch_' in of]
         states.sort()
         if len(states) >= 1:
-            load_state = os.path.join(out_path, states[-1])
+            load_state = os.path.join(opath, states[-1])
             if os.path.isfile(load_state):
                 tmp_load = torch.load(load_state)
                 netD.load_state_dict(tmp_load["netD"])
@@ -166,7 +172,7 @@ if __name__ == '__main__':
                 lossD = tmp_load["lossD"]
                 lossG = tmp_load["lossG"]
                 print("successfully loaded {}".format(load_state))
-                starting_epoch = int(states[-1][-6:-3])
+                starting_epoch = int(states[-1][-6:-3]) + 1
                 print("continueing with epoch {}".format(starting_epoch))
                 del tmp_load
 
@@ -179,7 +185,7 @@ if __name__ == '__main__':
         lossD = tmp_load["lossD"]
         lossG = tmp_load["lossG"]
         print("successfully loaded {}".format(opt.loadstate))
-        starting_epoch = int(states[-1][-6:-3])
+        starting_epoch = int(states[-1][-6:-3]) + 1
         print("continueing with epoch {}".format(starting_epoch))
         del tmp_load
     
@@ -239,7 +245,7 @@ if __name__ == '__main__':
     fake_label = 0
 
     # setup optimizer
-    optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+    optimizerD = optim.Adam(netD.parameters(), lr=opt.lrD, betas=(opt.beta1, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
     if os.path.isfile(load_state):
@@ -252,10 +258,10 @@ if __name__ == '__main__':
         lossG = tmp_load["lossG"]
         del tmp_load
     
-    for pg in optimizerD.param_groups:
-        pg["lr"] = opt.lr
-    for pg in optimizerG.param_groups:
-        pg["lr"] = opt.lr
+    # for pg in optimizerD.param_groups:
+    #     pg["lr"] = opt.lrD
+    # for pg in optimizerG.param_groups:
+    #     pg["lr"] = opt.lr
 
     # schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=30, factor=0.5)
     # schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=5, factor=0.2)
@@ -321,11 +327,11 @@ if __name__ == '__main__':
 
             if i % 100 == 0:
                 vutils.save_image(real_cpu,
-                        os.path.join(out_path , 'real_samples.png'),
+                        os.path.join(opath , 'real_samples.png'),
                         normalize=True)
                 fake = netG(fixed_noise)
                 vutils.save_image(fake.detach(),
-                        os.path.join(out_path , 'fake_samples_epoch_{:03d}.png'.format(epoch)),
+                        os.path.join(opath , 'fake_samples_epoch_{:03d}.png'.format(epoch)),
                         normalize=True)
             del real_cpu
             del fake
@@ -347,7 +353,7 @@ if __name__ == '__main__':
 
         # save state
         state = {'netD':netD.state_dict(), 'netG':netG.state_dict(), 'optimD':optimizerD.state_dict(), 'optimG':optimizerG.state_dict(), 'lrD':lrD, 'lrG':lrG, 'lossD':lossD, 'lossG':lossG}
-        filename = os.path.join(out_path, "net_state_epoch_{:0=3d}.nn".format(epoch))
+        filename = os.path.join(opath, "net_state_epoch_{:0=3d}.nn".format(epoch))
         if not os.path.isdir(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename), exist_ok=True)
         torch.save(state, filename)

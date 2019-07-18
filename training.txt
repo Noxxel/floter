@@ -1,20 +1,31 @@
-wegener:
-	(python infogan.py --cuda --mel --batch_size=4 --code_dim=128 --latent_dim=64 --workers=4)
-	floter/infogan/out/
+tutu:
+	(python train.py --cuda --batchSize=8 --workers=4 --nz=16 --ngf=128 --ndf=96 --lr=0.0005 --lrD=0.0005)
+	floter_mnt/high_res_gan_v3/out/nz_16_ngf_128_ndf_96_bs_8/
+	old:
+		(python infogan.py --cuda --batch_size=85 --workers=4 --ae --lr=0.00025 --image_size=256)
+		floter_mnt/infogan/out/
 
 delaunay:
-	(python train.py --cuda --batchSize=12 --workers=4 --nz=128 --mel --lr=0.00005)
-	floter_mnt/high_res_gan_v3/out/nz_128_ngf_64_ndf_16_bs_12/
+	(python train.py --cuda --batchSize=12 --workers=4 --nz=128 --mel --ngf=64 --ndf=32 --lr=0.0005 --lrD=0.0005)
+	floter_mnt/high_res_gan_v3/out/nz_128_ngf_64_ndf_32_bs_12/
+	old:
+		(python train.py --cuda --batchSize=12 --workers=4 --nz=128 --mel --lr=0.00001 --lrD=0.00001)
+		floter_mnt/high_res_gan_v3/out/nz_128_ngf_64_ndf_16_bs_12/
+
+kajiya:
+    (python train.py --cuda --batchSize=10 --workers=4 --nz=16 --ngf=64 --ndf=32 --lr=0.00005 --lrD=0.00005)
+	floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_10/
+
+dalton:
+    (python train.py --cuda --manualSeed=1337 --batchSize=8 --workers=4 --nz=32 --ngf=64 --ndf=32 --conv --l2size=32 --lr=0.00001)
+    floter/high_res_gan_v3/out/nz_32_ngf_64_ndf_32_bs_8
 
 catmull:
-	(python train.py --cuda --manualSeed=1337 --batchSize=11 --workers=4 --nz=16 --ngf=64 --ndf=32 --ae --lr=0.00005)
+	(python train.py --cuda --manualSeed=1337 --batchSize=11 --workers=4 --nz=16 --ngf=64 --ndf=32 --ae --lr=0.00001 --lrD=0.00001)
 	floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_12/ (old)
 	floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_11/
 
-tutu:
-	(python infogan.py --cuda --batch_size=18 --workers=4 --ae --lr=0.0005)
-	floter_mnt/infogan/out/
-
-kajiya:
-	(python train.py --cuda --batchSize=10 --workers=4 --nz=16 --ngf=64 --ndf=32)
-	floter_mnt/high_res_gan_v3/out/nz_16_ngf_64_ndf_32_bs_10/
+wegener:
+	old:
+		(python infogan.py --cuda --mel --batch_size=40 --code_dim=128 --latent_dim=64 --workers=4 --image_size=256)
+		floter/infogan/out/

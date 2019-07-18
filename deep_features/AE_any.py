@@ -53,7 +53,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--batchSize', type=int, default=16, help='input batch size')
-    parser.add_argument('--imageSize', type=int, default=512, help='the height / width of the input image to network')
     parser.add_argument('--nz', type=int, default=1000, help='size of the latent z vector')
     parser.add_argument('--l1size', type=int, default=100)
     parser.add_argument('--l2size', type=int, default=30)
@@ -65,13 +64,18 @@ if __name__ == '__main__':
     parser.add_argument('--debug', action='store_true', help='shrinks the dataset')
     parser.add_argument('--log', action='store_true', help='log during epochs')
     parser.add_argument('--fresh', action='store_true', help='force a fresh start without loading states')
+    parser.add_argument('--opath', type=str, default="", help='force a fresh start without loading states')
+
+    parser.add_argument('--n_fft', type=int, default=2**11)
+    parser.add_argument('--hop_length', type=int, default=367) #--> fps: 60.0817
+    parser.add_argument('--n_mels', type=int, default=128)
 
     opt = parser.parse_args()
     print(opt)
 
-    n_fft = 2**11
-    hop_length = 367
-    n_mels = 128
+    n_fft = opt.n_fft
+    hop_length = opt.hop_length
+    n_mels = opt.n_mels
 
     encode_size = opt.l1size
     middle_size = opt.l2size
@@ -85,8 +89,15 @@ if __name__ == '__main__':
     log_intervall = 200
     # ipath = "./mels_set_f8820_h735_b256"
     ipath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
-    statepath = "./out/vae_b{}_{}".format(n_mels, middle_size)
-    print('output-path: {}'.format(statepath))
+    statepath = os.path.join(os.path.join("./out", opt.opath), "vae_b{}_{}".format(n_mels, middle_size))
+    print('final output-path: {}'.format(statepath))
+
+    os.makedirs(statepath, exist_ok=True)
+
+    # log parameters
+    log_file = open(os.path.join(statepath, "params.txt"), "w")
+    log_file.write(str(opt))
+    log_file.close()
 
     dset = SoundfileDataset(ipath=ipath, out_type="ae", normalize=True)
 
@@ -103,9 +114,6 @@ if __name__ == '__main__':
     vae.to(device)
     lossf = nn.MSELoss()
     lossf.to(device)
-
-    if not os.path.exists(statepath):
-        os.makedirs(statepath)
 
     starting_epoch = 0
     state = ''
