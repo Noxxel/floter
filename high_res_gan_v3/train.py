@@ -36,7 +36,6 @@ class DatasetCust(Dataset):
             sample = self.transform(sample)
         
         return sample
-        
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
