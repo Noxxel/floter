@@ -3,8 +3,11 @@ wegener:
 	floter/infogan/out/
 
 delaunay:
-	(python train.py --cuda --batchSize=12 --workers=4 --nz=128 --mel --lr=0.00001 --lrD=0.00001)
-	floter_mnt/high_res_gan_v3/out/nz_128_ngf_64_ndf_16_bs_12/
+	(python train.py --cuda --batchSize=12 --workers=4 --nz=128 --mel --ngf=64 --ndf=32 --lr=0.0005 --lrD=0.0005)
+	floter_mnt/high_res_gan_v3/out/nz_128_ngf_64_ndf_32_bs_12/
+	old:
+		(python train.py --cuda --batchSize=12 --workers=4 --nz=128 --mel --lr=0.00001 --lrD=0.00001)
+		floter_mnt/high_res_gan_v3/out/nz_128_ngf_64_ndf_16_bs_12/
 
 catmull:
 	(python train.py --cuda --manualSeed=1337 --batchSize=11 --workers=4 --nz=16 --ngf=64 --ndf=32 --ae --lr=0.00001 --lrD=0.00001)
@@ -13,7 +16,7 @@ catmull:
 
 tutu:
 	(python train.py --cuda --batchSize=8 --workers=4 --nz=16 --ngf=128 --ndf=96 --lr=0.0005 --lrD=0.0005)
-	floter_mnt/high_res_gan_v3/out/nz_16_ngf_128_ndf_96_bs_12/
+	floter_mnt/high_res_gan_v3/out/nz_16_ngf_128_ndf_96_bs_8/
 	old:
 		(python infogan.py --cuda --batch_size=85 --workers=4 --ae --lr=0.00025 --image_size=256)
 		floter_mnt/infogan/out/
