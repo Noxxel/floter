@@ -164,7 +164,7 @@ if __name__ == '__main__':
         igan = Generator(latent_dim=opt.latent_dim, n_classes=opt.n_classes, code_dim=opt.code_dim, img_size=opt.img_size, channels=opt.channels)
         igan.to(device)
 
-    for m, s in zip(mels, tqdm(input_songs, desc="generating videos")):
+    for m, s in tqdm(zip(mels, input_songs), desc="generating videos"):
         m = (m / (-80)).to(device)
         if opt.ae:
             m = vae.encode(m)
@@ -175,6 +175,9 @@ if __name__ == '__main__':
 
         m_step_history = []
         for i, m_step in enumerate(tqdm(m, desc="generating images for {}".format(s))):
+            if i > 100:
+                break
+
             m_step_cur = m_step.unsqueeze(0).unsqueeze(2).unsqueeze(2)
 
             if opt.smooth:
@@ -183,6 +186,7 @@ if __name__ == '__main__':
                     del m_step_history[0]
                 meaned_step = torch.mean(torch.stack(m_step_history), dim=0)
                 m_step_cur = meaned_step
+                m_step_cur.to(device)
 
             if opt.dcgan:
                 img = netG(m_step_cur)
