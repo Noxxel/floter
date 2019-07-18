@@ -11,9 +11,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 n_fft = 2**11
-hop_length = 2**9
+#hop_length = 2**9
+hop_length = 367
 n_mels = 128
-n_time_steps = 1290
+n_time_steps = 1800
 n_layers = 2
 NORMALIZE = True
 
@@ -28,12 +29,14 @@ log_intervall = 50
 
 #datapath = "./mels_set_db"
 datapath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
-statepath = "./lstm_f{}_h{}_b{}_cpu".format(n_fft, hop_length, n_mels)
+statepath = "./lstm_f{}_h{}_b{}_no_max".format(n_fft, hop_length, n_mels)
 #statepath = "conv_small_b128"
 
 device = "cuda"
+filt_genre = None
+#filt_genre = ['Experimental', 'Instrumental', 'International', 'Pop']
 
-dset = SoundfileDataset("./all_metadata.p", ipath=datapath, out_type="mel", normalize=NORMALIZE, n_time_steps=n_time_steps)
+dset = SoundfileDataset("./all_metadata.p", ipath=datapath, out_type="mel", normalize=NORMALIZE, n_time_steps=n_time_steps, filter_list=filt_genre)
 if DEBUG:
     dset.data = dset.data[:2000]
 
@@ -47,13 +50,13 @@ loss_function = nn.NLLLoss()
 optimizer = optim.Adam(model.parameters(), lr=l_rate)
 #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
-stateD = torch.load("lstm_399.nn")
-model.load_state_dict(stateD['state_dict'])
+""" stateD = torch.load("lstm_399.nn")
+model.load_state_dict(stateD['state_dict']) """
 val_loss_list, val_accuracy_list, epoch_list = [], [], []
 loss_function.to(device)
 model.to(device)
 model.hidden = model.init_hidden(device)
-optimizer.load_state_dict(stateD['optim'])
+#optimizer.load_state_dict(stateD['optim'])
 
 for epoch in tqdm(range(n_epochs), desc='Epoch'):
     train_running_loss, train_acc = 0.0, 0.0

@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 from model import LSTM
+from AE_any import AutoEncoder
 from tqdm import tqdm
 import os
 
@@ -12,9 +13,9 @@ filename = "./relish_it.mp3"
 duration = 30
 
 n_fft = 2**11
-hop_length = 2**10
-#hop_length = 220
-n_mels = 256
+#hop_length = 2**9
+hop_length = 367
+n_mels = 128
 n_time_steps = 2580
 NORMALIZE = True
 
@@ -37,7 +38,8 @@ def plot_signal():
 
     plt.figure(figsize=(24, 6))
     plt.plot(list(range(y.shape[0])), y)
-    plt.xticks(ticks=ticks, labels=list(range(duration+1)))
+    #plt.xticks(ticks=ticks, labels=list(range(duration+1)))
+    plt.axis('off')
     #plt.show()
     plt.tight_layout()
     plt.savefig("signal.png")
@@ -69,9 +71,36 @@ def plot_melspectogram():
 
     return mel
 
+def plot_encoder():
+    stateD = torch.load("ae_490.nn")
+    ae = AutoEncoder(n_mels, encode=64, middle=16)
+    ae.load_state_dict(stateD['state_dict'])
+    ae.eval()
+    mel = librosa.feature.melspectrogram(y, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels)
+    mel = librosa.power_to_db(mel, ref=np.max)
+    plt.figure(figsize=(24, 6))
+    dsp.specshow(mel, y_axis="mel", x_axis="time", sr=sr)
+    plt.title("Original mel spectogram")
+    plt.colorbar(format='%+2.0f dB')
+    plt.tight_layout()
+    plt.savefig("orig_spec.png")
+    plt.clf()
+    reconstructed = (ae(torch.tensor(mel.T/(-80), dtype=torch.float32)) * (-80)).detach().numpy().T
+    plt.figure(figsize=(24, 6))
+    dsp.specshow(reconstructed, y_axis="mel", x_axis="time", sr=sr)
+    plt.title("Reconstructed mel spectogram")
+    plt.colorbar(format='%+2.0f dB')
+    plt.tight_layout()
+    plt.savefig("recon_spec.png")
+    plt.clf()
+
+
 #plot_signal()
+
 #fft = plot_spectogram()
-mel = plot_melspectogram()
+#mel = plot_melspectogram()
+plot_encoder()
+exit()
 mel = librosa.power_to_db(mel)
 print(mel.shape)
 
