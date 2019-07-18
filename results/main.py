@@ -82,31 +82,8 @@ if __name__ == '__main__':
     os.makedirs(ae_path, exist_ok=True)
     os.makedirs(conv_path, exist_ok=True)
 
-    input_songs = os.listdir(ipath)
-    input_songs = [x for x in input_songs if x.endswith(".mp3")]
-    if opt.test:
-        input_songs = [x for x in input_songs if x == "068582.mp3"]
-    if not len(input_songs) > 0:
-        raise Exception("no input song provided!")
-
-    mels = []
-    for file in tqdm(input_songs, desc="mel spectograms"):
-        if not file.endswith(".mp3"):
-            continue
-        
-        song, sr = librosa.load(os.path.join(ipath, file), mono=True, sr=22050)
-
-        if len(song) < n_fft:
-            continue
-
-        X = librosa.feature.melspectrogram(song, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels)
-        X = librosa.power_to_db(X, ref=np.max)
-
-        mels.append(torch.tensor(X.T, dtype=torch.float32))
-
-    loaded_epoch = 0
-
     # load pretrained autoencoder
+    loaded_epoch = 0
     vae = None
     if opt.ae:
         vae = AutoEncoder(n_mels, encode=opt.l1size, middle=opt.l2size)
@@ -184,6 +161,37 @@ if __name__ == '__main__':
     log_file = open(os.path.join(opath, "params.txt"), "w")
     log_file.write(str(opt))
     log_file.close()
+
+    input_songs = [x for x in os.listdir(ipath) if x.endswith(".mp3")]
+    if opt.test:
+        input_songs = [x for x in input_songs if x == "068582.mp3"]
+    if not len(input_songs) > 0:
+        raise Exception("no input song provided!")
+    tmp_list = []
+    for s in input_songs:
+        exists = False
+        for of in os.listdir(opath):
+            if of == s:
+                exists = True
+        if not exists:
+            tmp_list.append(s)
+    if len(tmp_list) < 1:
+        exit()
+    
+    mels = []
+    for file in tqdm(input_songs, desc="mel spectograms"):
+        if not file.endswith(".mp3"):
+            continue
+        
+        song, sr = librosa.load(os.path.join(ipath, file), mono=True, sr=22050)
+
+        if len(song) < n_fft:
+            continue
+
+        X = librosa.feature.melspectrogram(song, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels)
+        X = librosa.power_to_db(X, ref=np.max)
+
+        mels.append(torch.tensor(X.T, dtype=torch.float32))
 
     for m, s in tqdm(zip(mels, input_songs), desc="generating videos"):
         m = (m / (-80)).to(device)
