@@ -170,7 +170,7 @@ if __name__ == '__main__':
         os.makedirs(os.path.join(opath, "tmp/"), exist_ok=True)
         os.system("rm {}".format(os.path.join(opath, "tmp/*")))
         img = None
-        for i, m_step in enumerate(tqdm(m, desc="generating images")):
+        for i, m_step in enumerate(tqdm(m, desc="generating images for {}".format(s))):
             m_step = m_step.unsqueeze(0).unsqueeze(2).unsqueeze(2)
             if opt.dcgan:
                 img = netG(m_step)
