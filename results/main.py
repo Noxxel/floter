@@ -49,7 +49,7 @@ if __name__ == '__main__':
     parser.add_argument('--smooth', action='store_true', help='attempt to smoothen the video by slowly moving in the feature-space')
     parser.add_argument('--smooth_count', type=int, default=5, help='the amount of points in the feature space over which the mean is taken to generate images')
 
-    parser.add_argument('--test', type=int, default=5, help='small sample song') # 068582.mp3
+    parser.add_argument('--test', action='store_true', help='small sample song') # 068582.mp3
 
     opt = parser.parse_args()
     print(opt)
@@ -177,6 +177,11 @@ if __name__ == '__main__':
             tmp_list.append(s)
     if len(tmp_list) < 1:
         exit()
+    for s in input_songs:
+        if s not in tmp_list:
+            print("found output file, skipping: {}".format(s))
+
+    input_songs = tmp_list
     
     mels = []
     for file in tqdm(input_songs, desc="mel spectograms"):
@@ -193,7 +198,7 @@ if __name__ == '__main__':
 
         mels.append(torch.tensor(X.T, dtype=torch.float32))
 
-    for m, s in tqdm(zip(mels, input_songs), desc="generating videos"):
+    for m, s in tqdm(zip(mels, input_songs), desc="generating videos", total=len(input_songs)):
         m = (m / (-80)).to(device)
         if opt.ae:
             vae.to(device)
@@ -228,7 +233,7 @@ if __name__ == '__main__':
         video_no_sound = os.path.join(opath, s[:-1]+"4") if not opt.smooth else os.path.join(opath, "smooth{:02d}_".format(opt.smooth_count)+s[:-1]+"4")
         video_sound = os.path.join(opath, s[:-4]+"_sound.mp4") if not opt.smooth else os.path.join(opath, "smooth{:02d}_".format(opt.smooth_count)+s[:-4]+"_sound.mp4")
 
-        command = ["ffmpeg", "-r", str(fps), "-f", "image2", "-s", str(opt.image_size)+"x"+str(opt.image_size), "-i", image_param, "-vcodec", "libx264", "-crf", "25", "-pix_fmt", "yuv420p", video_no_sound]
+        command = ["ffmpeg", "-r", str(fps), "-f", "image2", "-s", str(opt.image_size)+"x"+str(opt.image_size), "-i", image_param, "-vcodec", "libx264", "-crf", "20", "-pix_fmt", "yuv420p", video_no_sound]
         tqdm.write("running system command: {}".format(" ".join(command)))
         subprocess.run(command)
 
