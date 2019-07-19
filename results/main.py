@@ -49,7 +49,7 @@ if __name__ == '__main__':
     parser.add_argument('--smooth', action='store_true', help='attempt to smoothen the video by slowly moving in the feature-space')
     parser.add_argument('--smooth_count', type=int, default=5, help='the amount of points in the feature space over which the mean is taken to generate images')
 
-    parser.add_argument('--test', type=int, default=5, help='small sample song') # 068582.mp3
+    parser.add_argument('--test', action='store_true', help='small sample song') # 068582.mp3
 
     opt = parser.parse_args()
     print(opt)
@@ -177,6 +177,11 @@ if __name__ == '__main__':
             tmp_list.append(s)
     if len(tmp_list) < 1:
         exit()
+    for s in input_songs:
+        if s not in tmp_list:
+            print("found output file, skipping: {}".format(s))
+
+    input_songs = tmp_list
     
     mels = []
     for file in tqdm(input_songs, desc="mel spectograms"):
