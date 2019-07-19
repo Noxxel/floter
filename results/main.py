@@ -193,7 +193,7 @@ if __name__ == '__main__':
 
         mels.append(torch.tensor(X.T, dtype=torch.float32))
 
-    for m, s in tqdm(zip(mels, input_songs), desc="generating videos"):
+    for m, s in tqdm(zip(mels, input_songs), desc="generating videos", total=len(input_songs)):
         m = (m / (-80)).to(device)
         if opt.ae:
             vae.to(device)
