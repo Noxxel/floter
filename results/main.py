@@ -233,7 +233,7 @@ if __name__ == '__main__':
         video_no_sound = os.path.join(opath, s[:-1]+"4") if not opt.smooth else os.path.join(opath, "smooth{:02d}_".format(opt.smooth_count)+s[:-1]+"4")
         video_sound = os.path.join(opath, s[:-4]+"_sound.mp4") if not opt.smooth else os.path.join(opath, "smooth{:02d}_".format(opt.smooth_count)+s[:-4]+"_sound.mp4")
 
-        command = ["ffmpeg", "-r", str(fps), "-f", "image2", "-s", str(opt.image_size)+"x"+str(opt.image_size), "-i", image_param, "-vcodec", "libx264", "-crf", "25", "-pix_fmt", "yuv420p", video_no_sound]
+        command = ["ffmpeg", "-r", str(fps), "-f", "image2", "-s", str(opt.image_size)+"x"+str(opt.image_size), "-i", image_param, "-vcodec", "libx264", "-crf", "20", "-pix_fmt", "yuv420p", video_no_sound]
         tqdm.write("running system command: {}".format(" ".join(command)))
         subprocess.run(command)
 
