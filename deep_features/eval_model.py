@@ -2,7 +2,7 @@ print("GODDAMNITPYTHONNOTAGAIN!")
 import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from model import LSTM
+from model_small import LSTM
 from dataset import SoundfileDataset
 from tqdm import tqdm
 import os
@@ -11,9 +11,10 @@ import numpy as np
 from colorhash import ColorHash as cHash
 
 n_fft = 2**11
-hop_length = 2**9
+#hop_length = 2**9
+hop_length = 367
 n_mels = 128
-n_time_steps = 1290
+n_time_steps = 1800
 NORMALIZE = True
 batch_size = 1
 num_workers = 1
@@ -33,12 +34,13 @@ TLoader = DataLoader(tset, batch_size=batch_size, shuffle=False, drop_last=False
 VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=num_workers)
 
 model = LSTM(n_mels, batch_size, num_layers=n_layers)
+model.to(device)
 
-stateD = torch.load(os.path.join(modelpath, modelName), map_location=device)
+stateD = torch.load(modelName, map_location=device)
 model.load_state_dict(stateD['state_dict'])
 #print(stateD['optim'])
 #exit()
-model.to(device)
+
 model.hidden = model.init_hidden(device)
 
 model.eval()
