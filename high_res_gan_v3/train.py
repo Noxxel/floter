@@ -271,6 +271,10 @@ if __name__ == '__main__':
     # schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=5, factor=0.2)
 
     if opt.samples:
+        del optimizerD
+        del optimizerG
+        del fixed_noise
+        del netD
         netG.eval()
         Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.sample_size, shuffle=True, num_workers=int(opt.workers))
         for i, mels in enumerate(tqdm(Mloader, total=opt.sample_count)):
@@ -292,8 +296,9 @@ if __name__ == '__main__':
                 noise = torch.randn(batch_size, nz, 1, 1, device=device)
             
             fake = netG(noise)
-
             vutils.save_image(fake.detach(), os.path.join(opath, 'fake_samples_{:02d}.png'.format(i)), normalize=True)
+
+            del fake
         exit()
 
 
