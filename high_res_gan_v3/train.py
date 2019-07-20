@@ -59,6 +59,10 @@ if __name__ == '__main__':
     parser.add_argument('--ae', action='store_true', help='train with autoencoder')
     parser.add_argument('--mel', action='store_true', help='train with raw mel spectograms')
     parser.add_argument('--conv', action='store_true', help='use input generated from an RCNN')
+    
+    parser.add_argument('--samples', action='store_true', help='just generate a bunch of samples, no training')
+    parser.add_argument("--sample_size", type=int, default=16, help="batch size for samples")
+    parser.add_argument("--sample_amount", type=int, default=20, help="amount of sample images to generate")
 
     parser.add_argument("--l1size", type=int, default=64, help="layer sizes of ae")
     parser.add_argument("--l2size", type=int, default=16, help="layer sizes of ae or conv")
@@ -265,6 +269,33 @@ if __name__ == '__main__':
 
     # schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=30, factor=0.5)
     # schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=5, factor=0.2)
+
+    if opt.samples:
+        netG.eval()
+        Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.sample_size, shuffle=True, num_workers=int(opt.workers))
+        for i, mels in enumerate(tqdm(Mloader), total=len(opt.sample_count)):
+            if i >= opt.sample_count:
+                break
+            batch_size = mels.size(0)
+
+            # train with fake
+            noise = None
+            if opt.ae:
+                noise = vae.encode(mels.to(device)).unsqueeze(2).unsqueeze(2)
+            elif opt.mel:
+                noise = mels.to(device).unsqueeze(2).unsqueeze(2)
+            elif opt.conv:
+                noise = conv.convolve(mels.to(device))
+                rand_index = np.random.randint(0, noise.shape[1], size=batch_size)
+                noise = (noise[range(batch_size), rand_index, :]).unsqueeze(2).unsqueeze(2)
+            else:
+                noise = torch.randn(batch_size, nz, 1, 1, device=device)
+            
+            fake = netG(noise)
+
+            vutils.save_image(fake.detach(), os.path.join(opath, 'fake_samples_{:02d}.png'.format(i)), normalize=True)
+        exit()
+
 
     for epoch in tqdm(range(starting_epoch, opt.niter)):
         torch.cuda.empty_cache()
