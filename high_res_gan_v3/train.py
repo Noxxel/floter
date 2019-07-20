@@ -62,7 +62,7 @@ if __name__ == '__main__':
     
     parser.add_argument('--samples', action='store_true', help='just generate a bunch of samples, no training')
     parser.add_argument("--sample_size", type=int, default=16, help="batch size for samples")
-    parser.add_argument("--sample_amount", type=int, default=20, help="amount of sample images to generate")
+    parser.add_argument("--sample_count", type=int, default=20, help="amount of sample images to generate")
 
     parser.add_argument("--l1size", type=int, default=64, help="layer sizes of ae")
     parser.add_argument("--l2size", type=int, default=16, help="layer sizes of ae or conv")
