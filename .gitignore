@@ -8,9 +8,9 @@ data/
 *.pth
 high_res_gan/out/
 high_res_gan_v2/out/
-conv_*/
-vae_*/
-lstm_*/
-GAN/
+deep_features/conv_*/
+deep_features/vae_*/
+deep_features/lstm_*/
 */out/
+!results/gan/*
 results/gen_stuff.sh

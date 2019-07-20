@@ -213,7 +213,7 @@ if __name__ == '__main__':
     #load pretrained LSTM model
     conv = None
     if opt.conv:
-        conv = LSTM(n_mels, opt.batchSize)
+        conv = LSTM(n_mels)
         files = os.listdir(statepath)
         states = [f for f in files if "lstm_" in f]
         states.sort()

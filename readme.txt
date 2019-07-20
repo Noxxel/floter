@@ -13,3 +13,8 @@ http://deepsound.io/music_genre_recognition.html
 GAN:
 https://arxiv.org/abs/1511.06434
 
+dcgan:
+http://papers.nips.cc/paper/5423-generative-adversarial-nets
+
+infogan:
+http://papers.nips.cc/paper/6399-infogan-interpretable-representation

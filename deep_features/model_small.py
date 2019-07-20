@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 class LSTM(nn.Module):
 
-    def __init__(self, input_dim, batch_size, output_dim=8, num_layers=2, dropout=0.4):
+    def __init__(self, input_dim, batch_size=1, output_dim=8, num_layers=2, dropout=0.4):
         super(LSTM, self).__init__()
         self.input_dim = input_dim
         self.batch_size = batch_size
