@@ -273,7 +273,7 @@ if __name__ == '__main__':
     if opt.samples:
         netG.eval()
         Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.sample_size, shuffle=True, num_workers=int(opt.workers))
-        for i, mels in enumerate(tqdm(Mloader), total=opt.sample_count):
+        for i, mels in enumerate(tqdm(Mloader, total=opt.sample_count)):
             if i >= opt.sample_count:
                 break
             batch_size = mels.size(0)
