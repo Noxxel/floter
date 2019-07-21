@@ -207,12 +207,12 @@ if __name__ == '__main__':
         if s not in tmp_list:
             print("found output file, skipping: {}".format(s))
 
-    input_songs = tmp_list
+    input_songs = [x for x in tmp_list if x.endswith(".mp3")]
     
     mels = []
     for file in tqdm(input_songs, desc="mel spectograms"):
         if not file.endswith(".mp3"):
-            continue
+            raise RuntimeError("Something went wrong!")
         
         song, sr = librosa.load(os.path.join(ipath, file), mono=True, sr=22050)
 
