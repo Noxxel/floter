@@ -10,13 +10,14 @@ import librosa.display as dsp
 import numpy as np
 from torch.utils.data import DataLoader
 import librosa
-import cv2
 import torchvision.utils as vutils
 import subprocess
+import scipy.stats as st
 
 import dcgan
 from dataset import SoundfileDataset
 from AE_any import AutoEncoder
+from model import LSTM
 from infogan import Generator
 
 if __name__ == '__main__':
@@ -75,8 +76,11 @@ if __name__ == '__main__':
     elif opt.mel:
         nz = 128
         dcgan_path = os.path.join("./gan/mel", 'nz_{}_ngf_{}_ndf_{}_bs_{}/'.format(nz, opt.ngf, opt.ndf, opt.batch_size))
+    elif opt.conv:
+        nz = 32
+        dcgan_path = os.path.join("./gan/conv", 'nz_{}_ngf_{}_ndf_{}_bs_{}/'.format(nz, opt.ngf, opt.ndf, opt.batch_size))
     ae_path = "./gan/ae/ae_states/vae_b{}_{}".format(n_mels, opt.l2size)
-    conv_path = "./gan/conv"
+    conv_path = "./gan/conv/crnn_states/lstm_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
 
     os.makedirs(ipath, exist_ok=True)
     os.makedirs(dcgan_path, exist_ok=True)
@@ -98,6 +102,22 @@ if __name__ == '__main__':
             vae.load_state_dict(torch.load(state)['state_dict'])
         vae.to(device)
         vae.eval()
+        del state
+    
+    if opt.conv:
+        conv = LSTM(n_mels)
+        files = os.listdir(conv_path)
+        states = [f for f in files if "lstm_" in f]
+        states.sort()
+        if not len(states) > 0:
+            raise Exception("no states for crnn provided!")
+        state = os.path.join(conv_path, states[-1])
+        if os.path.isfile(state):
+            state = torch.load(state, map_location=device)
+            conv.load_state_dict(state['state_dict'])
+        conv.to(device)
+        conv.eval()
+        del state
 
     # load pretrained dcgan
     netG = None
@@ -121,6 +141,8 @@ if __name__ == '__main__':
                 netG.eval()
                 
                 loaded_epoch = int(states[-1][-6:-3])
+            else:
+                raise RuntimeError("No correct dcgan state provided!")
 
     # if opt.debug:
     #     for original_mel, s in zip(mels, input_songs):
@@ -153,10 +175,11 @@ if __name__ == '__main__':
         igan = Generator(latent_dim=opt.latent_dim, n_classes=opt.n_classes, code_dim=opt.code_dim, img_size=opt.img_size, channels=opt.channels)
         igan.to(device)
     
-    if opt.ae or opt.mel:
-        opath = os.path.join(opath, "nz{}_epoch{}_ngf{}_ndf{}_bs{}/".format(nz, int(states[-1][-6:-3]), opt.ngf, opt.ndf, opt.batch_size))
-    elif opt.conv:
-        raise Exception("fix this!")
+    #if opt.ae or opt.mel:
+    opath = os.path.join(opath, "nz{}_epoch{}_ngf{}_ndf{}_bs{}/".format(nz, int(states[-1][-6:-3]), opt.ngf, opt.ndf, opt.batch_size))
+    #if opt.conv:
+    #    opath = os.path.join(opath, "nz{}_epoch{}_ngf{}_ndf{}_bs{}/".format(nz, int(states[-1][-6:-3]), opt.ngf, opt.ndf, opt.batch_size))
+    
     os.makedirs(opath, exist_ok=True)
     # log parameters
     log_file = open(os.path.join(opath, "params.txt"), "w")
@@ -202,29 +225,57 @@ if __name__ == '__main__':
         mels.append(torch.tensor(X.T, dtype=torch.float32))
 
     for m, s in tqdm(zip(mels, input_songs), desc="generating videos", total=len(input_songs)):
-        m = (m / (-80)).to(device)
-        if opt.ae:
-            vae.to(device)
-            m = vae.encode(m)
-            vae.cpu()
+
+        if opt.ae or opt.mel:
+            m = (m / (-80)).to(device)        
+            if opt.ae:
+                vae.to(device)
+                m = vae.encode(m)
+                vae.cpu()
+        
+        if opt.conv:
+            m = ((m / (-80) * 2) - 1).to(device)
+            conv.to(device)
+            m = conv.convolve(m.unsqueeze(0)).squeeze()
+            conv.cpu()
         
         os.makedirs(os.path.join(opath, "tmp/"), exist_ok=True)
         with open(os.devnull, 'w') as devnull:
             subprocess.run(["rm", "-r", os.path.join(opath, "tmp")], stdout=devnull, stderr=devnull)
         os.makedirs(os.path.join(opath, "tmp/"), exist_ok=True)
         # subprocess.run(["rm", os.path.join(opath, "tmp/*")])
+        
+        if opt.smooth:
+            x = np.linspace(-3, 3, opt.smooth_count+1)
+            kernel = np.diff(st.norm.cdf(x))
+            kernel = torch.tensor(kernel / kernel.sum(), dtype=torch.float32)
+            print("Gauss kernel:", kernel)
+            
+            #kernel = torch.tensor([0.06136, 0.24477, 0.38774, 0.24477, 0.06136])
+            #kernel = torch.tensor([0.00135, 0.157305, 0.68269, 0.157305, 0.00135])
+            #kernel = torch.tensor([0.000088, 0.105561, 0.7887, 0.105561, 0.000088])
+            #kernel = torch.tensor([0.023857, 0.09774, 0.227595, 0.301618, 0.227595, 0.09774, 0.023857])
 
-        m_step_history = []
+            weights = nn.parameter.Parameter(kernel.repeat(m.shape[1], 1, 1))
+            padding = int((opt.smooth_count - 1)/ 2)
+            gauss = nn.Conv1d(m.shape[1], m.shape[1], opt.smooth_count, groups=m.shape[1], padding=padding, bias=False)
+            gauss.weight = weights
+
+            gauss.to(device)
+            m = torch.transpose(gauss(torch.transpose(m, 1, 0).unsqueeze(0)).squeeze(), 1, 0)
+            gauss.cpu()
+        
+        #m_step_history = []
         for i, m_step in enumerate(tqdm(m, desc="generating images for {}".format(s))):
             m_step_cur = m_step.unsqueeze(0).unsqueeze(2).unsqueeze(2)
 
-            if opt.smooth:
+            """ if opt.smooth:
                 m_step_history.append(m_step_cur)
                 while len(m_step_history) > opt.smooth_count:
                     del m_step_history[0]
                 meaned_step = torch.mean(torch.stack(m_step_history), dim=0)
                 m_step_cur = meaned_step
-                m_step_cur.to(device)
+                m_step_cur.to(device) """
 
             if opt.dcgan:
                 img = netG(m_step_cur)

@@ -218,7 +218,7 @@ if __name__ == '__main__':
         states = [f for f in files if "lstm_" in f]
         states.sort()
         if not len(states) > 0:
-            raise Exception("no states for autoencoder provided!")
+            raise Exception("no states for crnn provided!")
         state = os.path.join(statepath, states[-1])
         if os.path.isfile(state):
             state = torch.load(state)
