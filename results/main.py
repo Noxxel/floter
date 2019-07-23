@@ -48,6 +48,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_mels', type=int, default=128)
 
     parser.add_argument('--smooth', action='store_true', help='attempt to smoothen the video by slowly moving in the feature-space')
+    parser.add_argument('--smooth_old', action='store_true', help='attempt to smoothen the video by slowly moving in the feature-space, old version')
     parser.add_argument('--smooth_count', type=int, default=5, help='the amount of points in the feature space over which the mean is taken to generate images')
 
     parser.add_argument('--test', action='store_true', help='small sample song') # 068582.mp3
@@ -265,17 +266,17 @@ if __name__ == '__main__':
             m = torch.transpose(gauss(torch.transpose(m, 1, 0).unsqueeze(0)).squeeze(), 1, 0)
             gauss.cpu()
         
-        #m_step_history = []
+        m_step_history = []
         for i, m_step in enumerate(tqdm(m, desc="generating images for {}".format(s))):
             m_step_cur = m_step.unsqueeze(0).unsqueeze(2).unsqueeze(2)
 
-            """ if opt.smooth:
+            if opt.smooth_old:
                 m_step_history.append(m_step_cur)
                 while len(m_step_history) > opt.smooth_count:
                     del m_step_history[0]
                 meaned_step = torch.mean(torch.stack(m_step_history), dim=0)
                 m_step_cur = meaned_step
-                m_step_cur.to(device) """
+                m_step_cur.to(device)
 
             if opt.dcgan:
                 img = netG(m_step_cur)
@@ -284,8 +285,11 @@ if __name__ == '__main__':
             vutils.save_image(img, os.path.join(opath, 'tmp/{:06d}.png'.format(i)), normalize=True)
 
         image_param = os.path.join(opath, "tmp/")+"%06d.png"
-        video_no_sound = os.path.join(opath, s[:-1]+"4") if not opt.smooth else os.path.join(opath, "smooth{:02d}_".format(opt.smooth_count)+s[:-1]+"4")
-        video_sound = os.path.join(opath, s[:-4]+"_sound.mp4") if not opt.smooth else os.path.join(opath, "smooth{:02d}_".format(opt.smooth_count)+s[:-4]+"_sound.mp4")
+        video_no_sound = os.path.join(opath, "smooth{:02d}_".format(opt.smooth_count)+s[:-1]+"4") if opt.smooth  else os.path.join(opath, s[:-1]+"4")
+        video_sound = os.path.join(opath, "smooth{:02d}_".format(opt.smooth_count)+s[:-4]+"_sound.mp4") if opt.smooth  else os.path.join(opath, s[:-4]+"_sound.mp4")
+        if opt.smooth_old:
+            video_no_sound = os.path.join(opath, "smoothold{:02d}_".format(opt.smooth_count)+s[:-1]+"4")
+            video_sound = os.path.join(opath, "smoothold{:02d}_".format(opt.smooth_count)+s[:-4]+"_sound.mp4")
 
         command = ["ffmpeg", "-r", str(fps), "-f", "image2", "-s", str(opt.image_size)+"x"+str(opt.image_size), "-i", image_param, "-vcodec", "libx264", "-crf", "20", "-pix_fmt", "yuv420p", video_no_sound]
         tqdm.write("running system command: {}".format(" ".join(command)))
