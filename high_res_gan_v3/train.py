@@ -71,6 +71,8 @@ if __name__ == '__main__':
     parser.add_argument('--hop_length', type=int, default=367) # --> fps: 60.0817
     parser.add_argument('--n_mels', type=int, default=128)
 
+    parser.add_argument('--override_lr', action='store_true', help='override the lr after loading an optimizer state')
+
     opt = parser.parse_args()
     print(opt)
 
@@ -269,10 +271,11 @@ if __name__ == '__main__':
         lossG = tmp_load["lossG"]
         del tmp_load
     
-    # for pg in optimizerD.param_groups:
-    #     pg["lr"] = opt.lrD
-    # for pg in optimizerG.param_groups:
-    #     pg["lr"] = opt.lr
+    if opt.override_lr:
+        for pg in optimizerD.param_groups:
+            pg["lr"] = opt.lrD
+        for pg in optimizerG.param_groups:
+            pg["lr"] = opt.lr
 
     # schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, patience=30, factor=0.5)
     # schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, patience=5, factor=0.2)
