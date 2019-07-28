@@ -196,11 +196,10 @@ if __name__ == '__main__':
         raise Exception("no input song provided!")
     tmp_list = []
     for s in input_songs:
-        exists = False
-        for of in os.listdir(opath):
-            if of == s:
-                exists = True
-        if not exists:
+        if opt.song != "":
+            tmp_list = input_songs
+            break
+        if s[:-1]+"4" not in os.listdir(opath):
             tmp_list.append(s)
     if len(tmp_list) < 1:
         exit()
