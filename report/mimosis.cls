@@ -50,6 +50,10 @@
 
 \newcommand{\comment}[1]{}
 
+\RequirePackage{color}
+\definecolor{myred}{rgb}{0.8588,0.2667,0.2157}
+\newcommand{\TODO}[1]{\color{myred} \textbf{#1} \color{black}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Fonts & colours
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
