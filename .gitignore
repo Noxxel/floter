@@ -14,3 +14,6 @@ deep_features/lstm_*/
 */out/
 !results/gan/*
 results/gen_stuff.sh
+results/gen_stuff4.sh
+results/gen_stuff2.sh
+results/gen_stuff3.sh

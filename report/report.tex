@@ -94,20 +94,46 @@
 \author{Peter Hügel and Florian Fallenbüchel}
 
 \begin{document}
-  \include{Title}
+  \frontmatter
 
-  \include{chapters/introduction}
+  \sloppy
+  \include{sources/title}
 
-  \include{chapters/related}
+  \include{sources/abstract}
 
-  \include{chapters/extraction}
+  \tableofcontents
 
-  \include{chapters/gan}
+  \mainmatter
+  \sloppy
 
-  \include{chapters/results}
+  \include{sources/introduction}
 
-  \include{chapters/conclusion}
+  \include{sources/related}
 
-  \printbibliography
+  \include{sources/extraction}
+
+  \include{sources/gan}
+
+  \include{sources/results}
+
+  \include{sources/conclusion}
+
+% This ensures that the subsequent sections are being included as root
+% items in the bookmark structure of your PDF reader.
+\bookmarksetup{startatroot}
+\backmatter
+
+	\begingroup
+		\let\clearpage\relax
+		\glsaddall
+		% \printglossary[type=\acronymtype]
+		% \newpage
+		\printglossary
+		\newpage
+		\listoffigures
+	\endgroup
+
+	\printindex
+	\printbibliography
 
 \end{document}
