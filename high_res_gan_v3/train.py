@@ -236,8 +236,20 @@ if __name__ == '__main__':
 
     fixed_noise = None
     if opt.ae:
-        fixed_noise = torch.tensor([vae.encode(Mset[i].to(device)).detach().cpu().numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
-        print(fixed_noise.shape)
+        fixed_noise = torch.tensor([vae.encode(Mset[i].to(device)).detach().cpu().numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32)
+
+        # sample vectors taken from unsmoothened song "Ed Sheeran - Shape of You.mp3"
+        fixed_noise[0] = torch.tensor([2.6654, 0.0000, 2.8484, 0.0000, 3.4987, 0.0000, 2.2018, 2.2429, 1.0855,
+        2.3932, 2.8212, 0.0000, 1.3639, 2.7173, 2.6672, 1.1499]) #00682.png
+        fixed_noise[1] = torch.tensor([2.9989, 0.0000, 2.4614, 0.0000, 2.5902, 0.0000, 2.1589, 2.7042, 0.9324,
+        2.2107, 2.3555, 0.0000, 1.7953, 1.8928, 2.8769, 1.2591]) #00691.png
+        fixed_noise[2] = torch.tensor([2.8579, 0.0000, 1.8545, 0.0000, 2.5746, 0.0000, 2.2980, 2.6766, 0.9076,
+        2.2311, 2.1345, 0.0000, 1.7587, 1.7266, 2.5189, 1.2771]) #00693.png
+        fixed_noise[3] = torch.tensor([2.7027, 0.0000, 1.7005, 0.0000, 2.1748, 0.0000, 2.4242, 2.6952, 0.9972,
+        2.2989, 1.9881, 0.0000, 1.7763, 1.1806, 2.0095, 1.3649]) #00695.png
+
+        fixed_noise = fixed_noise.unsqueeze(2).unsqueeze(2).to(device)
+
     elif opt.mel:
         fixed_noise = torch.tensor([Mset[i].numpy() for i in range(1337,1337+opt.batchSize)], dtype=torch.float32).unsqueeze(2).unsqueeze(2).to(device)
 
