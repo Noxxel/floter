@@ -80,7 +80,7 @@ if __name__ == '__main__':
     elif opt.conv:
         nz = 32
         dcgan_path = os.path.join("./gan/conv", 'nz_{}_ngf_{}_ndf_{}_bs_{}/'.format(nz, opt.ngf, opt.ndf, opt.batch_size))
-    ae_path = "./gan/ae/ae_states/vae_b{}_{}".format(n_mels, opt.l2size)
+    ae_path = "./gan/ae/ae_states/ae_n{}_b{}_{}".format(opt.n_fft, n_mels, opt.l2size)
     conv_path = "./gan/conv/crnn_states/lstm_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
 
     os.makedirs(ipath, exist_ok=True)

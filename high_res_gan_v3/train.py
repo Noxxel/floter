@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     statepath = ""
     if opt.ae:
-        statepath = "./states/vae_b{}_{}".format(n_mels, opt.l2size)
+        statepath = "./states/ae_n{}_b{}_{}".format(opt.n_fft, n_mels, opt.l2size)
     elif opt.conv:
         statepath = "./states/conv_b{}_{}".format(n_mels, opt.l2size)
 
