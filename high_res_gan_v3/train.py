@@ -46,7 +46,7 @@ if __name__ == '__main__':
     parser.add_argument('--nz', type=int, default=1000, help='size of the latent z vector')
     parser.add_argument('--ngf', type=int, default=64)
     parser.add_argument('--ndf', type=int, default=16)
-    parser.add_argument('--niter', type=int, default=300, help='number of epochs to train for')
+    parser.add_argument('--niter', type=int, default=400, help='number of epochs to train for')
     parser.add_argument('--lrG', type=float, default=0.0001, help='learning rate, default=0.0001')
     parser.add_argument('--lrD', type=float, default=0.0001, help='learning rate, default=0.0001')
     parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
@@ -72,6 +72,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_mels', type=int, default=128)
 
     parser.add_argument('--override_lr', action='store_true', help='override the lr after loading an optimizer state')
+    parser.add_argument('--mass_imgs', action='store_true', help='generate an image after every batch for the first 100 batches of the first epoch')
 
     opt = parser.parse_args()
     print(opt)
@@ -371,7 +372,7 @@ if __name__ == '__main__':
 
             tqdm.write('[{:d}/{:d}][{:d}/{:d}] Loss_D: {:.4f} Loss_G: {:.4f} D(x): {:.4f} D(G(z)): {:.4f} / {:.4f} lrD: {:.2E} lrG: {:.2E}'.format(epoch, opt.niter, i, len(dataloader), errD.item(), errG.item(), D_x, D_G_z1, D_G_z2, optimizerD.param_groups[0]["lr"], optimizerG.param_groups[0]["lr"]))
 
-            if i % 100 == 0:
+            if i % 100 == 0 or (opt.mass_imgs and i < 100 and epoch == starting_epoch):
                 vutils.save_image(real_cpu,
                         os.path.join(opath , 'real_samples.png'),
                         normalize=True)
