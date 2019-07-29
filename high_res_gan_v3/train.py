@@ -324,7 +324,7 @@ if __name__ == '__main__':
             del fake
         exit()
 
-
+    import pdb
     for epoch in tqdm(range(starting_epoch, opt.niter)):
         torch.cuda.empty_cache()
 
@@ -334,6 +334,7 @@ if __name__ == '__main__':
         running_D = 0
         running_G = 0
         for i, (data, mels) in enumerate(tqdm(zip(dataloader, Mloader), total=len(dataloader))):
+            pdb.set_trace()
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
