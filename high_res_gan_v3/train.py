@@ -254,8 +254,8 @@ if __name__ == '__main__':
         del rand_index
     else:
         fixed_noise = torch.randn(opt.batchSize, nz, 1, 1, device=device)
-    real_label = 1
-    fake_label = 0
+    real_label = 0.9
+    fake_label = 0.0
 
     # setup optimizer
     optimizerD = optim.Adam(netD.parameters(), lr=opt.lrD, betas=(opt.beta1, 0.999))
