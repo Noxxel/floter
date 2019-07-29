@@ -2,7 +2,7 @@
 \ProvidesClass{mimosis}[2017/08/01 Minimal modern thesis class]
 
 \LoadClass[paper=a4,
-           twoside,
+           oneside,
            pagesize,
            11pt,
            DIV=10,                % TODO: Make configurable
