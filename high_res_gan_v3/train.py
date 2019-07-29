@@ -372,10 +372,11 @@ if __name__ == '__main__':
 
             tqdm.write('[{:d}/{:d}][{:d}/{:d}] Loss_D: {:.4f} Loss_G: {:.4f} D(x): {:.4f} D(G(z)): {:.4f} / {:.4f} lrD: {:.2E} lrG: {:.2E}'.format(epoch, opt.niter, i, len(dataloader), errD.item(), errG.item(), D_x, D_G_z1, D_G_z2, optimizerD.param_groups[0]["lr"], optimizerG.param_groups[0]["lr"]))
 
-            if i % 100 == 0 or (opt.mass_imgs and i < 100 and epoch == starting_epoch):
+            if i % 100 == 0:
                 vutils.save_image(real_cpu,
                         os.path.join(opath , 'real_samples.png'),
                         normalize=True)
+            if i % 100 == 0 or (opt.mass_imgs and i < 100 and epoch == starting_epoch):
                 fake = netG(fixed_noise)
                 vutils.save_image(fake.detach(),
                         os.path.join(opath , 'fake_samples_epoch_{:03d}.png'.format(epoch)),
