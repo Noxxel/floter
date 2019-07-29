@@ -13,6 +13,7 @@
 % This ensures that I am able to typeset bold font in table while still aligning the numbers
 % correctly.
 \usepackage{etoolbox}
+\usepackage{lipsum}
 
 \usepackage[binary-units=true]{siunitx}
 \DeclareSIUnit\px{px}
@@ -91,18 +92,13 @@
 \begin{document}
   \include{Title}
 
-  \chapter{Introduction}
-    In this project, we wanted to generate visualizations of music tracks with the help of Generative Adverserial Networks (GAN). Our goal was for the visualizations to visibly correlate to the music when played alongside. For this we extract different sets of features from the music and use these features as seeds for a generator of a GAN, which we train on different sets of images. Main approaches: mel spectrogram, autoencoder, neural network, blah blah. Put into DCgan, infogan didnt work.
+  \include{chapters/introduction}
 
-  \chapter{Related Work}
-    xd
+  \include{chapters/related}
 
-  \chapter{Feature Extraction}
-    xd
+  \include{chapters/extraction}
 
-  \chapter{Image Generation with GANs}
-    xd
-    % \include{chapters/gan.tex}
+  \include{chapters/gan}
 
   \printbibliography
 
