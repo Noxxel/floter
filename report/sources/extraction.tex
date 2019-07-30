@@ -1,2 +1,14 @@
 \chapter{Feature Extraction}
-    \TODO{\lipsum[1-3]}
+    In this chapter we discuss the different approaches for extracting features from the music. The basis for all our methods are the mel spectrograms.
+
+\section{Mel Spectrograms}
+    In sound processing, it is difficult to work with the raw signal of a song.
+    Usually the signal is sampled 22050 to 44100 times per second and therefore yields a lot of data points to be processed.
+    A way to counter this problem is the short-time Fourier transform. 
+    It divides the signal into windows of equal size with a given amount of overlap, and then computes the Fourier transform for each of the individual windows.
+    This results in the power of the frequencies which compose the amplitude of the signal, as they vary over time.\\
+    Mel spectrograms are an extension of this method, which map the resulting powers to a logarithmic scale to better approximate the human perception of sound.
+
+\section{Autoencoder}
+
+\section{Convolutional Recurrent Neural Network}
