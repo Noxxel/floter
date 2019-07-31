@@ -201,6 +201,8 @@ if __name__ == "__main__":
     parser.add_argument('--lrG', type=float, default=0.0005, help='learning rate')
     parser.add_argument('--lrD', type=float, default=0.0001, help='learning rate')
     parser.add_argument('--lrI', type=float, default=0.00005, help='learning rate')
+
+    parser.add_argument('--factor_cont', type=float, default=0.2, help='factor for infoloss')
     
     opt = parser.parse_args()
     print(opt)
@@ -271,10 +273,6 @@ if __name__ == "__main__":
     # Loss functions
     adversarial_loss = torch.nn.MSELoss()
     continuous_loss = torch.nn.MSELoss()
-
-    # Loss weights
-    lambda_cat = 1
-    lambda_con = 0.1
 
     # Initialize generator and discriminator
     generator = Generator(latent_dim=opt.latent_dim, code_dim=opt.code_dim, img_size=opt.image_size, channels=opt.channels, ngf=opt.ngf)
@@ -499,7 +497,7 @@ if __name__ == "__main__":
             pred_code = pred_code.to(device)
 
             # info_loss = lambda_con * continuous_loss(pred_code, code_input)
-            info_loss = 1 * continuous_loss(pred_code, code_input)
+            info_loss = opt.factor_cont * continuous_loss(pred_code, code_input)
             running_I += info_loss.item()
 
             info_loss.backward()
