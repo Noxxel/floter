@@ -211,7 +211,7 @@ if __name__ == "__main__":
     if (opt.ae and opt.mel) or (opt.ae and opt.conv) or (opt.mel and opt.conv):
         raise Exception("only specify one of '--ae', '--mel', '--conv'!")
 
-    lambda_cont = torch.float32(opt.factor_cont)
+    lambda_cont = opt.factor_cont
 
     n_fft = opt.n_fft
     hop_length = opt.hop_length
