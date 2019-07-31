@@ -277,6 +277,9 @@ if __name__ == "__main__":
     generator = Generator(latent_dim=opt.latent_dim, code_dim=opt.code_dim, img_size=opt.image_size, channels=opt.channels, ngf=opt.ngf)
     discriminator = Discriminator(ndf=opt.ndf)
 
+    generator.apply(weights_init_normal)
+    discriminator.apply(weights_init_normal)
+
     # Initialize weights
     lossD = []
     lossG = []
@@ -300,15 +303,6 @@ if __name__ == "__main__":
                 starting_epoch = int(states[-1][-6:-3])+1
                 print("continueing with epoch {}".format(starting_epoch))
                 del tmp_load
-            else:
-                generator.apply(weights_init_normal)
-                discriminator.apply(weights_init_normal)
-        else:
-            generator.apply(weights_init_normal)
-            discriminator.apply(weights_init_normal)
-    else:
-        generator.apply(weights_init_normal)
-        discriminator.apply(weights_init_normal)
 
     # Configure data loaders
     Mset = SoundfileDataset(ipath=ipath, out_type="gan")
