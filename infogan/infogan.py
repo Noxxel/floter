@@ -150,18 +150,20 @@ class Discriminator(nn.Module):
         )
 
         # Output layers
-        self.aux_layer = nn.Sequential(nn.Conv2d(in_channels=14*ndf, out_channels=1, kernel_size=2, stride=2, padding=0, bias=False), nn.Sigmoid())
+        self.validity_l = nn.Sequential(nn.Conv2d(in_channels=14*ndf, out_channels=1, kernel_size=2, stride=2, padding=0, bias=False), nn.Sigmoid())
 
-        self.latent_layer = nn.Sequential(nn.Conv2d(in_channels=14*ndf, out_channels=16*ndf, kernel_size=2, stride=2, padding=0, bias=False), nn.Linear(16*ndf, opt.code_dim))
+        self.latent_l1 = nn.Conv2d(in_channels=14*ndf, out_channels=16*ndf, kernel_size=2, stride=2, padding=0, bias=False)
+        self.latent_l2 = nn.Linear(16*ndf, opt.code_dim)
 
     def forward(self, img):
         out = self.conv_blocks(img)
         # out = out.view(out.shape[0], -1)
-        validity = self.aux_layer(out)
+        validity = self.validity_l(out)
         # out = self.prep_layer(out)
         # 'reshape' for linear layers
-        # out = out.view(out.shape[0], -1)
-        latent_code = self.latent_layer(out)
+        out = self.latent_l1(out)
+        out = out.view(out.shape[0], -1)
+        latent_code = self.latent_l2(out)
 
         return validity, latent_code
 
