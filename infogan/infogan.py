@@ -171,7 +171,6 @@ if __name__ == "__main__":
     parser.add_argument('--dataroot', required=False, default="../data/flowers", help='path to dataset')
     parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")
     parser.add_argument("--batch_size", type=int, default=64, help="size of the batches")
-    parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
     parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
     parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
     parser.add_argument("--latent_dim", type=int, default=84, help="dimensionality of the latent space")
@@ -197,6 +196,11 @@ if __name__ == "__main__":
 
     parser.add_argument("--ngf", type=int, default=32, help="generator size multiplier")
     parser.add_argument("--ndf", type=int, default=16, help="discriminator size multiplier")
+
+    parser.add_argument('--override_lr', action='store_true', help='override the lr after loading an optimizer state')
+    parser.add_argument('--lrG', type=float, default=0.0005, help='learning rate')
+    parser.add_argument('--lrD', type=float, default=0.0001, help='learning rate')
+    parser.add_argument('--lrI', type=float, default=0.00005, help='learning rate')
     
     opt = parser.parse_args()
     print(opt)
@@ -332,9 +336,9 @@ if __name__ == "__main__":
     Iloader = torch.utils.data.DataLoader(Iset, batch_size=opt.batch_size, shuffle=True, num_workers=int(opt.workers))
 
     # Optimizers
-    optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
-    optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
-    optimizer_info = torch.optim.Adam(itertools.chain(generator.parameters(), discriminator.parameters()), lr=opt.lr, betas=(opt.b1, opt.b2))
+    optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lrD, betas=(opt.b1, opt.b2))
+    optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lrG, betas=(opt.b1, opt.b2))
+    optimizer_info = torch.optim.Adam(itertools.chain(generator.parameters(), discriminator.parameters()), lr=opt.lrI, betas=(opt.b1, opt.b2))
 
     generator.to(device)
     discriminator.to(device)
@@ -399,6 +403,13 @@ if __name__ == "__main__":
     # ----------
     #  Training
     # ----------
+    if opt.override_lr:
+        for pg in optimizer_D.param_groups:
+            pg["lr"] = opt.lrD
+        for pg in optimizer_G.param_groups:
+            pg["lr"] = opt.lrG
+        for pg in optimizer_info.param_groups:
+            pg["lr"] = opt.lrI
 
     generator.cpu()
     discriminator.cpu()
