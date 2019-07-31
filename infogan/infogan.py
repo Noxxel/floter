@@ -486,7 +486,7 @@ if __name__ == "__main__":
 
             # Sample noise, labels and code as generator input
             z = torch.tensor(np.random.normal(0, 1, (current_b_size, opt.latent_dim)), dtype=torch.float32).to(device)
-            code_input = torch.tensor(np.random.uniform(-1, 1, (current_b_size, opt.code_dim)), dtype=torch.float32).to(device)
+            # code_input = torch.tensor(np.random.uniform(-1, 1, (current_b_size, opt.code_dim)), dtype=torch.float32).to(device)
 
             gen_imgs = generator(z, code_input)
             pred_code = discriminator(gen_imgs)[1]
