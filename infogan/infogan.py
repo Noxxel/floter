@@ -469,17 +469,19 @@ if __name__ == "__main__":
             # Loss for real images
             real_pred = discriminator(real_imgs)[0].to(device)
             d_real_loss = adversarial_loss(real_pred, valid)
+            d_real_loss.backward()
 
 
             # Loss for fake images
             fake_pred = discriminator(gen_imgs.detach())[0].to(device)
             d_fake_loss = adversarial_loss(fake_pred, fake)
+            d_fake_loss.backward()
 
             # Total discriminator loss
             d_loss = (d_real_loss + d_fake_loss) / 2
             running_D += d_loss.item()
 
-            d_loss.backward()
+            # d_loss.backward()
             optimizer_D.step()
 
             # ------------------
