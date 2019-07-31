@@ -273,7 +273,7 @@ if __name__ == "__main__":
 
     # Loss functions
     adversarial_loss = torch.nn.BCELoss()
-    continuous_loss = torch.nn.BCELoss()
+    continuous_loss = torch.nn.MSELoss()
 
     # Initialize generator and discriminator
     generator = Generator(latent_dim=opt.latent_dim, code_dim=opt.code_dim, img_size=opt.image_size, channels=opt.channels, ngf=opt.ngf)
@@ -486,13 +486,12 @@ if __name__ == "__main__":
 
             # Sample noise, labels and code as generator input
             z = torch.tensor(np.random.normal(0, 1, (current_b_size, opt.latent_dim)), dtype=torch.float32).to(device)
-            code_input = torch.tensor(np.random.uniform(-1, 1, (current_b_size, opt.code_dim)), dtype=torch.float32).to(device)
+            # code_input = torch.tensor(np.random.uniform(-1, 1, (current_b_size, opt.code_dim)), dtype=torch.float32).to(device)
 
             gen_imgs = generator(z, code_input)
             pred_code = discriminator(gen_imgs)[1]
 
-            # info_loss = lambda_con * continuous_loss(pred_code, code_input)
-            info_loss = continuous_loss(pred_code, code_input)
+            info_loss = lambda_cont * continuous_loss(pred_code, code_input)
             running_I += info_loss.item()
 
             info_loss.backward()
