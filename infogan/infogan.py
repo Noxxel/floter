@@ -150,19 +150,18 @@ class Discriminator(nn.Module):
         )
 
         # Output layers
-        self.aux_layer = nn.Sequential(nn.Conv2d(in_channels=14*ndf, out_channels=1, kernel_size=2, stride=2, padding=0, bias=False), nn.Sigmoid())
+        self.validity_l = nn.Sequential(nn.Conv2d(in_channels=14*ndf, out_channels=1, kernel_size=2, stride=2, padding=0, bias=False), nn.Sigmoid())
 
-        self.prep_layer = nn.Sequential(nn.Conv2d(in_channels=14*ndf, out_channels=16*ndf, kernel_size=2, stride=2, padding=0, bias=False))
-        self.latent_layer = nn.Sequential(nn.Linear(16*ndf, opt.code_dim))
+        self.latent_l1 = nn.Conv2d(in_channels=14*ndf, out_channels=16*ndf, kernel_size=2, stride=2, padding=0, bias=False)
+        self.latent_l2 = nn.Linear(16*ndf, opt.code_dim)
 
     def forward(self, img):
         out = self.conv_blocks(img)
-        # out = out.view(out.shape[0], -1)
-        validity = self.aux_layer(out)
-        out = self.prep_layer(out)
+        validity = self.validity_l(out)
+        out = self.latent_l1(out)
         # 'reshape' for linear layers
         out = out.view(out.shape[0], -1)
-        latent_code = self.latent_layer(out)
+        latent_code = self.latent_l2(out)
 
         return validity, latent_code
 
@@ -211,6 +210,8 @@ if __name__ == "__main__":
 
     if (opt.ae and opt.mel) or (opt.ae and opt.conv) or (opt.mel and opt.conv):
         raise Exception("only specify one of '--ae', '--mel', '--conv'!")
+
+    lambda_cont = opt.factor_cont
 
     n_fft = opt.n_fft
     hop_length = opt.hop_length
@@ -278,6 +279,9 @@ if __name__ == "__main__":
     generator = Generator(latent_dim=opt.latent_dim, code_dim=opt.code_dim, img_size=opt.image_size, channels=opt.channels, ngf=opt.ngf)
     discriminator = Discriminator(ndf=opt.ndf)
 
+    generator.apply(weights_init_normal)
+    discriminator.apply(weights_init_normal)
+
     # Initialize weights
     lossD = []
     lossG = []
@@ -301,15 +305,6 @@ if __name__ == "__main__":
                 starting_epoch = int(states[-1][-6:-3])+1
                 print("continueing with epoch {}".format(starting_epoch))
                 del tmp_load
-            else:
-                generator.apply(weights_init_normal)
-                discriminator.apply(weights_init_normal)
-        else:
-            generator.apply(weights_init_normal)
-            discriminator.apply(weights_init_normal)
-    else:
-        generator.apply(weights_init_normal)
-        discriminator.apply(weights_init_normal)
 
     # Configure data loaders
     Mset = SoundfileDataset(ipath=ipath, out_type="gan")
@@ -454,7 +449,7 @@ if __name__ == "__main__":
             gen_imgs = generator(z, code_input)
 
             # Loss measures generator's ability to fool the discriminator
-            validity = discriminator(gen_imgs)[0].to(device)
+            validity = discriminator(gen_imgs)[0]
             g_loss = adversarial_loss(validity, valid)
             running_G += g_loss.item()
 
@@ -467,13 +462,13 @@ if __name__ == "__main__":
             optimizer_D.zero_grad()
 
             # Loss for real images
-            real_pred = discriminator(real_imgs)[0].to(device)
+            real_pred = discriminator(real_imgs)[0]
             d_real_loss = adversarial_loss(real_pred, valid)
             d_real_loss.backward()
 
 
             # Loss for fake images
-            fake_pred = discriminator(gen_imgs.detach())[0].to(device)
+            fake_pred = discriminator(gen_imgs.detach())[0]
             d_fake_loss = adversarial_loss(fake_pred, fake)
             d_fake_loss.backward()
 
@@ -496,10 +491,8 @@ if __name__ == "__main__":
             gen_imgs = generator(z, code_input)
             pred_code = discriminator(gen_imgs)[1]
 
-            pred_code = pred_code.to(device)
-
             # info_loss = lambda_con * continuous_loss(pred_code, code_input)
-            info_loss = opt.factor_cont * continuous_loss(pred_code, code_input)
+            info_loss = continuous_loss(pred_code, code_input)
             running_I += info_loss.item()
 
             info_loss.backward()
