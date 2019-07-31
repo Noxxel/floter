@@ -201,7 +201,7 @@ if __name__ == "__main__":
     parser.add_argument('--lrD', type=float, default=0.0001, help='learning rate')
     parser.add_argument('--lrI', type=float, default=0.00005, help='learning rate')
 
-    parser.add_argument('--factor_cont', type=torch.float32, default=0.2, help='factor for infoloss')
+    parser.add_argument('--factor_cont', type=float, default=0.2, help='factor for infoloss')
     
     opt = parser.parse_args()
     print(opt)
@@ -210,6 +210,8 @@ if __name__ == "__main__":
 
     if (opt.ae and opt.mel) or (opt.ae and opt.conv) or (opt.mel and opt.conv):
         raise Exception("only specify one of '--ae', '--mel', '--conv'!")
+
+    lambda_cont = torch.float32(opt.factor_cont)
 
     n_fft = opt.n_fft
     hop_length = opt.hop_length
@@ -490,7 +492,7 @@ if __name__ == "__main__":
             pred_code = discriminator(gen_imgs)[1]
 
             # info_loss = lambda_con * continuous_loss(pred_code, code_input)
-            info_loss = opt.factor_cont * continuous_loss(pred_code, code_input)
+            info_loss = lambda_cont * continuous_loss(pred_code, code_input)
             running_I += info_loss.item()
 
             info_loss.backward()
