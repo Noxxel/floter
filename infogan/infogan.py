@@ -157,11 +157,9 @@ class Discriminator(nn.Module):
 
     def forward(self, img):
         out = self.conv_blocks(img)
-        # out = out.view(out.shape[0], -1)
         validity = self.validity_l(out)
-        # out = self.prep_layer(out)
-        # 'reshape' for linear layers
         out = self.latent_l1(out)
+        # 'reshape' for linear layers
         out = out.view(out.shape[0], -1)
         latent_code = self.latent_l2(out)
 
@@ -455,7 +453,7 @@ if __name__ == "__main__":
             gen_imgs = generator(z, code_input)
 
             # Loss measures generator's ability to fool the discriminator
-            validity = discriminator(gen_imgs)[0]
+            validity = discriminator(gen_imgs)[0].to(device)
             g_loss = adversarial_loss(validity, valid)
             running_G += g_loss.item()
 
@@ -468,13 +466,13 @@ if __name__ == "__main__":
             discriminator.zero_grad()
 
             # Loss for real images
-            real_pred = discriminator(real_imgs)[0]
+            real_pred = discriminator(real_imgs)[0].to(device)
             d_real_loss = adversarial_loss(real_pred, valid)
             d_real_loss.backward()
 
 
             # Loss for fake images
-            fake_pred = discriminator(gen_imgs.detach())[0]
+            fake_pred = discriminator(gen_imgs.detach())[0].to(device)
             d_fake_loss = adversarial_loss(fake_pred, fake)
             d_fake_loss.backward()
 
