@@ -201,7 +201,7 @@ if __name__ == "__main__":
     parser.add_argument('--lrD', type=float, default=0.0001, help='learning rate')
     parser.add_argument('--lrI', type=float, default=0.00005, help='learning rate')
 
-    parser.add_argument('--factor_cont', type=float, default=0.2, help='factor for infoloss')
+    parser.add_argument('--factor_cont', type=torch.float32, default=0.2, help='factor for infoloss')
     
     opt = parser.parse_args()
     print(opt)
@@ -430,7 +430,7 @@ if __name__ == "__main__":
             # -----------------
             #  Train Generator
             # -----------------
-            generator.zero_grad()
+            optimizer_G.zero_grad()
 
             # Sample noise and labels as generator input
             z = torch.tensor(np.random.normal(0, 1, (current_b_size, opt.latent_dim)), dtype=torch.float32).to(device)
@@ -457,7 +457,7 @@ if __name__ == "__main__":
             # ---------------------
             #  Train Discriminator
             # ---------------------
-            discriminator.zero_grad()
+            optimizer_D.zero_grad()
 
             # Loss for real images
             real_pred = discriminator(real_imgs)[0]
@@ -488,8 +488,6 @@ if __name__ == "__main__":
 
             gen_imgs = generator(z, code_input)
             pred_code = discriminator(gen_imgs)[1]
-
-            pred_code = pred_code.to(device)
 
             # info_loss = lambda_con * continuous_loss(pred_code, code_input)
             info_loss = opt.factor_cont * continuous_loss(pred_code, code_input)
