@@ -273,7 +273,7 @@ if __name__ == "__main__":
 
     # Loss functions
     adversarial_loss = torch.nn.BCELoss()
-    continuous_loss = torch.nn.BCELoss()
+    continuous_loss = torch.nn.MSELoss()
 
     # Initialize generator and discriminator
     generator = Generator(latent_dim=opt.latent_dim, code_dim=opt.code_dim, img_size=opt.image_size, channels=opt.channels, ngf=opt.ngf)
@@ -444,9 +444,6 @@ if __name__ == "__main__":
                 code_input = vae.encode(mels).detach()
             elif opt.conv:
                 raise Exception("missing")
-            
-            import pdb
-            pdb.set_trace()
 
             # Generate a batch of images
             gen_imgs = generator(z, code_input)
@@ -495,7 +492,7 @@ if __name__ == "__main__":
             pred_code = discriminator(gen_imgs)[1]
 
             # info_loss = lambda_con * continuous_loss(pred_code, code_input)
-            info_loss = continuous_loss(pred_code, code_input)
+            info_loss = lambda_cont * continuous_loss(pred_code, code_input)
             running_I += info_loss.item()
 
             info_loss.backward()
