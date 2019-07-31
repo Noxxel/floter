@@ -437,7 +437,7 @@ if __name__ == "__main__":
             # -----------------
             #  Train Generator
             # -----------------
-            optimizer_G.zero_grad()
+            generator.zero_grad()
 
             # Sample noise and labels as generator input
             z = torch.tensor(np.random.normal(0, 1, (current_b_size, opt.latent_dim)), dtype=torch.float32).to(device)
@@ -454,7 +454,7 @@ if __name__ == "__main__":
             gen_imgs = generator(z, code_input)
 
             # Loss measures generator's ability to fool the discriminator
-            validity = discriminator(gen_imgs)[0].to(device)
+            validity = discriminator(gen_imgs)[0]
             g_loss = adversarial_loss(validity, valid)
             running_G += g_loss.item()
 
@@ -464,16 +464,16 @@ if __name__ == "__main__":
             # ---------------------
             #  Train Discriminator
             # ---------------------
-            optimizer_D.zero_grad()
+            discriminator.zero_grad()
 
             # Loss for real images
-            real_pred = discriminator(real_imgs)[0].to(device)
+            real_pred = discriminator(real_imgs)[0]
             d_real_loss = adversarial_loss(real_pred, valid)
             d_real_loss.backward()
 
 
             # Loss for fake images
-            fake_pred = discriminator(gen_imgs.detach())[0].to(device)
+            fake_pred = discriminator(gen_imgs.detach())[0]
             d_fake_loss = adversarial_loss(fake_pred, fake)
             d_fake_loss.backward()
 
