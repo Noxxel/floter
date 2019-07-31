@@ -450,7 +450,7 @@ if __name__ == "__main__":
                 raise Exception("missing")
 
             # Generate a batch of images
-            gen_imgs = generator(z, code_input)
+            gen_imgs = generator(z, code_input).to(device)
 
             # Loss measures generator's ability to fool the discriminator
             validity = discriminator(gen_imgs)[0].to(device)
