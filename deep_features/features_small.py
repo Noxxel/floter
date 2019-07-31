@@ -48,6 +48,7 @@ optimizer = optim.Adam(model.parameters(), lr=l_rate)
 #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
 val_loss_list, val_accuracy_list, epoch_list = [], [], []
+train_loss_list, train_acc_list = [], []
 loss_function.to(device)
 model.to(device)
 model.hidden = model.init_hidden(device)
@@ -66,8 +67,13 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         train_acc += model.get_accuracy(out, y)
         if LOG and idx != 0 and idx % log_intervall == 0:
             tqdm.write("Current loss: {}".format(train_running_loss/idx))
-
-    tqdm.write("Epoch:  %d | NLLoss: %.4f | Train Accuracy: %.2f" % (epoch, train_running_loss / len(TLoader), train_acc / len(TLoader)))
+    
+    train_loss = train_running_loss / len(TLoader)
+    train_acc = train_acc / len(TLoader)
+    tqdm.write("Epoch:  %d | NLLoss: %.4f | Train Accuracy: %.2f" % (epoch, train_loss, train_acc))
+    train_loss_list.append(train_loss)
+    train_acc_list.append(train_acc)
+    
     val_running_loss, val_acc = 0.0, 0.0
     model.eval()
     
@@ -91,29 +97,32 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
     val_accuracy_list.append(val_acc / len(VLoader))
     val_loss_list.append(val_running_loss / len(VLoader))
 
-    if (epoch+1)%10 == 0:
-        state = {'state_dict':model.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'accuracy':val_accuracy_list}
-        filename = "{}/lstm_{:02d}.nn".format(statepath, epoch)
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.makedirs(os.path.dirname(filename), exist_ok=True)
-        torch.save(state, filename)
-        del state
-        torch.cuda.empty_cache()
+    #if (epoch+1)%10 == 0:
+    state = {'state_dict':model.state_dict(), 'optim':optimizer.state_dict(), 'epoch_list':epoch_list, 'val_loss':val_loss_list, 'accuracy':val_accuracy_list}
+    filename = "{}/lstm_{:02d}.nn".format(statepath, epoch)
+    if not os.path.isdir(os.path.dirname(filename)):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+    torch.save(state, filename)
+    del state
+    torch.cuda.empty_cache()
 
 # visualization loss
-plt.plot(epoch_list, val_loss_list)
-plt.ylim(0, np.max(val_loss_list))
+loss_max = max(train_loss_list + val_loss_list)
+plt.plot(epoch_list, train_loss_list, color='blue', label='train loss')
+plt.plot(epoch_list, val_loss_list, color='red', label='validation loss')
+plt.ylim(0, loss_max)
 plt.xlabel("# of epochs")
 plt.ylabel("Loss")
 plt.title("LSTM: Loss vs # epochs")
-plt.savefig("{}/val_loss.png".format(statepath))
+plt.savefig("{}/loss.png".format(statepath))
 plt.clf()
 
 # visualization accuracy
-plt.plot(epoch_list, val_accuracy_list, color="red")
+plt.plot(epoch_list, train_acc_list, color='blue', label='train accuracy')
+plt.plot(epoch_list, val_accuracy_list, color='red', label='validation accuracy')
 plt.ylim(0, 100)
 plt.xlabel("# of epochs")
 plt.ylabel("Accuracy")
 plt.title("LSTM: Accuracy vs # epochs")
-plt.savefig("{}/val_acc.png".format(statepath))
+plt.savefig("{}/acc.png".format(statepath))
 plt.clf()
