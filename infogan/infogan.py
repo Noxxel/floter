@@ -171,7 +171,6 @@ if __name__ == "__main__":
     parser.add_argument('--dataroot', required=False, default="../data/flowers", help='path to dataset')
     parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")
     parser.add_argument("--batch_size", type=int, default=64, help="size of the batches")
-    parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
     parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
     parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
     parser.add_argument("--latent_dim", type=int, default=84, help="dimensionality of the latent space")
@@ -197,6 +196,13 @@ if __name__ == "__main__":
 
     parser.add_argument("--ngf", type=int, default=32, help="generator size multiplier")
     parser.add_argument("--ndf", type=int, default=16, help="discriminator size multiplier")
+
+    parser.add_argument('--override_lr', action='store_true', help='override the lr after loading an optimizer state')
+    parser.add_argument('--lrG', type=float, default=0.0005, help='learning rate')
+    parser.add_argument('--lrD', type=float, default=0.0001, help='learning rate')
+    parser.add_argument('--lrI', type=float, default=0.00005, help='learning rate')
+
+    parser.add_argument('--factor_cont', type=float, default=0.2, help='factor for infoloss')
     
     opt = parser.parse_args()
     print(opt)
@@ -265,12 +271,8 @@ if __name__ == "__main__":
     #     vae.eval()
 
     # Loss functions
-    adversarial_loss = torch.nn.MSELoss()
-    continuous_loss = torch.nn.MSELoss()
-
-    # Loss weights
-    lambda_cat = 1
-    lambda_con = 0.1
+    adversarial_loss = torch.nn.BCELoss()
+    continuous_loss = torch.nn.BCELoss()
 
     # Initialize generator and discriminator
     generator = Generator(latent_dim=opt.latent_dim, code_dim=opt.code_dim, img_size=opt.image_size, channels=opt.channels, ngf=opt.ngf)
@@ -332,9 +334,9 @@ if __name__ == "__main__":
     Iloader = torch.utils.data.DataLoader(Iset, batch_size=opt.batch_size, shuffle=True, num_workers=int(opt.workers))
 
     # Optimizers
-    optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
-    optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
-    optimizer_info = torch.optim.Adam(itertools.chain(generator.parameters(), discriminator.parameters()), lr=opt.lr, betas=(opt.b1, opt.b2))
+    optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lrD, betas=(opt.b1, opt.b2))
+    optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lrG, betas=(opt.b1, opt.b2))
+    optimizer_info = torch.optim.Adam(itertools.chain(generator.parameters(), discriminator.parameters()), lr=opt.lrI, betas=(opt.b1, opt.b2))
 
     generator.to(device)
     discriminator.to(device)
@@ -399,6 +401,13 @@ if __name__ == "__main__":
     # ----------
     #  Training
     # ----------
+    if opt.override_lr:
+        for pg in optimizer_D.param_groups:
+            pg["lr"] = opt.lrD
+        for pg in optimizer_G.param_groups:
+            pg["lr"] = opt.lrG
+        for pg in optimizer_info.param_groups:
+            pg["lr"] = opt.lrI
 
     generator.cpu()
     discriminator.cpu()
@@ -460,17 +469,19 @@ if __name__ == "__main__":
             # Loss for real images
             real_pred = discriminator(real_imgs)[0].to(device)
             d_real_loss = adversarial_loss(real_pred, valid)
+            d_real_loss.backward()
 
 
             # Loss for fake images
             fake_pred = discriminator(gen_imgs.detach())[0].to(device)
             d_fake_loss = adversarial_loss(fake_pred, fake)
+            d_fake_loss.backward()
 
             # Total discriminator loss
             d_loss = (d_real_loss + d_fake_loss) / 2
             running_D += d_loss.item()
 
-            d_loss.backward()
+            # d_loss.backward()
             optimizer_D.step()
 
             # ------------------
@@ -488,7 +499,7 @@ if __name__ == "__main__":
             pred_code = pred_code.to(device)
 
             # info_loss = lambda_con * continuous_loss(pred_code, code_input)
-            info_loss = 1 * continuous_loss(pred_code, code_input)
+            info_loss = opt.factor_cont * continuous_loss(pred_code, code_input)
             running_I += info_loss.item()
 
             info_loss.backward()
