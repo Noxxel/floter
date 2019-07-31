@@ -271,8 +271,8 @@ if __name__ == "__main__":
     #     vae.eval()
 
     # Loss functions
-    adversarial_loss = torch.nn.MSELoss()
-    continuous_loss = torch.nn.MSELoss()
+    adversarial_loss = torch.nn.BCELoss()
+    continuous_loss = torch.nn.BCELoss()
 
     # Initialize generator and discriminator
     generator = Generator(latent_dim=opt.latent_dim, code_dim=opt.code_dim, img_size=opt.image_size, channels=opt.channels, ngf=opt.ngf)
