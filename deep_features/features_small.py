@@ -17,7 +17,7 @@ n_time_steps = 1800
 n_layers = 2
 NORMALIZE = True
 
-n_epochs = 400
+n_epochs = 100
 batch_size = 16
 l_rate = 1e-3
 num_workers = 4
@@ -28,10 +28,10 @@ log_intervall = 50
 
 #datapath = "./mels_set_db"
 datapath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
-statepath = "./lstm_f{}_h{}_b{}_nomax".format(n_fft, hop_length, n_mels)
+statepath = "./lstm_f{}_h{}_b{}_normfixed".format(n_fft, hop_length, n_mels)
 #statepath = "conv_small_b128"
 
-device = "cuda"
+device = "cuda:1"
 
 dset = SoundfileDataset("./all_metadata.p", ipath=datapath, out_type="mel", normalize=NORMALIZE, n_time_steps=n_time_steps)
 if DEBUG:
@@ -45,7 +45,7 @@ VLoader = DataLoader(vset, batch_size=batch_size, shuffle=False, drop_last=True,
 model = LSTM(n_mels, batch_size, num_layers=n_layers)
 loss_function = nn.NLLLoss()
 optimizer = optim.Adam(model.parameters(), lr=l_rate)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
+#scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True)
 
 val_loss_list, val_accuracy_list, epoch_list = [], [], []
 loss_function.to(device)
@@ -78,7 +78,7 @@ for epoch in tqdm(range(n_epochs), desc='Epoch'):
         val_running_loss += val_loss.detach().item()
         val_acc += model.get_accuracy(out, y)
 
-    scheduler.step(val_loss)
+    #scheduler.step(val_loss)
     tqdm.write("Epoch:  %d | Val Loss %.4f  | Val Accuracy: %.2f"
             % (
                 epoch,

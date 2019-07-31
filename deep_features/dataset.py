@@ -82,7 +82,7 @@ class SoundfileDataset(Dataset):
                     X = X[:self.n_time_steps,:]
                 #normalize data
                 if self.normalize and self.out_type == 'mel':
-                    X = (X / -80) * 2 - 1 #librosa.power_to_db scales from -80 to 0
+                    X = (X / 80) * 2 + 1 #librosa.power_to_db scales from -80 to 0
                 elif self.normalize and self.out_type == 'ae':
                     X = (X / -80) # atuo encoder produces vectors in range 0 to 1
         else:
