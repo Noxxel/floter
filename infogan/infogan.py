@@ -454,7 +454,7 @@ if __name__ == "__main__":
 
             # Loss measures generator's ability to fool the discriminator
             validity = discriminator(gen_imgs)[0]
-            g_loss = adversarial_loss(validity, valid).to(device)
+            g_loss = adversarial_loss(validity, valid)
             running_G += g_loss.item()
 
             g_loss.backward()
@@ -467,13 +467,13 @@ if __name__ == "__main__":
 
             # Loss for real images
             real_pred = discriminator(real_imgs)[0]
-            d_real_loss = adversarial_loss(real_pred, valid).to(device)
+            d_real_loss = adversarial_loss(real_pred, valid)
             d_real_loss.backward()
 
 
             # Loss for fake images
             fake_pred = discriminator(gen_imgs.detach())[0]
-            d_fake_loss = adversarial_loss(fake_pred, fake).to(device)
+            d_fake_loss = adversarial_loss(fake_pred, fake)
             d_fake_loss.backward()
 
             # Total discriminator loss
