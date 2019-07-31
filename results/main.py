@@ -80,7 +80,7 @@ if __name__ == '__main__':
     elif opt.conv:
         nz = 32
         dcgan_path = os.path.join("./gan/conv", 'nz_{}_ngf_{}_ndf_{}_bs_{}/'.format(nz, opt.ngf, opt.ndf, opt.batch_size))
-    ae_path = "./gan/ae/ae_states/vae_b{}_{}".format(n_mels, opt.l2size)
+    ae_path = "./gan/ae/ae_states/ae_n{}_b{}_{}".format(opt.n_fft, n_mels, opt.l2size)
     conv_path = "./gan/conv/crnn_states/lstm_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
 
     os.makedirs(ipath, exist_ok=True)
@@ -196,11 +196,10 @@ if __name__ == '__main__':
         raise Exception("no input song provided!")
     tmp_list = []
     for s in input_songs:
-        exists = False
-        for of in os.listdir(opath):
-            if of == s:
-                exists = True
-        if not exists:
+        if opt.song != "":
+            tmp_list = input_songs
+            break
+        if s[:-1]+"4" not in os.listdir(opath):
             tmp_list.append(s)
     if len(tmp_list) < 1:
         exit()
@@ -256,6 +255,7 @@ if __name__ == '__main__':
             #kernel = torch.tensor([0.00135, 0.157305, 0.68269, 0.157305, 0.00135])
             #kernel = torch.tensor([0.000088, 0.105561, 0.7887, 0.105561, 0.000088])
             #kernel = torch.tensor([0.023857, 0.09774, 0.227595, 0.301618, 0.227595, 0.09774, 0.023857])
+            # kernel = torch.tensor([0.02697878088, 0.04942955421, 0.08112130558, 0.1192552159, 0.1570364062, 0.1852325013, 0.1957137347, 0.1852325013, 0.0, 0.0, 0.0, 0.0, 0.0])
 
             weights = nn.parameter.Parameter(kernel.repeat(m.shape[1], 1, 1))
             padding = int((opt.smooth_count - 1)/ 2)

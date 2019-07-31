@@ -10,11 +10,11 @@ import os
 
 filename = "./relish_it.mp3"
 #filename = "./fma_small/000/000002.mp3"
-duration = 30
+duration = 40
 
 n_fft = 2**11
-#hop_length = 2**9
-hop_length = 367
+hop_length = 2**9
+#hop_length = 367
 n_mels = 128
 n_time_steps = 2580
 NORMALIZE = True
@@ -26,7 +26,7 @@ statepath = "./conv_big_b{}_norm".format(n_mels)
 
 device = "cuda"
 
-y, sr = librosa.load(filename, mono=True, duration=duration, sr=22050)
+y, sr = librosa.load(filename, mono=True, duration=duration, sr=22050, offset=220)
 
 print("Sample rate:", sr)
 print("Signal:", y.shape)
@@ -98,8 +98,8 @@ def plot_encoder():
 #plot_signal()
 
 #fft = plot_spectogram()
-#mel = plot_melspectogram()
-plot_encoder()
+mel = plot_melspectogram()
+#plot_encoder()
 exit()
 mel = librosa.power_to_db(mel)
 print(mel.shape)

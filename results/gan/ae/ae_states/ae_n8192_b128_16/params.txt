@@ -1,0 +1,1 @@
+Namespace(batchSize=16, beta1=0.5, cuda=False, debug=False, fresh=False, hop_length=367, l1size=64, l2size=16, log=False, lr=0.0001, n_fft=8192, n_mels=128, niter=500, nz=1000, opath='nfft_8192', workers=2)

@@ -89,7 +89,7 @@ if __name__ == '__main__':
     log_intervall = 200
     # ipath = "./mels_set_f8820_h735_b256"
     ipath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
-    statepath = os.path.join(os.path.join("./out", opt.opath), "vae_b{}_{}".format(n_mels, middle_size))
+    statepath = os.path.join(os.path.join("./out", opt.opath), "ae_n{}_b{}_{}".format(opt.n_fft, opt.n_mels, middle_size))
     print('final output-path: {}'.format(statepath))
 
     os.makedirs(statepath, exist_ok=True)
