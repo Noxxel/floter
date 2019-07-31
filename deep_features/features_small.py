@@ -17,7 +17,7 @@ n_time_steps = 1800
 n_layers = 2
 NORMALIZE = True
 
-n_epochs = 400
+n_epochs = 100
 batch_size = 16
 l_rate = 1e-3
 num_workers = 4
@@ -28,7 +28,7 @@ log_intervall = 50
 
 #datapath = "./mels_set_db"
 datapath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
-statepath = "./lstm_f{}_h{}_b{}_nomax".format(n_fft, hop_length, n_mels)
+statepath = "./lstm_f{}_h{}_b{}_normfixed".format(n_fft, hop_length, n_mels)
 #statepath = "conv_small_b128"
 
 device = "cuda"
