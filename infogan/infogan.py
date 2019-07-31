@@ -491,6 +491,8 @@ if __name__ == "__main__":
             gen_imgs = generator(z, code_input)
             pred_code = discriminator(gen_imgs)[1]
 
+            import pdb
+            pdb.set_trace()
             # info_loss = lambda_con * continuous_loss(pred_code, code_input)
             info_loss = continuous_loss(pred_code, code_input)
             running_I += info_loss.item()
