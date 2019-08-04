@@ -33,7 +33,7 @@
             \label{fig:architecture_dcgan}
         \end{figure}
 
-        Our first implementation was based on an implementation for CIFAR10. Because we want images with a resolution of more than 32 x 32, we scaled up the network to fit our requirements.
+        Our first implementation was based on an implementation for CIFAR10. Because we want images with a resolution of more than 32 x 32, we scaled up the networks to fit our requirements.
 
         \subsection{Generator}
             As the input resolution for the generator is essentially 1 x 1, the first transposed convolutional layer of the generator, with a kernel size of 4, a stride of 1, and a padding of 0, outputs a resolution of 4 x 4. With an exception of the last, the remaining transposed convolutional layers double the resolution by instead using a stride of 2 and padding of 1 with the same kernel size. The last one uses a kernel size and stride of 1 and padding of 0, it is simply used ot reduce the channels for the final image, in our case 3.
