@@ -74,8 +74,11 @@
     A LSTM layer is able to analyze entire sequences of data, being able to remember values over arbitrary time intervals, and therefore fitting perfectly for the classification from the temporal change of the music features.
     This layer collects the features over the time steps, always condensing the most information in the last output step, making us able to only take this step, a single 64-dimensional vector, as our input for the next linear layer with relatively few weights.\\
     This linear layer does not have another non-linearity, but this did not seem to influence the performance of the network.
-    After that, there is the last linear layer, which connects the 32 neurons to the 8 output neurons, which depict the individual genres.
-    We apply a logarithmic softmax function to the 8 outputs and then use the NLLLoss (negative log likelihood, together with log softmax this is basically the cross entropy loss) to measure the error of the network during training.\\
+    After that, there is the last linear layer, which connects the 32 neurons of the previous layer to the 8 output neurons, which depict the individual genres.
+    We apply a logarithmic softmax function to the 8 outputs and then use the NLLLoss (negative log likelihood, together with log softmax this is basically the cross entropy loss) to measure the performance of the network during training.\\
+    Unfortunately the performance of the network in practice was subpar to levels of comparable networks on this dataset.
+    Bla
+    \\
     \TODO{problems during training, performance after 100 epochs, overfitting, and cherrypicking of best one}
 
     \begin{figure}[b]
