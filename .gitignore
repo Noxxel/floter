@@ -19,3 +19,4 @@ results/gen_stuff2.sh
 results/gen_stuff3.sh
 params.txt
 report/report.lof
+.vscode/settings.json
