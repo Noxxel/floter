@@ -11,10 +11,10 @@ CRNN inspiration:
 http://deepsound.io/music_genre_recognition.html
 
 GAN:
-https://arxiv.org/abs/1511.06434
+http://papers.nips.cc/paper/5423-generative-adversarial-nets
 
 dcgan:
-http://papers.nips.cc/paper/5423-generative-adversarial-nets
+https://arxiv.org/abs/1511.06434
 
 infogan:
 http://papers.nips.cc/paper/6399-infogan-interpretable-representation
