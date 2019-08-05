@@ -41,7 +41,7 @@
 
             As the input resolution for the generator is essentially 1 x 1, the first transposed convolutional layer of the generator, with a kernel size of 4, a stride of 1, and a padding of 0, outputs a resolution of 4 x 4. With an exception of the last, the remaining transposed convolutional layers double the resolution by instead using a stride of 2 and padding of 1 with the same kernel size. The last one uses a kernel size and stride of 1 and padding of 0, it is simply used ot reduce the channels for the final image, in our case 3.
             
-            To reach our desired resolution of 512 x 512, we opted to increase the amount of layers rather than modify the stride and kernel size. This lead to an increase of transposed convolutional layers from 5 to 9. With the first and last having their own role, this leads to 7 layers doubling the resolution of 4 x 4 ($\rightarrow 4 \times 2^7 = 512$). While the original version reduced the amount of channels by a factor of two after each transposed convolutional layer, due to hardware limitations this method was no longer feasible after increasing the amount of layers. Instead we therefore reduced the amount of channels in the generator linearly. Due to a mistake during the first implementation and to keep backwards compatability, the last layer in the generator is scaled with 2$\times$ngf instead of 2$\times$ngf, with ngf being a variable that controls the size of the network. Each layers amount of output channels decreases in a linear fashion, with layer 8 having 2$\times$ngf filters, layer 7 has 4$\times$ngf, layer 6 has 6$\times$ngf, .., and layer 1 has 16$\times$ngf. We have found that training with values for ngf between 64 and 128 generate images of comparable quality. The final architecture of our generator is displayed in figure~\ref{fig:architecture_dcgan_ours_generator}
+            To reach our desired resolution of 512 x 512, we opted to increase the amount of layers rather than modify the stride and kernel size. This lead to an increase of transposed convolutional layers from 5 to 9. With the first and last having their own role, this leads to 7 layers doubling the resolution of 4 x 4 ($\rightarrow 4 \times 2^7 = 512$). While the original version reduced the amount of channels by a factor of two after each transposed convolutional layer, due to hardware limitations this method was no longer feasible after increasing the amount of layers. Instead we therefore reduced the amount of channels in the generator linearly. Due to a mistake during the first implementation and to keep backwards compatability, the last layer in the generator is scaled with 2$\times$ngf instead of 2$\times$ngf, with ngf being a variable that controls the size of the network. Each layers amount of output channels decreases in a linear fashion, with layer 8 having 2$\times$ngf filters, layer 7 has 4$\times$ngf, layer 6 has 6$\times$ngf, .., and layer 1 has 16$\times$ngf. The final architecture of our generator is displayed in figure~\ref{fig:architecture_dcgan_ours_generator}
         
             \begin{figure}[h]
                 \centering
@@ -57,7 +57,8 @@
 
         \subsection{Discriminator}
 
-            blahblahblahSo the second convolutional layer of the discriminator has twice the channels as the first and the third has three times as many. Figure~\TODO{ref and insert fig!} shows the architecture of our final generator and discriminator. We achieved results of similar quality with values for ndf ranging from 32 to 64 and values for ngf ranging from 64 to 128. As the generators task is more complex we also raised the complexity of its network compared to the discriminator. 
+            For the discriminator we applied the same approach. While the generator network increases the resolution while decreasing the amount of channels, the discriminator reduces the resolution and increases the amount of channels. The first convolutional layer starts out with the 3 input channels of an image, which are then increased linearly as we progress through the network. The exact architecture can be seen in figure~\ref{fig:architecture_dcgan_ours_discriminator}. Since the smallest transposed convolutional layer in the generator has 2$\times$ngf filters while the discriminators smallest convolutional layer has $\times$ndf filters, the generators network is more complex by default when ngf=ndf.
+
             \begin{figure}[h]
                 \centering
                 \fbox{
@@ -70,15 +71,12 @@
                 \label{fig:architecture_dcgan_ours_discriminator}
             \end{figure}
 
+        \subsection{Training}
+            We have found that training with values for ngf between 64 and 128 generate images of comparable quality.
+
             \TODO{
                 training with actually possible input configurations allows for a more reasonable mapping of the feature space to output images. as an example, include an image of how 4 different input vectors result in almost the same output img when gan is trained on random input! more blah. Use example images for some epochs, displaying how the network improves over epochs. Important: explain that sample images not necessarily correlate to good video results! because of that we implemented static image sampling for important sections in songs (e.g. there's always a base-image for when almost nothing happens in a song! that one is important to look at when selecting a GAN state)
             }
-            \begin{itemize}
-                \item image of architecture
-                \item mention loss, optimizer, ..
-            \end{itemize}
-
-        \subsection{Training}
 
             \begin{itemize}
                 \item how are both networks trained?
