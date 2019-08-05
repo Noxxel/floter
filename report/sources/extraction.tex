@@ -83,17 +83,33 @@
     After that, there is the last linear layer, which connects the 32 neurons of the previous layer to the 8 output neurons, which depict the individual genres.
     We apply a logarithmic softmax function to the output and then use the NLLLoss (negative log likelihood, together with log softmax this is basically the cross entropy loss) to measure the performance of the network during training.\\
     Unfortunately, the performance of the network in practice was subpar to levels of comparable networks on this dataset.
-    We plotted the loss and accuracy of our CRNN over the first 100 epochs in Figure~\ref{performance}.
+    We plotted the loss and accuracy of our CRNN over the first 100 epochs in the top half of Figure~\ref{performance}.
     For the first 15 epochs the network seems to learn some abstraction from the data, performing around 44$\%$ accuracy, but then the validation loss diverges from the training loss and the validation accuracy stagnates.
     Up from this point, the network overfits on the training data, with no real gain on validation.
-    This is around $20\%$ lower than comparable networks and might be due to multiple factors.
-    \\
-    \TODO{problems during training, performance after 100 epochs, overfitting, and cherrypicking of best one}
+    This performance is around $20\%$ lower than the top leader board score of the FMA genre recognition challenge~\cite{GenreChallenge} with 63$\%$ and might be due to multiple factors.
+    As we had to train a network from scratch to fit our particular needs, the small FMA dataset with its 8000 songs is a relatively small sample size for a deep learning model.
+    This leads to the model overfitting very quickly on the training data.
+    An approach to counter this could be to split each of the 30 seconds clips into 3 parts of 10 seconds to artificially increase the sample size.
+    But in addition, the FMA dataset itself is quite challenging, featuring abstract genres like International or Experimental, as well as Pop, which is just a conglomerate of popular music with no distinct defining sound.
+    This has got to be kept in mind when evaluating the model compared to the top scorer with 63$\%$, which also does not sound exceptionally high.\\
+    For the generator input, we picked a state of the network right before it starts to overfit on the data, to get the most generic features from the music. 
 
-    \begin{figure}[b]
+    \begin{figure}[t]
         \centering
         \includegraphics[width=0.49\textwidth]{images/loss}
         \includegraphics[width=0.49\textwidth]{images/acc}
-        \caption{Loss and accuracy of the CRNN for training and validation over 100 epochs.}
+        \includegraphics[width=0.91\textwidth]{images/val_acc}
+        \caption{Top: loss and accuracy of the CRNN for training and validation over 100 epochs. Bottom: classification accuracy per class of the cherrypicked model at the sweet spot with few overfitting.}
         \label{performance}
     \end{figure}
+
+    The bottom image of Figure~\ref{performance} shows our classification accuracies for each of the individual genres of that state.
+    Pop is clearly falling off with an accuracy of below 10$\%$, whereas Rock on the other hand is classified correctly around 80$\%$ of the time.
+    The other classes gather together at around 40$\%$ with slight differences.
+    This introduces some problems for the generator, as the feature space is not well defined and yields ambiguities.
+    We tried to gain higher accuracies by reproducing state of the art implementations of CRNNs, but to no avail, we always ended up at similar performance.
+    One could argue, that the filters of the convolutional layers have problems learning a decent set of weights, as the small step size of the mel spectrograms produce a lot of similar vectors.
+    This can lead to plateaus with little change between the time steps, throwing off the filter as it convolves over the input.
+    But our experiments with more reasonable step sizes also ended up in similar performance ranges.
+    We therefore may have made a mistake somewhere in our system, which we cannot pin down at the moment.
+    We still proceeded with the dirty feature map and try to train a generator on the distribution produced by the network. This leads us to our generative adverserial networks.
