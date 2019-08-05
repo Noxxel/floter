@@ -60,6 +60,8 @@ def plot_spectogram():
 
 def plot_melspectogram():
     mel = librosa.feature.melspectrogram(y, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels)
+    print(mel)
+    exit()
     plt.figure(figsize=(24, 6))
     dsp.specshow(librosa.power_to_db(mel, ref=np.max), y_axis="mel", x_axis="time", sr=sr)
     plt.title("Mel spectrogram")
