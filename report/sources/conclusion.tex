@@ -1,25 +1,5 @@
 \chapter{Conclusion}
-    We reached our base goal of generating visualizations which visibly correlate to the music when played alongside.
-    We achieved our best results with the generator which was trained on the raw mel spectrogram vectors.
-    \TODO{
-        \begin{itemize}
-            \item maybe mimic the latent vector distribution instead of using pretrained models during training of GANs
-            \item maybe should mention proGANs? slowly increasing the resolution seems smart
-            \item train models where the discriminator is more complex than generator
-        \end{itemize}
-    }
-    \TODO{
-        This chapter will contain the following
-        \begin{itemize}
-            \item too high res for fast feedback during training. epochs take forever.
-            \item speculate about genres available in FMA (??? what did i mean with this)
-        \end{itemize}
-        List of methods that delviered results of sufficient quality:
-        \begin{itemize}
-            \item raw mels + dcgan
-            \item ae + infogan (?)
-            \item more?
-        \end{itemize}
-    }
 
-    
+    We reached our base goal of generating visualizations that visibly correlate to the music when played alongside each other. We achieved our best results with the generator that was trained with the raw mel spectrogram as latent vectors. When applying our smoothing techniques during the video generation we have also achieved our secondary goal of having smooth transitions. Depending on the song those techniques do not necessarily have to be applied for a smooth result.
+
+    There are many things we still want to try or investigate. Instead of randomly taking one sample from each song per epoch during training of the GANs it should at least be modified to randomly select one sample from all songs in each step. Another option would be to construct a distribution of the samples from which we can then generate samples as needed. We want to try different combinations of complexities regarding the generator and discriminator. While the individual images of the combination of encoded features and InfoGAN look promising, the problem of images being very similar is still unsolved. Because the training takes multiple days before a judgement can be made it is very tedious and time-consuming. To prevent this issue in the future we would take a look at ProGANs where the output resolution is slowly increased during training. This significantly speeds up the training at the beginning and one is no longer required to decide on the final resolution from the start.

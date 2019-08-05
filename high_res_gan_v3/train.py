@@ -1,3 +1,5 @@
+#please excuse the dirty code if you read it before i managed to clean it up
+
 import argparse
 import torch
 import os
