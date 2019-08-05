@@ -15,7 +15,6 @@ import subprocess
 import scipy.stats as st
 
 import dcgan
-from dataset import SoundfileDataset
 from AE_any import AutoEncoder
 from model import LSTM
 from infogan import Generator
