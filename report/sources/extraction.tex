@@ -39,7 +39,7 @@
     For our second feature method, we trained an autoencoder to reduce the dimensionality of the mel spectrograms down to a much smaller feature space.
     The main idea behind this approach was to use the encoded spectrograms as conditional vectors for the InfoGAN, where the comparatively large original vectors are impractical and would require proportionately larger latent vectors.
     As direct input for a DCGAN, they are somewhat redundant, losing information and complexity compared to the original spectrograms, and should therefore deliver worse results, but we still gave it a try, because why not.
-    We will discuss more on this in the next chapter.\\
+    We will discuss more on this in the next chapters.\\
 
     \subsection{Architecture}
     \indent Figure~\ref{autoencoder} shows the architecture of the neural network, which we used to encode the vectors. In the first step, we half the dimensionality to 64 dimensions, followed by a rectified linear unit (ReLU).
@@ -117,8 +117,8 @@
     The other classes gather together at around 40$\%$ with slight differences.
     This introduces some problems for the generator, as the feature space is not well defined and yields ambiguities.
     We tried to gain higher accuracies by reproducing state of the art implementations of CRNNs, but to no avail, we always ended up at similar performance.
-    One could argue, that the filters of the convolutional layers have problems learning a decent set of weights, as the small step size of the mel spectrograms produce a lot of similar vectors.
+    One could argue that the filters of the convolutional layers have problems learning a decent set of weights, as the small step size of the mel spectrograms produce a lot of similar vectors.
     This can lead to plateaus with little change between the time steps, throwing off the filter as it convolves over the input.
-    But our experiments with more reasonable step sizes also ended up in similar performance ranges.
+    This also might be emphasized by the missing max pooling layers inbetween the convolutions, but our experiments with more reasonable step sizes and max pooling also ended up in similar performance ranges.
     We therefore may have made a mistake somewhere in our system, which we cannot pin down at the moment.
     We still proceeded with the dirty feature map and try to train a generator on the distribution produced by the network. This leads us to our generative adverserial networks.
