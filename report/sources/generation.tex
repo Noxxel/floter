@@ -11,9 +11,9 @@
         \subcaptionbox{\label{sfig:rnd_125}}{
             \includegraphics[width=.47\textwidth]{images/randomstatic_125}
         }
-        \caption[Image generation with differently distributed latent code]
+        \caption[Image generation with latent vectors from different distributions]
         {
-            \textbf{Image generation with differently distributed latent code. The generator was trained on the distribution from the FMA dataset~\cite{FMA}. Latent code from the proper distribution~\subref{sfig:fixed_125} and from a multivariate normal distribution~\subref{sfig:rnd_125}.}
+            \textbf{Image generation with latent vectors from different distributions. The generator was trained on the distribution from the FMA dataset~\cite{FMA}. A latent vector from the proper distribution~\subref{sfig:fixed_125} and from a multivariate normal distribution~\subref{sfig:rnd_125}.}
         }
         \label{fig:distribution}
     \end{figure}
@@ -93,13 +93,13 @@
                 \label{eq:gan_2}
             \end{equation}
 
-            Equation~\ref{eq:gan_2} reaches its maximum when $p_{generator}$ approaches $p_{data}$. As $p_{generator}$ is dependant on the latent vector $\vec{z}$, we can see that exchanging the distribution $p_{\vec{z}}$ after training will also change $p_{generator}$. As mentioned at the beginning of this chapter we therefore have to train with the correct distribution of latent code. In our case this means that we sample from the songs of the FMA dataset~\cite{FMA}, directly or after preprocessing them as described in chapter~\ref{ch:extraction}.
+            Equation~\ref{eq:gan_2} reaches its maximum when $p_{generator}$ approaches $p_{data}$. As $p_{generator}$ is dependant on the latent vector $\vec{z}$, we can see that exchanging the distribution $p_{\vec{z}}$ after training will also change $p_{generator}$. As mentioned at the beginning of this chapter we therefore have to train with the correct distribution in latent space. In our case this means that we sample from the songs of the FMA dataset~\cite{FMA}, directly or after preprocessing them as described in chapter~\ref{ch:extraction}.
 
-            As our music dataset contains roughly 8000 sample songs, with about 1800 possible valid latent vectors per song, we are drawing from a pool of $\num{1.44e7}$ samples. As each epoch is composed of our roughly 8000 images, we only draw as many samples for latent code. This means we only cover about $0.0556\%$ of our valid latent codes. Additionally we draw exactly one sample from each song per epoch. This implementation may have an impact on our ability to model $p_{\vec{z}}$ correctly.
+            As our music dataset contains roughly 8000 sample songs, with about 1800 possible valid latent vectors per song, we are drawing from a pool of $\num{1.44e7}$ samples. As each epoch is composed of our roughly 8000 images, we only draw as many latent vector samples. This means we only cover about $0.0556\%$ of our valid latent vectors. Additionally we draw exactly one sample from each song per epoch. This implementation may have an impact on our ability to model $p_{\vec{z}}$ correctly.
 
             Because of our implementation, using the same value for ngf and ndf, already leads to a generator that is about twice the size of the discriminator. During training we assumed that suitable values for ngf are 2$\times$ndf, with ndf at 32 and 64 leading to generated images of sufficient quality. At the time of writing, we realize that the discriminator should not necessarily be less complex than the generator. We are training some new networks with differently sized discriminators to help us understand the relationship between the complexity of the two networks. As training progressed we lowered the learning rates for both networks. We also ended up changing the value for the label of real images from 1.0 to 0.9. As the discriminators last layer is a sigmoid layer, the possible output ranges from 0 to 1. With this change the discriminator is discouraged to be overconfident. This should prevent the discriminator from making a decision based on a small set of criteria.
 
-            When it came to producing videos based on songs, we realized that the samples of generated during training are not necessarily a good representation for how the final result will turn out. As we used randomly selected samples from $p_{\vec{z}}$, a trained generator might seem very promising while the frequent and important configurations for $\vec{z}$ produce disappointing results. The reason for this might be our bad modeling of $p_{\vec{z}}$. To allow us to better approximate the quality of the resulting videos, we modified our sample generation during training to produce some images from static latent code that we know is relevant. For example, one of those is the latent code representing the absence of sound. This static latent code is of course different depending on the preprocessing of the melspectrograms.
+            When it came to producing videos based on songs, we realized that the samples of generated during training are not necessarily a good representation for how the final result will turn out. As we used randomly selected samples from $p_{\vec{z}}$, a trained generator might seem very promising while the frequent and important configurations for $\vec{z}$ produce disappointing results. The reason for this might be our bad modeling of $p_{\vec{z}}$. To allow us to better approximate the quality of the resulting videos, we modified our sample generation during training to produce some images from static latent vectors, which we know are relevant. For example, one of those is the latent vector representing the absence of sound. This static vector of course has to be different depending on the preprocessing of the melspectrograms.
 
             We struggled a lot with mode collapse during training. Attempting to reduce the learning rate in response yielded moderate improvements. It should be noted, that this problem was very persistent when using the encoded features, leading us to think that the 16-dimensional input vector just doesn't contain enough information. An example of mode collapse is shown in figure~\ref{fig:mode_collapse}
 
@@ -114,9 +114,34 @@
             \end{figure}
 
     \section{InfoGAN}
+        
+        As we could not produce satisfying results with an InfoGAN we will not go too deep into its inner workings. The basic idea is to split the generators input into two parts, the latent vector and now additionally the latent code. The first part behaves the same as in a DCGAN, the latent code is supposed to represent specific features of the generated images. In the case of our flower dataset one parameter could for example be corresponding to the size of the generated flower. As explained in \citetitle{infogan}~\cite{infogan}, mutual information between the latent code and the generated images is maximized. This can be approximated by letting the descriminator attempt to extract the latent code that was used to create an image. The paper distinguishes between categorical and continuous latent code, e.g. in the case of MNIST the 10 different numbers can be mapped to categorical code with 10 classes. For our flowers we have opted to only use continuous code as our available inputs for the gennerator are all continuous variables.
 
-        Idea is to now use a conditional GAN to introduce some random noise into the image generation while ensuring the latent code has a high impact on the image generation. Using random input together with the latent code may cause abrupt changes between subsequent images.
-        \begin{itemize}
-            \item image of architecture
-            \item mention loss, optimizer, ..
-        \end{itemize}
+        All our attempts at training an InfoGan were performed with the encoded 16 features produced from our autoencoder, the latent vector had a dimensionality of 84, summing it up to 100. In the first iteration we used Upsample layers to increase the image resolution while progressing through the generator. Even after increasing the amount of layers and / or the complexity of the networks, the results were extremely unsatisfying, even after tweaking the parameters and training multiple models. The second approach was to replace those layers with transposed convolutional layers and essentially use the DCGAN, which has proven to produce acceptable results, as a base for the new InfoGAN architecture. A comparison of both iterations can be seen in figure~\ref{fig:infogan_res_1}. All versions were implemented with MSELoss and the Adam optimizer.
+
+        \begin{figure}[h]
+            \centering
+            \subcaptionbox{\label{sfig:infogan_trash}}{
+                \includegraphics[width=.47\textwidth]{images/infogan_trash}
+            }
+            \subcaptionbox{\label{sfig:infogan_ok}}{
+                \includegraphics[width=.47\textwidth]{images/infogan_ok}
+            }
+            \caption[Images generated from InfoGans with different architectures.]
+            {
+                \textbf{Images generated from InfoGans with different architectures. \subref{sfig:infogan_trash} displays an image generated from the first iteration using Upsammple layers. \subref{sfig:infogan_ok} shows the second iteration that uses a very similar architecture to the DCGAN.}
+            }
+            \label{fig:infogan_res_1}
+        \end{figure}
+
+        While the second iteration of our InfoGAN implementation produced images of sufficient quality, another issue arose. As the idea is to have each dimension of the latent code correlate to an important property of the resulting image, our hopes were for the beat to correlate to for example the color or the size of the generated image. In figure~\ref{fig:infogan_res_2} 4 images can be seen that were generated with static latent code which was retrieved specific timesteps in a song that should produce 4 distinctly different images. It is clearly visible, that there are only very minor changes, e.g. the extend of the flower to the right. We have not investigated this any further as of now, so we can only speculate about the reasons for this behaviour. This could be a mode collapse, although more sample generation is necessary. Another reason could be that our implementation of the mutual information loss is faulty, leading to the generator simply ignoring the latent code. Finding out what, if anything, the model has encoded in the latent code requires more analysis.
+        
+        \begin{figure}[h]
+            \centering
+            \includegraphics[width=.94\textwidth]{images/fixed_160}
+            \caption[Images generated from InfoGan.]
+            {
+                \textbf{Visible are 4 images that were generated with an InfoGAN. The latent code used to produce these images was extracted from specific timesteps in a song that should produce visibly different images.}
+            }
+            \label{fig:infogan_res_2}
+        \end{figure}
