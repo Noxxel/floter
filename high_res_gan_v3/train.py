@@ -184,7 +184,7 @@ if __name__ == '__main__':
                 del tmp_load
 
     if opt.loadstate != '':
-        tmp_load = torch.load(opt.load_state)
+        tmp_load = torch.load(opt.loadstate)
         netD.load_state_dict(tmp_load["netD"])
         netG.load_state_dict(tmp_load["netG"])
         lrD = tmp_load["lrD"]
