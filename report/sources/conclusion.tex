@@ -1,5 +1,6 @@
 \chapter{Conclusion}
     We reached our base goal of generating visualizations which visibly correlate to the music when played alongside.
+    We achieved our best results with the generator which was trained on the raw mel spectrogram vectors.
     \TODO{
         \begin{itemize}
             \item maybe mimic the latent vector distribution instead of using pretrained models during training of GANs
@@ -9,4 +10,8 @@
     }
 
     \section{Visualizing your own music}
-    If the reader of this report would like to generate a visualization of a mp3-file of his likings, he can clone the project repository from our github page and download one of our pretrained state dictionaries from \TODO{INSERT LINK}. After inserting the states into the right folder, one can place their 
+    If the reader of this report would like to generate a visualization of a music track of his likings, he can clone the project repository from our github page (\TODO{INSERT LINK}) and download one of our pretrained state dictionaries from \TODO{INSERT LINK}. 
+    After inserting the state into the correct \TODO{folder of the results subdirectory}, one can place their desired mp3 file in the $song\_in$ folder and execute the \TODO{main bash script}. 
+    We currently only support the video generation directly from the mel spectrograms due to the mixed results of the other approaches.
+    The script will then automatically calculate the mel spectrogram of the given song, apply a Gaussian smoothing over the time steps, feed the vectors to the pretrained generator and afterwords compile the images to a single video with the song added as the audio track.
+    The resulting video will appear in the $song\_out$ folder adjacent to the $song\_in$ folder after everything is completed.
