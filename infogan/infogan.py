@@ -1,3 +1,5 @@
+#please excuse the dirty code if you read it before i managed to clean it up
+
 import argparse
 import os
 import numpy as np
@@ -67,9 +69,9 @@ class Generator(nn.Module):
         # we want to start with 1x1 resolution and upscale from there!
         # hardcoding for img_size=512!!
         # doubling the resolution 9 times -> 1x1 -> 512x512
-        # self.init_size = img_size // 32  # Initial size before upsampling
 
-        # self.l1 = nn.Sequential(nn.Linear(input_dim, 8*ngf * self.init_size ** 2))
+        # self.init_size = img_size // 32  # Initial size before upsampling <-- obsolete
+        # self.l1 = nn.Sequential(nn.Linear(input_dim, 8*ngf * self.init_size ** 2)) <-- obsolete
 
         self.conv_blocks = nn.Sequential(
             # input is Z, going into a convolution

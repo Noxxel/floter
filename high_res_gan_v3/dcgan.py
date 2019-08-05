@@ -1,9 +1,6 @@
-# https://raw.githubusercontent.com/pytorch/examples/master/dcgan/main.py
+#please excuse the dirty code if you read it before i managed to clean it up
 
-from __future__ import print_function
 import torch.nn as nn
-
-# python dcgan.py --dataset cifar10 --dataroot /scratch/users/vision/yu_dl/raaz.rsk/data/cifar10 --imageSize 32 --cuda --outf out_cifar --manualSeed 13 --niter 100
 
 class Generator(nn.Module):
     def __init__(self, ngpu, nc=3, nz=100, ngf=64):
