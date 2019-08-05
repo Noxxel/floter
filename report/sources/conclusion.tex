@@ -23,8 +23,11 @@
     }
 
     \section{Visualizing your own music}
-    If the reader of this report would like to generate a visualization of a music track of his likings, he can clone the project repository from our github page (\TODO{INSERT LINK}) and download one of our pretrained state dictionaries from \TODO{INSERT LINK}. 
-    After inserting the state into the correct \TODO{folder of the results subdirectory}, one can place their desired mp3 file in the $song\_in$ folder and execute the \TODO{main bash script}. 
+    If the reader of this report would like to generate a visualization of a music track of his likings, he can download a compact version of a pretrained generator from our Google Drive~\cite{visualizer}. 
+    After extracting the zip file, one can place their desired mp3 file in the $song\_in$ folder and execute either \textit{start\_cuda.sh} or \textit{start\_cpu.sh}, if your device does not support cuda (warning, this can take very long).
     We currently only support the video generation directly from the mel spectrograms due to the mixed results of the other approaches.
     The script will then automatically calculate the mel spectrogram of the given song, apply a Gaussian smoothing over the time steps, feed the vectors to the pretrained generator and afterwords compile the images to a single video with the song added as the audio track.
     The resulting video will appear in the $song\_out$ folder adjacent to the $song\_in$ folder after everything is completed.
+    If you would like to experiment with the smoothing, you can either change the kernel size with the \textit{smooth\_count} parameter, or disable smoothing entirely by removing the \textit{smooth} parameter from the respective bash scripts.
+    The whole procedure requires a variety of python packages, as well as ffmpeg installed on the system.
+    We cannot guarantee that every genre will deliver satisfying results, an average metal song seemed to throw off the results quite a bit, but maybe you have some fun with the generators.
