@@ -1,6 +1,6 @@
 \chapter{Introduction}
     In this project we wanted to generate visualizations of music tracks with the help of generative adverserial networks (GAN). Our goal was for the visualizations to visibly correlate to the music when played alongside.
-    For this we extract different sets of features from the music and use these features as seeds for the generators of our GANs, which we train on sets of real world images, flowers for the most part.
+    For this we extract a variety of features from the music and use these features as seeds for the generators of GANs, which we train on sets of real world images, flowers for the most part.
 
     For the feature extraction, we mainly tried out three different approaches. First, we generated mel spectrograms from the music and used these directly as input. As our second approach, we reduced the size of the mel spectrograms with an autoencoder to then use the encoded vectors as input, and the last approach was to use the featuremap of an intermediate layer of a convolutional recurrent neural network (CRNN), trained to classify the genre of a given song from its corresponding mel spectrogram.
 
@@ -11,6 +11,6 @@
     \begin{figure}
         \centering
         \includegraphics[width=\textwidth]{images/real_samples}
-        \caption{Small excerpt from the \textit{102 Category Flower} dataset. The flowers offer a rich variety of colors, which perfectly fit for the visualization of music.}
+        \caption{Small excerpt from the \textit{102 Category Flower} dataset. The flowers offer a rich variety of colors, which perfectly fit for a diverse visualization of music.}
         \label{flowers}
     \end{figure}
