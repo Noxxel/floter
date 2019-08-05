@@ -185,8 +185,8 @@ if __name__ == '__main__':
 
     if opt.loadstate != '':
         tmp_load = torch.load(load_state)
-        netD.load_state_dict(torch.load(opt.loadstate))
-        netG.load_state_dict(torch.load(opt.loadstate))
+        netD.load_state_dict(tmp_load["netD"])
+        netG.load_state_dict(tmp_load["netG"])
         lrD = tmp_load["lrD"]
         lrG = tmp_load["lrG"]
         lossD = tmp_load["lossD"]
