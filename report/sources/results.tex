@@ -4,34 +4,29 @@
 
     \section{Generating videos}
         
-        Theoretically we can generate videos with each possible combination of extracted features and trained generators.
-
-        \begin{itemize}
-            \item how did we generate images from the trained nets?
-            \item maybe also discuss/display intermediate results? (genre classification, autoencoder, single generated images)
-        \end{itemize}
+        Theoretically we can generate videos with each possible combination of extracted features and trained generators. The process is quite simple, the input song(s) are processed and melspectrograms are created. Depending on the chosen combination the melspectrograms are then used raw, encoded with the autoencoder, or processed through the CRNN. We then end up with 60 latent vectors per second of video, this information is used to create an image for each of those samples. From there we simply call ffmpeg to combine the images into a video, which is then combined with the input song.
 
     \section{Ensuring smooth transitions}
         
-        \begin{itemize}
-            \item smoothing?
-            \item what did we do to smoothen the video?
-            \item smoothing --> talk about the movement through feature space when producing a video from song
-        \end{itemize}
+        Depending on the input song the resulting videos flickered and had very rapid and dramatic changes of images. As two very close latent vectors will produce a very similar image, the idea is to slow down our movement in the latent space. We realized this by implementing a gaussian smoothing with variable size. So depending on the song we can apply more or less smoothing.
+        
+        One might assume that the beginnning of change in an image should correlate with the beginning of change in sound. With this assumption we want to avoid smoothening future latent vectors into an image. Therefore we implemented a kernel that falls off very quickly in the direction of positive time, this results in a more smooth and slower movement through the latent space. For spikes in the song that only last a few frames, this smoothening will cause us to never reach the corresponding point within the latent space. Instead we move in the direction of that point but turn around / away before reaching it. More complex methods could be applied to shape our path through the latent space. For example, our path could be described using Bézier curve.
 
     \section{Results}
 
-        Actual example videos can be downloaded and / or generated as described in the next chapter.
+        Figure~\ref{fig:dcgan_samples} displays a collection of images that were generated with a DCGAN.
 
         \begin{figure}[ht]
             \centering
             \includegraphics[width=.94\textwidth]{images/fake_samples_not_cherry_picked}
             \caption[not used]
             {
-                \textbf{\TODO{do}.}
+                \textbf{A collection of images that were generated with a DCGAN. The latent vectors used to produce these images were randomly sampled from the music dataset.}
             }
             \label{fig:dcgan_samples}
         \end{figure}
+
+        blahblahblah
 
         \begin{figure}[ht]
             \centering
@@ -44,7 +39,3 @@
             }
             \label{fig:video}
         \end{figure}
-
-        \begin{itemize}
-            \item display the stuff that was on the poster? in an attempt to put a video on paper
-        \end{itemize}
