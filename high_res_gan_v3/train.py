@@ -164,7 +164,7 @@ if __name__ == '__main__':
     lossG = []
     load_state = ""
     starting_epoch = 0
-    if not opt.fresh:
+    if not opt.fresh and opt.loadstate == '':
         outf_files = os.listdir(opath)
         states = [of for of in outf_files if 'net_state_epoch_' in of]
         states.sort()
@@ -192,8 +192,6 @@ if __name__ == '__main__':
         lossD = tmp_load["lossD"]
         lossG = tmp_load["lossG"]
         print("successfully loaded {}".format(opt.loadstate))
-        starting_epoch = int(states[-1][-6:-3]) + 1
-        print("continueing with epoch {}".format(starting_epoch))
         del tmp_load
     
     # load pretrained autoencoder
