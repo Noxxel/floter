@@ -1,4 +1,3 @@
-print("GODDAMNITPYTHONNOTAGAIN!")
 import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
@@ -22,7 +21,7 @@ n_layers = 2
 
 datapath = "./mels_set_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
 modelpath = "./lstm_f{}_h{}_b{}".format(n_fft, hop_length, n_mels)
-modelName = "lstm_29.nn"
+modelName = "lstm_99.nn"
 
 device = "cuda"
 
