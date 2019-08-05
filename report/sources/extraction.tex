@@ -1,8 +1,8 @@
 \chapter{Feature Extraction}\label{ch:extraction}
     In this chapter we discuss the different approaches for extracting features from the music. 
-    The basis for all our methods are mel spectrograms, which we extract from songs of the free music archive (FMA) dataset~\cite{FMA}, giving us a decent selection of 8 different genres with enough variety for deep learning tasks.
+    The basis for all our methods are mel spectrograms, which we extract from songs of the Free Music Archive (FMA) dataset~\cite{FMA}, giving us a decent selection of 8 different genres: Electronic, Experimental, Folk, Pop, Hip-Hop, Instrumental, International, and Rock.
 
-\section{Mel Spectrograms}
+\section{Spectrograms}
     In sound processing, it is difficult to work with the raw signal of any music track.
     Usually the signal is sampled 22050 to 44100 times per second and therefore yields a lot of data points to be processed. 
     Feeding this signal directly to a neural network is inconvenient and single data points don't give a lot of information.
@@ -16,10 +16,11 @@
         \caption{The mel spectrogram represents the power of the different frequencies in a frame as they change over time. The powers are mapped to a decibel scale.}
         \label{mel}
     \end{figure}
+    \subsection{Mel Spectrograms}
     \indent Mel spectrograms are an extension of the short-time Fourier transform, which map the magnitudes of the frequencies to a logarithmic power scale, to better approximate the human perception of sound.
     For our experiments we sampled the songs with 22050Hz and chose a frame size of 2048 samples for the transformation.
     This corresponds to a window of about 100ms, as bursts of frequencies, which are shorter than this time frame, are perceived less loud by the human ear~\cite{Acoustics}.
-    This makes the spectrograms fit best to the human perception of sound, eventually giving us correlating images.\\
+    This approximates the human perception of sound for a single time step, eventually giving us correlating images.\\
     To be able to produce 60 fps videos from the music, we chose the step size to be $\lfloor \frac{22050}{60} \rfloor = 367$, also introducing a reasonable amount of overlap, and 128 buckets for the frequencies as the resolution of the spectrum.
     As a last step, we mapped the powers of the mel spectrogram to a decibel scale from -80 to 0, to directly display the sound level of a frequency.\\ 
     \indent Figure~\ref{mel} shows a plot of a mel spectrogram obtained from a 30 second sound snippet of an electronic music track. 
@@ -27,24 +28,28 @@
     These 128-dimensional mel spectrograms are the basis for every of our approaches.
 
 \section{Autoencoder}
+    
+    \begin{figure}[!t]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/autoencoder}    
+    \caption{Architecture of the autoencoder}
+    \label{autoencoder}
+    \end{figure}
+    
     For our second feature method, we trained an autoencoder to reduce the dimensionality of the mel spectrograms down to a much smaller feature space.
     The main idea behind this approach was to use the encoded spectrograms as conditional vectors for the InfoGAN, where the comparatively large original vectors are impractical and would require proportionately larger latent vectors.
     As direct input for a DCGAN, they are somewhat redundant, losing information and complexity compared to the original spectrograms, and should therefore deliver worse results, but we still gave it a try, because why not.
     We will discuss more on this in the next chapter.\\
-    \begin{figure}[!t]
-        \centering
-        \includegraphics[width=0.75\textwidth]{images/autoencoder}    
-        \caption{Architecture of the autoencoder}
-        \label{autoencoder}
-    \end{figure}
+
+    \subsection{Architecture}
     \indent Figure~\ref{autoencoder} shows the architecture of the neural network, which we used to encode the vectors. In the first step, we half the dimensionality to 64 dimensions, followed by a rectified linear unit (ReLU).
     The next layer reduces the dimensionality down to the encoded size of 16 dimensions, followed by another ReLU. 
     The resulting vectors after these layers can then serve as potential source of input for a GAN.\\
     \indent The decoding side of the network is symmetric to the encoding side, but ends with the sigmoid function. 
     As the sigmoid function scales the values between 0 and 1, we have to divide the vectors of the mel spectrogram by -80 (they range from -80 to 0) before we put them into the autoencoder, scaling them between 0 and 1 as well. 
-    In order to restore the original mel spectrogram, we therefore have to multiply the decoded vectors again with -80.\\
+    In order to restore the original mel spectrogram, we therefore have to multiply the decoded vectors again with -80.
     As our loss function, we used the MSELoss (mean squared L2 norm) to measure the error between each element of the decoded vector and the original target vector. 
-    We trained this setup for 400 epochs.
+    We trained this setup for 400 epochs.\\
     Figure~\ref{reconstructed} shows a reconstruction of the mel spectrogram from Figure~\ref{mel}, after been passed through the fully trained autoencoder.
     The overall structure of the original spectrogram is clearly maintained, indicating that the autoencoder can compress most of the information into the 16 dimensions of the encoded layer, but still the reconstruction is a bit blurry, smoothes out information and has slightly different magnitudes than the original.
     This result is sufficient for our purposes.
@@ -60,6 +65,8 @@
 
     A more sophisticated method was the usage of intermediate features of a convolutional recurrent neural network (CRNN).
     The hope behind this approach was that if we train the network to classify the genre of a song, the convolutional layers at the front will extract features from the mel spectrograms which are specific to the genre, leading to visualizations of the music which correspond not only to the perceived sounds, but also to the respective genre.\\
+
+    \subsection{Architecture}
     In order to keep the temporal coherence of the input vectors throughout the convolutional layers, we had to modify naive realizations of CRNNs.
     Figure~\ref{CRNN} shows our architecture, which we used to classify the 8 different genres of the FMA dataset.
     We input the raw mel spectrograms as a 1D signal with 128 channels and apply a 1-dimensional convolution.
@@ -82,17 +89,8 @@
     This linear layer does not have another non-linearity, but this did not seem to influence the performance of the network.
     After that, there is the last linear layer, which connects the 32 neurons of the previous layer to the 8 output neurons, which depict the individual genres.
     We apply a logarithmic softmax function to the output and then use the NLLLoss (negative log likelihood, together with log softmax this is basically the cross entropy loss) to measure the performance of the network during training.\\
-    Unfortunately, the performance of the network in practice was subpar to levels of comparable networks on this dataset.
-    We plotted the loss and accuracy of our CRNN over the first 100 epochs in the top half of Figure~\ref{performance}.
-    For the first 15 epochs the network seems to learn some abstraction from the data, performing around 44$\%$ accuracy, but then the validation loss diverges from the training loss and the validation accuracy stagnates.
-    Up from this point, the network overfits on the training data, with no real gain on validation.
-    This performance is around $20\%$ lower than the top leader board score of the FMA genre recognition challenge~\cite{GenreChallenge} with 63$\%$ and might be due to multiple factors.
-    As we had to train a network from scratch to fit our particular needs, the small FMA dataset with its 8000 songs is a relatively small sample size for a deep learning model.
-    This leads to the model overfitting very quickly on the training data.
-    An approach to counter this could be to split each of the 30 seconds clips into 3 parts of 10 seconds to artificially increase the sample size.
-    But in addition, the FMA dataset itself is quite challenging, featuring abstract genres like International or Experimental, as well as Pop, which is just a conglomerate of popular music with no distinct defining sound.
-    This has got to be kept in mind when evaluating the model compared to the top scorer with 63$\%$, which also does not sound exceptionally high.\\
-    For the generator input, we picked a state of the network right before it starts to overfit on the data, to get the most generic features from the music. 
+
+    \subsection{Performance Issues}
 
     \begin{figure}[t]
         \centering
@@ -103,6 +101,17 @@
         \label{performance}
     \end{figure}
 
+    Unfortunately, the performance of the network in practice was subpar to levels of comparable networks on this dataset.
+    We plotted the loss and accuracy of our CRNN over the first 100 epochs in the top half of Figure~\ref{performance}.
+    For the first 15 epochs the network seems to learn some abstraction from the data, performing around 44$\%$ accuracy, but then the validation loss diverges from the training loss and the validation accuracy stagnates.
+    Up from this point, the network overfits on the training data, with no real gain on validation.
+    This performance is around $20\%$ lower than the top leader board score of the FMA genre recognition challenge~\cite{GenreChallenge} with 63$\%$ and might be due to multiple factors.
+    As we had to train a network from scratch to fit our particular needs, the small FMA dataset with its 8000 songs is a relatively small sample size for a deep learning model.
+    This leads to the model overfitting very quickly on the training data.
+    An approach to counter this could be to split each of the 30 seconds clips into 3 parts of 10 seconds to artificially increase the sample size.
+    But in addition, the FMA dataset itself is quite challenging, featuring abstract genres like International or Experimental, as well as Pop, which is just a conglomerate of popular music with no distinct defining sound.
+    This has got to be kept in mind when evaluating the model compared to the top scorer with 63$\%$, which also does not sound exceptionally high.\\
+    For the generator input, we picked a state of the network right before it starts to overfit on the data, to get the most generic features from the music.
     The bottom image of Figure~\ref{performance} shows our classification accuracies for each of the individual genres of that state.
     Pop is clearly falling off with an accuracy of below 10$\%$, whereas Rock on the other hand is classified correctly around 80$\%$ of the time.
     The other classes gather together at around 40$\%$ with slight differences.
