@@ -15,6 +15,8 @@ from tqdm import tqdm
 from skimage import io, transform
 from torch.utils.data import Dataset, DataLoader
 
+from itertools import cycle
+
 import dcgan
 from dataset import SoundfileDataset
 from AE_any import AutoEncoder
@@ -130,10 +132,6 @@ if __name__ == '__main__':
                            ]))
     nc=3
     assert dataset
-
-    assert len(dataset) > len(Mset)
-    dataset.data = dataset.data[:len(Mset)]
-    assert len(Mset) == len(dataset)
     
     Mloader = torch.utils.data.DataLoader(Mset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers))
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize,
@@ -332,7 +330,11 @@ if __name__ == '__main__':
 
         running_D = 0
         running_G = 0
-        for i, (data, mels) in enumerate(tqdm(zip(dataloader, Mloader), total=len(dataloader))):
+        zip_list = zip(dataloader, cycle(Mloader)) if len(dataloader) > len(Mloader) else zip(cycle(dataloader), Mloader)
+        zip_len = len(dataloader) if len(dataloader) > len(Mloader) else len(Mloader)
+        for i, (data, mels) in enumerate(tqdm(zip_list, total=zip_len)):
+            if len(data) != len(mels):
+                continue
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
@@ -381,7 +383,7 @@ if __name__ == '__main__':
             D_G_z2 = output.mean().item()
             optimizerG.step()
 
-            tqdm.write('[{:d}/{:d}][{:d}/{:d}] Loss_D: {:.4f} Loss_G: {:.4f} D(x): {:.4f} D(G(z)): {:.4f} / {:.4f} lrD: {:.2E} lrG: {:.2E}'.format(epoch, opt.niter, i, len(dataloader), errD.item(), errG.item(), D_x, D_G_z1, D_G_z2, optimizerD.param_groups[0]["lr"], optimizerG.param_groups[0]["lr"]))
+            tqdm.write('[{:d}/{:d}][{:d}/{:d}] Loss_D: {:.4f} Loss_G: {:.4f} D(x): {:.4f} D(G(z)): {:.4f} / {:.4f} lrD: {:.2E} lrG: {:.2E}'.format(epoch, opt.niter, i, zip_len, errD.item(), errG.item(), D_x, D_G_z1, D_G_z2, optimizerD.param_groups[0]["lr"], optimizerG.param_groups[0]["lr"]))
 
             if i % 100 == 0:
                 vutils.save_image(real_cpu,
